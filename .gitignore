@@ -395,3 +395,11 @@ CMakeUserPresets.json
 /_deps
 /CMakeFiles
 /third_party
+cmake_install.cmake
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Makefile
+Fallout II Community Edition.app/Contents/Info.plist
+Fallout II Community Edition.app/Contents/MacOS/Fallout II Community Edition
+Fallout II Community Edition.app/Contents/Resources/fallout2-ce.icns
