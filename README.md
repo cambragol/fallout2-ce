@@ -2,7 +2,7 @@
 
 Fallout 2 Community Edition is a fully working re-implementation of Fallout 2, with the same original gameplay, engine bugfixes, and some quality of life improvements, that works (mostly) hassle-free on multiple platforms.
 
-Popular Fallout 2 total conversion mods are partially supported. Original versions of Nevada and Sonora (that do not rely on extended features provided by Sfall) likely work, although there is no complete walkthrough confirmation yet. [Fallout 2 Restoration Project](https://github.com/BGforgeNet/Fallout2_Restoration_Project), [Fallout Et Tu](https://github.com/rotators/Fo1in2) and [Olympus 2207](https://olympus2207.com) are not yet supported. Other mods (particularly Resurrection and Yesterday) are not tested.
+Popular Fallout 2 total conversion mods are partially supported. Original versions of Nevada and Sonora (that do not rely on extended features provided by Sfall) work, and full play-throughs have been confirmed. In general, most other mods rely on sfall, and likely do not work. [Fallout 2 Restoration Project](https://github.com/BGforgeNet/Fallout2_Restoration_Project), [Fallout Et Tu](https://github.com/rotators/Fo1in2) and [Olympus 2207](https://olympus2207.com) are not yet supported. Other mods (particularly Resurrection and Yesterday) are not tested.
 
 There is also [Fallout Community Edition](https://github.com/alexbatalov/fallout1-ce).
 
@@ -88,23 +88,14 @@ The main configuration file is `fallout2.cfg`. There are several important setti
 
 The `sound` folder (with `music` folder inside) might be located either in `data` folder, or be in the Fallout folder. Update `music_path1` setting to match your hierarchy, usually it's `data/sound/music/` or `sound/music/`. Make sure it matches your path exactly (so it might be `SOUND/MUSIC/` if you've installed Fallout from CD). Music files themselves (with `ACM` extension) should be all uppercased, regardless of `sound` and `music` folders.
 
-The second configuration file is `f2_res.ini`. Use it to change game window size and enable/disable fullscreen mode.
-
-```ini
-[MAIN]
-SCR_WIDTH=1280
-SCR_HEIGHT=720
-WINDOWED=1
-```
+The second configuration file is `f2_res.ini`. Use it to change game window size and enable/disable fullscreen mode. Additionally, the iFace bar (lower command area for most screens) can be adjusted in this file, along with side graphics (leather, metal etc.) Settings for splashscreens are found here as well. f2_res.ini needs to used with f2_res.dat to access iFace graphics. A base version of both can be found here. Unzip and place into your Fallout install directory to use. `f2_res.ini` included with other mods or found elsewhere can be used, though not all options will be functional.
 
 Recommendations:
 - **Desktops**: Use any size you see fit.
 - **Tablets**: Set these values to logical resolution of your device, for example iPad Pro 11 is 1668x2388 (pixels), but it's logical resolution is 834x1194 (points).
 - **Mobile phones**: Set height to 480, calculate width according to your device screen (aspect) ratio, for example Samsung S21 is 20:9 device, so the width should be 480 * 20 / 9 = 1067.
 
-In time this stuff will receive in-game interface, right now you have to do it manually.
-
-The third configuration file is `ddraw.ini` (part of Sfall). There are dozens of options that adjust or override engine behaviour and gameplay mechanics. This file is intended for modders and advanced users. Currently only a small subset of these settings are actually implemented.
+The third configuration file is `ddraw.ini` (part of Sfall). There are dozens of options that adjust or override engine behaviour and gameplay mechanics. This file is intended for modders and advanced users, and is required for some mods to work. Currently only a small subset of these settings are actually implemented. The subset of working option is included in this baseline file here. `ddraw.ini` included with various mods can be used, though not all options will be functional.
 
 ## Contributing
 
