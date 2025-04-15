@@ -40,6 +40,8 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "movie.h"
+
 
 namespace fallout {
 
@@ -83,6 +85,9 @@ int falloutMain(int argc, char** argv)
     if (!falloutInit(argc, argv)) {
         return 1;
     }
+    
+    // added for movie stretching
+    readMovieSettings();
 
     // SFALL: Allow to skip intro movies
     int skipOpeningMovies;
