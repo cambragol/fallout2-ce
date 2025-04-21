@@ -23,7 +23,6 @@
 #include "mainmenu.h"
 #include "map.h"
 #include "mouse.h"
-#include "movie.h"
 #include "object.h"
 #include "palette.h"
 #include "platform_compat.h"
@@ -41,6 +40,8 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#include "movie.h"
+
 
 namespace fallout {
 
@@ -59,8 +60,8 @@ static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
 static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count);
 
-// extern void* internal_malloc(size_t size);
-// extern void internal_free(void* ptr);
+//extern void* internal_malloc(size_t size);
+//extern void internal_free(void* ptr);
 
 // 0x5194C8
 static char _mainMap[] = "artemple.map";
@@ -84,7 +85,7 @@ int falloutMain(int argc, char** argv)
     if (!falloutInit(argc, argv)) {
         return 1;
     }
-
+    
     // added for movie stretching
     readMovieSettings();
 
@@ -366,8 +367,7 @@ static void mainLoop()
 }
 
 // 0x48118C
-static void showDeath()
-{
+static void showDeath() {
     artCacheFlush();
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
@@ -432,7 +432,7 @@ static void showDeath()
         if (scaled != nullptr) {
             // Perform stretching.
             blitBufferToBufferStretch(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
-
+            
             // Fix rightmost edge artifacts by copying the last good pixel horizontally.
             for (int y = 0; y < scaledHeight; y++) {
                 scaled[y * scaledWidth + (scaledWidth - 1)] = scaled[y * scaledWidth + (scaledWidth - 2)];
