@@ -176,6 +176,18 @@ static int _LoadObjDudeCid(File* stream);
 static int _SaveObjDudeCid(File* stream);
 static int _EraseSave();
 
+// buffers for handling stretching
+static uint8_t* compositeBuffer = nullptr;
+static uint8_t* compositeBaseBuffer = nullptr;
+
+// static globals shared for stretching
+static int originalWidth = LS_WINDOW_WIDTH;
+static int originalHeight = LS_WINDOW_HEIGHT;
+static int scaledWidth = LS_WINDOW_WIDTH;
+static int scaledHeight = LS_WINDOW_HEIGHT;
+static float scaleX = 1.0f;
+static float scaleY = 1.0f;
+
 // 0x47B7C0
 static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     237, // lsgame.frm - load/save game
@@ -339,6 +351,10 @@ static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 static int quickSaveSlots = 0;
 static bool autoQuickSaveSlots = false;
 
+// clearing and refreshing functions for stretching
+void resetCompositeToBase();
+void loadsaveBlitComposite();
+
 // 0x47B7E4
 void _InitLoadSave()
 {
@@ -478,6 +494,7 @@ int lsgSaveGame(int mode)
         return -1;
     }
 
+    // compositeBaseBuffer added to handle stretched thumbnails/snapshots
     switch (_LSstatus[_slot_cursor]) {
     case SLOT_STATE_EMPTY:
     case SLOT_STATE_ERROR:
@@ -486,7 +503,7 @@ int lsgSaveGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     default:
@@ -495,13 +512,17 @@ int lsgSaveGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     }
-
+    
+    // updates and blits text to be stretched
+    resetCompositeToBase();
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+    loadsaveBlitComposite();
     _DrawInfoBox(_slot_cursor);
+    loadsaveBlitComposite();
     windowRefresh(gLoadSaveWindow);
 
     _dbleclkcntr = 24;
@@ -528,8 +549,12 @@ int lsgSaveGame(int mode)
                                 // Move to the previous page and set cursor to the last slot on that page
                                 _currentSlotPage--;
                                 _slot_cursor--;
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                windowRefresh(gLoadSaveWindow);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();                                windowRefresh(gLoadSaveWindow);
                             } else {
                                 // Normal movement within the page
                                 _slot_cursor--;
@@ -546,8 +571,12 @@ int lsgSaveGame(int mode)
                                 // Move to the next page and set cursor to the first slot on that page
                                 _currentSlotPage++;
                                 _slot_cursor++;
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                windowRefresh(gLoadSaveWindow);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();                                windowRefresh(gLoadSaveWindow);
                             } else {
                                 // Normal movement within the page
                                 _slot_cursor++;
@@ -590,36 +619,48 @@ int lsgSaveGame(int mode)
                     int mouseX, mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
+                    // Mouse locations updated for stretching
                     // Check if the click was in the "Next Page" button area
-                    if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
+                    if ((mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
                         if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
                             selectionChanged = true;
                             doubleClickSlot = -1;
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
 
+                    // Mouse locations updated for stretching
                     // Check if the click was in the "Previous Page" button area
-                    if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Previous Page coordinates
+                    if ((mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
+                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) || keyCode == KEY_ARROW_LEFT) { // Previous Page coordinates
                         if (_currentSlotPage > 0) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
                             _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
                             selectionChanged = true;
                             doubleClickSlot = -1;
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
 
+                    // Mouse locations updated for stretching
                     // Calculate the clicked slot, adjusting for pagination
-                    int relativeSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / (3 * static_cast<int>(fontGetLineHeight() * scaleY) + 4);
                     if (relativeSlot < 0) {
                         relativeSlot = 0;
                     } else if (relativeSlot > 9) {
@@ -711,7 +752,12 @@ int lsgSaveGame(int mode)
                         if (_slot_cursor < _currentSlotPage * 10) {
                             if (_currentSlotPage > 0) {
                                 _currentSlotPage--;
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
+                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = (_currentSlotPage * 10) + 9; // Move to the last slot of the previous page
                             } else {
@@ -725,7 +771,12 @@ int lsgSaveGame(int mode)
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
                             if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
+                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
@@ -744,7 +795,7 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -753,19 +804,22 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-
+                    // updates and blits text to be stretched
+                    resetCompositeToBase();
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
+                    loadsaveBlitComposite();
                     windowRefresh(gLoadSaveWindow);
                 }
 
@@ -791,7 +845,7 @@ int lsgSaveGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     break;
                 default:
@@ -800,18 +854,22 @@ int lsgSaveGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         LS_WINDOW_WIDTH,
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     blitBufferToBuffer(_thumbnail_image,
                         LS_PREVIEW_WIDTH - 1,
                         LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
                         LS_WINDOW_WIDTH);
                     break;                }
 
-                _DrawInfoBox(_slot_cursor);
+                // updates and blits text to be stretched
+                resetCompositeToBase();
                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                loadsaveBlitComposite();
+                _DrawInfoBox(_slot_cursor);
+                loadsaveBlitComposite();
             }
 
             windowRefresh(gLoadSaveWindow);
@@ -896,7 +954,7 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -905,19 +963,22 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-
+                    // updates and blits text to be stretched
+                    resetCompositeToBase();
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
+                    loadsaveBlitComposite();
                     windowRefresh(gLoadSaveWindow);
                     _dbleclkcntr = 24;
                 }
@@ -1093,7 +1154,7 @@ int lsgLoadGame(int mode)
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
             LS_WINDOW_WIDTH);
         break;
     default:
@@ -1102,13 +1163,16 @@ int lsgLoadGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     }
-
+    // updates and blits text to be stretched
+    resetCompositeToBase();
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+    loadsaveBlitComposite();
     _DrawInfoBox(_slot_cursor);
+    loadsaveBlitComposite();
     windowRefresh(gLoadSaveWindow);
     renderPresent();
     _dbleclkcntr = 24;
@@ -1135,7 +1199,12 @@ int lsgLoadGame(int mode)
                             // Move to the previous page and set cursor to the last slot on that page
                             _currentSlotPage--;
                             _slot_cursor--;
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();
                             windowRefresh(gLoadSaveWindow);
                         } else {
                             // Normal movement within the page
@@ -1153,8 +1222,12 @@ int lsgLoadGame(int mode)
                             // Move to the next page and set cursor to the first slot on that page
                             _currentSlotPage++;
                             _slot_cursor++;
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
                         } else {
                             // Normal movement within the page
                             _slot_cursor++;
@@ -1195,37 +1268,52 @@ int lsgLoadGame(int mode)
                     int mouseX, mouseY;
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
+                    // Mouse locations updated for stretching
                     // Check if the click was in the "Next Page" button area
-                    if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
+                    if ((mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) &&
+                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) ||
+                    keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
+
                         if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
                             selectionChanged = true;
                             doubleClickSlot = -1;
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();                                 windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
 
+                    // Mouse locations updated for stretching
                     // Check if the click was in the "Previous Page" button area
-                    if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Coordinates for Previous Page button
+                    if ((mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
+                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) ||
+                    keyCode == KEY_ARROW_LEFT) { // Coordinates for Previous Page button
                         if (_currentSlotPage > 0) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
                             _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
                             selectionChanged = true;
                             doubleClickSlot = -1;
-
+                            // updates and blits text to be stretched
+                            resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();                                 windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
 
+                    // Mouse locations updated for stretching
                     // Calculate the clicked slot, adjusting for pagination
-                    int relativeSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / (3 * static_cast<int>(fontGetLineHeight() * scaleY) + 4);
                     if (relativeSlot < 0) {
                         relativeSlot = 0;
                     } else if (relativeSlot > 9) {
@@ -1311,8 +1399,12 @@ int lsgLoadGame(int mode)
                         if (_slot_cursor < _currentSlotPage * 10) {
                             if (_currentSlotPage > 0) {
                                 _currentSlotPage--;
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                                windowRefresh(gLoadSaveWindow);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();                                     windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = (_currentSlotPage * 10) + 9; // Move to the last slot of the previous page
                             } else {
                                 _slot_cursor = 0; // Don't go under
@@ -1326,8 +1418,12 @@ int lsgLoadGame(int mode)
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
                             if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
+                                // updates and blits text to be stretched
+                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                                windowRefresh(gLoadSaveWindow);
+                                loadsaveBlitComposite();
+                                _DrawInfoBox(_slot_cursor);
+                                loadsaveBlitComposite();                                     windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
                                 _slot_cursor = (saveLoadPages - 1); // Prevent overflow (last slot overall)
@@ -1343,7 +1439,7 @@ int lsgLoadGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -1352,19 +1448,23 @@ int lsgLoadGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-
+                    
+                    // updates and blits text to be stretched
+                    resetCompositeToBase();
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
+                    loadsaveBlitComposite();                         _DrawInfoBox(_slot_cursor);
                     windowRefresh(gLoadSaveWindow);
                 }
 
@@ -1389,7 +1489,7 @@ int lsgLoadGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     break;
                 default:
@@ -1398,19 +1498,22 @@ int lsgLoadGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         LS_WINDOW_WIDTH,
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     blitBufferToBuffer(_thumbnail_image,
                         LS_PREVIEW_WIDTH - 1,
                         LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
-                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
                         LS_WINDOW_WIDTH);
                     break;
                 }
-
-                _DrawInfoBox(_slot_cursor);
+                // updates and blits text to be stretched
+                resetCompositeToBase();
                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                loadsaveBlitComposite();
+                _DrawInfoBox(_slot_cursor);
+                loadsaveBlitComposite();
             }
 
             windowRefresh(gLoadSaveWindow);
@@ -1471,11 +1574,52 @@ int lsgLoadGame(int mode)
     return rc;
 }
 
+static FrmImage _loadsaveBackgroundFrmImage;
+
 // 0x47D2E4
 static int lsgWindowInit(int windowType)
 {
     gLoadSaveWindowOldFont = fontGetCurrent();
     fontSetCurrent(103);
+    
+    // Get the screen/window size
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+
+    // Load stretch mode from INI file
+    int loadsaveStretchMode = 0;  // Default to 0, no stretch
+    Config config;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "LOADSAVE_SIZE", &loadsaveStretchMode);
+        }
+        configFree(&config);
+    }
+    
+    // Get the original image dimensions
+    originalWidth = LS_WINDOW_WIDTH;
+    originalHeight = LS_WINDOW_HEIGHT;
+    
+    scaledWidth = originalWidth;
+    scaledHeight = originalHeight;
+    
+    // Figure out how to stretch the character Selector depending on resolution + settings
+    if (loadsaveStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
+        if (loadsaveStretchMode == 2) {
+            // Fullscreen stretch
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            // Preserve aspect ratio
+            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * originalHeight / originalWidth;
+            } else {
+                scaledWidth = screenHeight * originalWidth / originalHeight;
+                scaledHeight = screenHeight;
+            }
+        }
+    }
 
     gLoadSaveWindowIsoWasEnabled = false;
     if (!messageListInit(&gLoadSaveMessageList)) {
@@ -1487,6 +1631,7 @@ static int lsgWindowInit(int windowType)
         return -1;
     }
 
+    // Allocate snapshot memory (preview image + buffer)
     _snapshot = (unsigned char*)internal_malloc(61632);
     if (_snapshot == nullptr) {
         messageListFree(&gLoadSaveMessageList);
@@ -1502,7 +1647,6 @@ static int lsgWindowInit(int windowType)
     }
 
     colorCycleDisable();
-
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     if (windowType == LOAD_SAVE_WINDOW_TYPE_SAVE_GAME || windowType == LOAD_SAVE_WINDOW_TYPE_PICK_QUICK_SAVE_SLOT) {
@@ -1535,33 +1679,36 @@ static int lsgWindowInit(int windowType)
     }
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
-        int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
-        if (!_loadsaveFrmImages[index].lock(fid)) {
-            while (--index >= 0) {
-                _loadsaveFrmImages[index].unlock();
-            }
-            internal_free(_snapshot);
-            messageListFree(&gLoadSaveMessageList);
-            fontSetCurrent(gLoadSaveWindowOldFont);
+         int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
+         if (!_loadsaveFrmImages[index].lock(fid)) {
+             while (--index >= 0) {
+                 _loadsaveFrmImages[index].unlock();
+             }
+             internal_free(_snapshot);
+             messageListFree(&gLoadSaveMessageList);
+             fontSetCurrent(gLoadSaveWindowOldFont);
 
-            if (windowType != LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) {
-                if (gLoadSaveWindowIsoWasEnabled) {
-                    isoEnable();
-                }
-            }
+             if (windowType != LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) {
+                 if (gLoadSaveWindowIsoWasEnabled) {
+                     isoEnable();
+                 }
+             }
 
-            colorCycleEnable();
-            gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-            return -1;
-        }
-    }
+             colorCycleEnable();
+             gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+             return -1;
+         }
+     }
 
-    int lsWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
-    int lsWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
+    // Center the menu window on screen
+    int lsWindowX = (screenWidth - scaledWidth) / 2;
+    int lsWindowY = (screenHeight - scaledHeight) / 2;
+
+    // Create the save game window
     gLoadSaveWindow = windowCreate(lsWindowX,
         lsWindowY,
-        LS_WINDOW_WIDTH,
-        LS_WINDOW_HEIGHT,
+        scaledWidth,
+        scaledHeight,
         256,
         WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (gLoadSaveWindow == -1) {
@@ -1582,8 +1729,28 @@ static int lsgWindowInit(int windowType)
     }
 
     gLoadSaveWindowBuffer = windowGetBuffer(gLoadSaveWindow);
-    memcpy(gLoadSaveWindowBuffer, _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData(), LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
+    
+    // Load the background image
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 237, 0, 0, 0);
+    if (!_loadsaveBackgroundFrmImage.lock(backgroundFid)) {
+        return -1;
+    }
 
+    //unsigned char* backgroundData = _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData();
+    unsigned char* backgroundData = _loadsaveBackgroundFrmImage.getData();
+    
+    // Clone the background so we can draw text on it (before scaling)
+    compositeBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
+    // Clone the background again so we have a pure 'original' for updating
+    compositeBaseBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
+    if (!compositeBuffer) {
+        _ls_error_code = 0;
+        return -1;
+    }
+
+    // copy the background to the composite buffer
+    memcpy(compositeBuffer, backgroundData, originalWidth * originalHeight);
+    
     int messageId;
     switch (windowType) {
     case LOAD_SAVE_WINDOW_TYPE_SAVE_GAME:
@@ -1609,94 +1776,234 @@ static int lsgWindowInit(int windowType)
 
     char* msg;
 
+    // Draw main background text to the compositeBuffer (to be stretched)
+    // Message ID
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, messageId);
-    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 27 + 48, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 27 + 48, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
 
     // DONE
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 104);
-    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 348 + 410, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 348 + 410, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
 
     // CANCEL
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 105);
-    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 348 + 515, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 348 + 515, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    
+    // Stretch and blit the text+background into our menu window
+    if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
+        unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
+        if (!stretched) {
+            SDL_free(compositeBuffer);
+            _ls_error_code = 0;
+            return -1;
+        }
 
+        blitBufferToBufferStretch(
+            compositeBuffer, originalWidth, originalHeight, originalWidth,
+            stretched, scaledWidth, scaledHeight, scaledWidth);
+        
+        // Fix the edge pixels to avoid glitches
+        for (int y = 0; y < scaledHeight; y++) {
+            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
+        }
+        for (int x = 0; x < scaledWidth; x++) {
+            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
+        }
+
+        blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gLoadSaveWindowBuffer, scaledWidth);
+        SDL_free(stretched);
+    } else {
+        blitBufferToBuffer(compositeBuffer, originalWidth, originalHeight, originalWidth, gLoadSaveWindowBuffer, scaledWidth);
+    }
+
+    SDL_free(compositeBuffer);
+    _loadsaveBackgroundFrmImage.unlock();
+    
     int btn;
+    
+    // Determine scaling factors based on the original and current window dimensions
+    scaleX = static_cast<float>(scaledWidth) / originalWidth;
+    scaleY = static_cast<float>(scaledHeight) / originalHeight;
 
+    // Round buttons: use scaleY to preserve aspect ratio
+    int redButtonBaseWidth = _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth();
+    int redButtonBaseHeight = _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight();
+    float roundButtonScale = scaleY;
+    int redButtonWidth = static_cast<int>(redButtonBaseWidth * roundButtonScale);
+    int redButtonHeight = static_cast<int>(redButtonBaseHeight * roundButtonScale);
+
+    // Allocate and stretch the round button images
+    unsigned char* scaledRedNormal = reinterpret_cast<unsigned char*>(SDL_malloc(redButtonWidth * redButtonHeight));
+    unsigned char* scaledRedPressed = reinterpret_cast<unsigned char*>(SDL_malloc(redButtonWidth * redButtonHeight));
+    if (!scaledRedNormal || !scaledRedPressed) {
+        return -1;
+    }
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
+        scaledRedNormal, redButtonWidth, redButtonHeight, redButtonWidth);
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
+        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
+        scaledRedPressed, redButtonWidth, redButtonHeight, redButtonWidth);
+
+    // Fix edge pixels to avoid glitches
+    for (int y = 0; y < redButtonHeight; y++) {
+        scaledRedNormal[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedNormal[y * redButtonWidth + (redButtonWidth - 2)];
+        scaledRedPressed[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedPressed[y * redButtonWidth + (redButtonWidth - 2)];
+    }
+    for (int x = 0; x < redButtonWidth; x++) {
+        scaledRedNormal[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedNormal[(redButtonHeight - 2) * redButtonWidth + x];
+        scaledRedPressed[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedPressed[(redButtonHeight - 2) * redButtonWidth + x];
+    }
+
+    // Create round buttons (button 0 and 1)
     btn = buttonCreate(gLoadSaveWindow,
-        391,
-        349,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
-        -1,
-        -1,
-        -1,
+        static_cast<int>(391 * scaleX),
+        static_cast<int>(349 * scaleY),
+        redButtonWidth,
+        redButtonHeight,
+        -1, -1, -1,
         500,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
+        scaledRedNormal,
+        scaledRedPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
+        buttonSetMask(btn, scaledRedNormal);
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
     btn = buttonCreate(gLoadSaveWindow,
-        495,
-        349,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
-        -1,
-        -1,
-        -1,
+        static_cast<int>(495 * scaleX),
+        static_cast<int>(349 * scaleY),
+        redButtonWidth,
+        redButtonHeight,
+        -1, -1, -1,
         501,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
+        scaledRedNormal,
+        scaledRedPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
+        buttonSetMask(btn, scaledRedNormal);
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
+    // Arrow buttons: scale images and position like background (scaleX and scaleY)
+    int arrowBaseWidth = _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getWidth();
+    int arrowBaseHeight = _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getHeight();
+    int arrowWidth = static_cast<int>(arrowBaseWidth * scaleX);
+    int arrowHeight = static_cast<int>(arrowBaseHeight * scaleY);
+
+    // Allocate and stretch arrow images
+    unsigned char* scaledArrowUpNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
+    unsigned char* scaledArrowUpPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
+    unsigned char* scaledArrowDownNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
+    unsigned char* scaledArrowDownPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
+    if (!scaledArrowUpNormal || !scaledArrowUpPressed || !scaledArrowDownNormal || !scaledArrowDownPressed) {
+        return -1;
+    }
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
+        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
+        scaledArrowUpNormal, arrowWidth, arrowHeight, arrowWidth);
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
+        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
+        scaledArrowUpPressed, arrowWidth, arrowHeight, arrowWidth);
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
+        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
+        scaledArrowDownNormal, arrowWidth, arrowHeight, arrowWidth);
+
+    blitBufferToBufferStretch(
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
+        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
+        scaledArrowDownPressed, arrowWidth, arrowHeight, arrowWidth);
+
+    // Arrow Up button
     btn = buttonCreate(gLoadSaveWindow,
-        35,
-        58,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getWidth(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight(),
+        static_cast<int>(35 * scaleX),
+        static_cast<int>(58 * scaleY),
+        arrowWidth,
+        arrowHeight,
         -1,
         505,
         506,
         505,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
+        scaledArrowUpNormal,
+        scaledArrowUpPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
+    // Arrow Down button
     btn = buttonCreate(gLoadSaveWindow,
-        35,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight() + 58,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getWidth(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getHeight(),
+        static_cast<int>(35 * scaleX),
+        static_cast<int>((58 + arrowBaseHeight) * scaleY),
+        arrowWidth,
+        arrowHeight,
         -1,
         503,
         504,
         503,
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
+        scaledArrowDownNormal,
+        scaledArrowDownPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    // tweaked bounds to accomodate Next/Previous buttons
-    buttonCreate(gLoadSaveWindow, 55, 87, 230, 348, -1, -1, -1, 502, nullptr, nullptr, nullptr, BUTTON_FLAG_TRANSPARENT);
+    // Invisible scroll click area
+    buttonCreate(gLoadSaveWindow,
+        static_cast<int>(55 * scaleX),
+        static_cast<int>(87 * scaleY),
+        static_cast<int>(230 * scaleX),
+        static_cast<int>(353 * scaleY),
+        -1, -1, -1, 502, nullptr, nullptr, nullptr, BUTTON_FLAG_TRANSPARENT);
+
     
     fontSetCurrent(101);
+    memcpy(compositeBaseBuffer, compositeBuffer, originalWidth * originalHeight);
+
 
     return 0;
 }
+
+// Resets compositeBuffer to the pure original (background + main text + snapshot)
+void resetCompositeToBase() {
+    if (compositeBuffer && compositeBaseBuffer) {
+        memcpy(compositeBuffer, compositeBaseBuffer, originalWidth * originalHeight);
+    }
+}
+
+// Blits/updates changed text to the gLoadSaveWindowBuffer for display
+void loadsaveBlitComposite() {
+    if (compositeBuffer == nullptr) return;
+
+    blitBufferToBufferStretch(
+        compositeBuffer,
+        originalWidth,
+        originalHeight,
+        originalWidth,
+        gLoadSaveWindowBuffer,
+        scaledWidth,
+        scaledHeight,
+        scaledWidth
+    );
+
+    windowRefresh(gLoadSaveWindow);
+}
+
 
 // 0x47D824
 static int lsgWindowFree(int windowType)
@@ -2229,9 +2536,6 @@ static void _ShowSlotList(int windowType)
     const int slotsPerPage = 10;  // Show 10 slots per page
     const int totalPages = (saveLoadPages + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
 
-    // Clear display area
-    bufferFill(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 87 + 55, 230, 353, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer[LS_WINDOW_WIDTH * 86 + 55] & 0xFF);
-
     int y = 87;
     int startIndex = _currentSlotPage * slotsPerPage;
     int endIndex = startIndex + slotsPerPage;
@@ -2241,7 +2545,7 @@ static void _ShowSlotList(int windowType)
         int color = index == _slot_cursor ? _colorTable[32747] : _colorTable[992];
         const char* text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, windowType != 0 ? 110 : 109);
         snprintf(_str, sizeof(_str), "[   %s %.2d:   ]", text, index + 1);
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+        fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
         y += fontGetLineHeight();
         switch (_LSstatus[index]) {
@@ -2267,32 +2571,35 @@ static void _ShowSlotList(int windowType)
             break;
         }
 
-        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+        // Draw text to compositeBuffer for later stretching
+        fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
         y += 2 * fontGetLineHeight() + 4;
     }
 
     // Pagination navigation
+    // Draw text to compositeBuffer for later stretching
     if (saveLoadPages > 10) {
         if (_currentSlotPage == 0) {
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
         }
         if (_currentSlotPage > 0) {
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
         }
         if (_currentSlotPage < totalPages - 1) {
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
         }
         if (_currentSlotPage == totalPages - 1) {
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
         }
     }
+    
 }
 
 // 0x47E8E0
 static void _DrawInfoBox(int slot)
 {
     // raises this one pixel to fit the extra line below a little better
-    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 253 + 396, 164, 60, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 253 + 396, 640);
+    /*blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 253 + 396, 164, 60, LS_WINDOW_WIDTH, compositeBuffer + LS_WINDOW_WIDTH * 253 + 396, 640);*/
 
     unsigned char* dest;
     const char* text;
@@ -2303,7 +2610,7 @@ static void _DrawInfoBox(int slot)
         if (1) {
             LoadSaveSlotData* ptr = &(_LSData[slot]);
             // raise this one pixel as well to match above
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 253 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 253 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2314,7 +2621,8 @@ static void _DrawInfoBox(int slot)
                 100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
             int v2 = fontGetLineHeight();
-            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (255 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            // Draw text to compositeBuffer for later stretching
+            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (255 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2342,27 +2650,28 @@ static void _DrawInfoBox(int slot)
                     int xShift = (index > 0) ? 2 : 0;
 
                     // Draw the substring
-                    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 399 + xShift, temp, 164, LS_WINDOW_WIDTH, color);
+                    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 399 + xShift, temp, 164, LS_WINDOW_WIDTH, color);
                     y += v2 + 2;
                 }
             }
         }
         return;
+    // Draw text to compositeBuffer for later stretching
     case SLOT_STATE_EMPTY:
         // Empty.
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 114);
-        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 404;
+        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 404;
         break;
     case SLOT_STATE_ERROR:
         // Error!
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 115);
-        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 404;
+        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 404;
         color = _colorTable[32328];
         break;
     case SLOT_STATE_UNSUPPORTED_VERSION:
         // Old version.
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 116);
-        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 400;
+        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 400;
         color = _colorTable[32328];
         break;
     default:
@@ -2370,6 +2679,7 @@ static void _DrawInfoBox(int slot)
     }
 
     fontDrawText(dest, text, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+
 }
 
 // 0x47EC48
