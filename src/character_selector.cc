@@ -72,14 +72,10 @@ namespace fallout {
 
 // Stretching defines
 #define SCALE_COORD_X(x) ( \
-    (menuStretchMode == 2) ? \
-        ((x) * windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH) : \
-        ((x) * getLetterboxWidthScaleFactor()) + getLetterboxOffsetX())
+    (menuStretchMode == 2) ? ((x) * windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH) : ((x) * getLetterboxWidthScaleFactor()) + getLetterboxOffsetX())
 
 #define SCALE_COORD_Y(y) ( \
-    (menuStretchMode == 2) ? \
-        ((y) * windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT) : \
-        ((y) * getLetterboxHeightScaleFactor()) + getLetterboxOffsetY())
+    (menuStretchMode == 2) ? ((y) * windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT) : ((y) * getLetterboxHeightScaleFactor()) + getLetterboxOffsetY())
 
 static int gCharacterSelectorWindowWidth = 0;
 static int gCharacterSelectorWindowHeight = 0;
@@ -163,25 +159,29 @@ static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
-float getLetterboxWidthScaleFactor() {
+float getLetterboxWidthScaleFactor()
+{
     float scaleX = (float)windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH;
     float scaleY = (float)windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT;
     return (scaleX < scaleY) ? scaleX : scaleY;
 }
 
-float getLetterboxHeightScaleFactor() {
+float getLetterboxHeightScaleFactor()
+{
     float scaleX = (float)windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH;
     float scaleY = (float)windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT;
     return (scaleX < scaleY) ? scaleX : scaleY;
 }
 
-int getLetterboxOffsetX() {
+int getLetterboxOffsetX()
+{
     float scale = getLetterboxWidthScaleFactor();
     int contentWidth = (int)(ORIGINAL_WIDTH * scale);
     return (windowGetWidth(gCharacterSelectorWindow) - contentWidth) / 2;
 }
 
-int getLetterboxOffsetY() {
+int getLetterboxOffsetY()
+{
     float scale = getLetterboxHeightScaleFactor();
     int contentHeight = (int)(ORIGINAL_HEIGHT * scale);
     return (windowGetHeight(gCharacterSelectorWindow) - contentHeight) / 2;
@@ -301,14 +301,15 @@ static FrmImage _charSelecButtonNormalFrmImage;
 static FrmImage _charSelecButtonPressedFrmImage;
 
 // 0x4A7468
-static bool characterSelectorWindowInit() {
+static bool characterSelectorWindowInit()
+{
     colorPaletteLoad("color.pal");
 
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
     // Load stretch mode from INI file
-    int menuStretchMode = 0;  // Default to 0, no stretch
+    int menuStretchMode = 0; // Default to 0, no stretch
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
@@ -316,14 +317,14 @@ static bool characterSelectorWindowInit() {
         }
         configFree(&config);
     }
-    
+
     // Get the original image dimensions
     int originalWidth = CS_WINDOW_WIDTH;
     int originalHeight = CS_WINDOW_HEIGHT;
-    
+
     int scaledWidth = originalWidth;
     int scaledHeight = originalHeight;
-    
+
     // Figure out how to stretch the character Selector depending on resolution + settings
     if (menuStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
         if (menuStretchMode == 2) {
@@ -341,11 +342,11 @@ static bool characterSelectorWindowInit() {
             }
         }
     }
-    
+
     // Center the menu window on screen
     int charSelecWindowX = (screenWidth - scaledWidth) / 2;
     int charSelecWindowY = (screenHeight - scaledHeight) / 2;
-    
+
     // Create the character selector window after the stretching calculations
     gCharacterSelectorWindow = windowCreate(
         charSelecWindowX,
@@ -353,12 +354,11 @@ static bool characterSelectorWindowInit() {
         scaledWidth,
         scaledHeight,
         _colorTable[0],
-        0
-    );
+        0);
     if (gCharacterSelectorWindow == -1) {
         return characterSelectorWindowFatalError(false);
     }
-    
+
     gCharacterSelectorWindowWidth = windowGetWidth(gCharacterSelectorWindow);
     gCharacterSelectorWindowHeight = windowGetHeight(gCharacterSelectorWindow);
     gCharacterSelectorWindowBuffer = windowGetBuffer(gCharacterSelectorWindow);
@@ -560,7 +560,6 @@ static bool characterSelectorWindowInit() {
     if (gCharacterSelectorWindowBackButton == -1) return characterSelectorWindowFatalError(false);
     buttonSetCallbacks(gCharacterSelectorWindowBackButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
-
     gCurrentPremadeCharacter = PREMADE_CHARACTER_NARG;
 
     windowRefresh(gCharacterSelectorWindow);
@@ -637,7 +636,8 @@ static void characterSelectorWindowFree()
 }
 
 // 0x4A7D58
-static bool characterSelectorWindowRefresh() {
+static bool characterSelectorWindowRefresh()
+{
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s.gcd", gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].fileName);
     premadeCharactersLocalizePath(path);
@@ -648,7 +648,7 @@ static bool characterSelectorWindowRefresh() {
     }
 
     // Allocate offscreen buffer at original resolution
-    uint8_t* tempBuffer = (uint8_t*) SDL_malloc(CS_WINDOW_WIDTH * CS_WINDOW_HEIGHT);
+    uint8_t* tempBuffer = (uint8_t*)SDL_malloc(CS_WINDOW_WIDTH * CS_WINDOW_HEIGHT);
     if (tempBuffer == NULL) {
         debugPrint("\n ** Failed to allocate temp buffer for character selector **\n");
         return false;
@@ -668,7 +668,7 @@ static bool characterSelectorWindowRefresh() {
     // Step 2: Render the face, stats, and bio onto the temporary buffer
     if (characterSelectorWindowRenderFace(tempBuffer)) {
         if (characterSelectorWindowRenderStats(tempBuffer)) {
-            success = characterSelectorWindowRenderBio(tempBuffer);  // Pass tempBuffer to render bio
+            success = characterSelectorWindowRenderBio(tempBuffer); // Pass tempBuffer to render bio
         }
     }
 
@@ -677,11 +677,11 @@ static bool characterSelectorWindowRefresh() {
         tempBuffer,
         CS_WINDOW_WIDTH,
         CS_WINDOW_HEIGHT,
-        CS_WINDOW_WIDTH,  // srcPitch
+        CS_WINDOW_WIDTH, // srcPitch
         gCharacterSelectorWindowBuffer,
         gCharacterSelectorWindowWidth,
         gCharacterSelectorWindowHeight,
-        gCharacterSelectorWindowWidth  // destPitch
+        gCharacterSelectorWindowWidth // destPitch
     );
 
     // Free the temporary buffer after use
@@ -694,7 +694,8 @@ static bool characterSelectorWindowRefresh() {
 }
 
 // Function to render the background of the character selector window
-static bool characterSelectorWindowRenderBackground(uint8_t* destBuffer) {
+static bool characterSelectorWindowRenderBackground(uint8_t* destBuffer)
+{
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 174, 0, 0, 0);
     if (!_charSelecBackgroundFrmImage.lock(backgroundFid)) {
         return false;
@@ -999,14 +1000,14 @@ static bool characterSelectorWindowRenderBio(uint8_t* tempBuffer)
     // Open the bio file
     File* stream = fileOpen(path, "rt");
     if (stream != nullptr) {
-        int y = 40;  // Starting y position for Bio text
-        int lineHeight = fontGetLineHeight();  // Get the line height of the font
+        int y = 40; // Starting y position for Bio text
+        int lineHeight = fontGetLineHeight(); // Get the line height of the font
 
         char string[256];
         while (fileReadString(string, 256, stream) && y < 260) {
             // Render each line of text into the tempBuffer
             fontDrawText(tempBuffer + CS_WINDOW_WIDTH * y + CS_WINDOW_BIO_X, string, CS_WINDOW_WIDTH - CS_WINDOW_BIO_X, CS_WINDOW_WIDTH, _colorTable[992]);
-            y += lineHeight;  // Move to the next line
+            y += lineHeight; // Move to the next line
         }
 
         // Close the bio file after reading
