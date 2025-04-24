@@ -70,6 +70,7 @@ namespace fallout {
 #define ORIGINAL_WIDTH 640
 #define ORIGINAL_HEIGHT 480
 
+// Stretching defines
 #define SCALE_COORD_X(x) ( \
     (menuStretchMode == 2) ? \
         ((x) * windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH) : \
@@ -185,7 +186,6 @@ int getLetterboxOffsetY() {
     int contentHeight = (int)(ORIGINAL_HEIGHT * scale);
     return (windowGetHeight(gCharacterSelectorWindow) - contentHeight) / 2;
 }
-
 
 // 0x4A71D0
 int characterSelectorOpen()
@@ -367,7 +367,7 @@ static bool characterSelectorWindowInit() {
         return characterSelectorWindowFatalError(false);
     }
 
-    // === Load and scale character selector buttons ===
+    // Load and scale character selector buttons
     int fid;
 
     // Load arrow button graphics (Next/Previous)
@@ -463,7 +463,7 @@ static bool characterSelectorWindowInit() {
         scaledRoundPressed[(roundHeight - 1) * roundWidth + x] = scaledRoundPressed[(roundHeight - 2) * roundWidth + x];
     }
 
-    // === Create Buttons ===
+    // Create Buttons
     gCharacterSelectorWindowPreviousButton = buttonCreate(gCharacterSelectorWindow,
         SCALE_COORD_X(CS_WINDOW_PREVIOUS_BUTTON_X),
         SCALE_COORD_Y(CS_WINDOW_PREVIOUS_BUTTON_Y),
@@ -565,9 +565,9 @@ static bool characterSelectorWindowInit() {
 
     windowRefresh(gCharacterSelectorWindow);
 
-    /*if (!characterSelectorWindowRefresh()) {
+    if (!characterSelectorWindowRefresh()) {
         return characterSelectorWindowFatalError(false);
-    }*/
+    }
 
     return true;
 }
