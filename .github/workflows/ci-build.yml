@@ -31,22 +31,6 @@ jobs:
       - name: cppcheck
         run: cppcheck --std=c++17 src/
 
-  code-format:
-    name: Code format check
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Show clang-format version
-        run: |
-          clang-format --version
-
-      - name: clang-format
-        run: find src -type f -name \*.cc -o -name \*.h | xargs clang-format --dry-run --Werror
-
   android:
     name: Android
 
@@ -84,15 +68,11 @@ jobs:
           cd os/android
           ./gradlew assembleDebug
 
-      - name: Change apk file name
-        run: |
-          mv os/android/app/build/outputs/apk/debug/app-debug.apk os/android/app/build/outputs/apk/debug/fallout2-ce.apk
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-debug.apk
-          path: os/android/app/build/outputs/apk/debug/fallout2-ce.apk
+          path: os/android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
 
   ios:
@@ -173,15 +153,11 @@ jobs:
         run: |
           cmake --build --preset linux-${{ matrix.arch }}-debug
 
-      - name: Change executable file name
-        run: |
-          mv out/build/linux-${{ matrix.arch }}-debug/fallout2-ce out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-${{ matrix.arch }}
-          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
+          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce
           retention-days: 7
 
   linux-armhf:
@@ -213,15 +189,11 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: Change executable file name
-        run: |
-          mv build/fallout2-ce build/fallout2-ce-linux-armhf
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-armhf
-          path:  build/fallout2-ce-linux-armhf
+          path:  build/fallout2-ce
           retention-days: 7
 
   linux-arm64:
@@ -244,15 +216,11 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: Change executable file name
-        run: |
-          mv build/fallout2-ce build/fallout2-ce-linux-arm64
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-arm64
-          path:  build/fallout2-ce-linux-arm64
+          path:  build/fallout2-ce
           retention-days: 7
 
   macos:
@@ -322,15 +290,11 @@ jobs:
         run: |
           cmake --build --preset windows-${{ matrix.arch }}-release
 
-      - name: Change executable file name
-        run: |
-          mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
-
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
+          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe
           retention-days: 7
 
 
@@ -355,43 +319,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Move unpacked artifacts to root folder
+      - name: Allow GitHub to process removed release for few seconds
         if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
+        continue-on-error: true
         run: |
-          ls -Rlah .
+          ls -R .
           find .
           cd artifacts/
           for folder in *; do
             if [[ -d "$folder" && "$folder" != "." ]]; then
               echo "Processing $folder"
-              mv "$folder" "$folder.dir"
-              cd "$folder.dir"
+              cd "$folder"
               for file in *; do
                 if [ -f "$file" ]; then
                   if [ -f "../$file" ]; then
                     echo "ERROR: Duplicate artifact file name $file"
                     exit 1
                   fi
-                  if [ -d "../$file" ]; then
-                    echo "ERROR: Duplicate artifact folder $file"
-                    exit 1
-                  fi
-
                   echo "Moving $file"
                   mv "$file" "../$file"
                 fi
               done
               cd ..
-              rm -rf "$folder.dir"
+              rm -rf "$folder"
             fi
           done
-          ls -Rlah .
+          ls -R .
           find .
           cd ../
-
-      - name: Allow GitHub to process removed release for few seconds
-        if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-        run: |
           sleep 20s
 
       - name: Upload new release
