@@ -1030,7 +1030,9 @@ int _action_climb_ladder(Object* a1, Object* a2)
     reg_anim_begin(animationRequestOptions);
 
     int tile = tileGetTileInDirection(a2->tile, ROTATION_SE, 1);
-    if (actionPoints != -1 || objectGetDistanceBetween(a1, a2) < 5) {
+    int walkDistance = 5;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
+    if (actionPoints != -1 || objectGetDistanceBetween(a1, a2) < walkDistance) {
         animationRegisterMoveToTile(a1, tile, a2->elevation, actionPoints, 0);
     } else {
         animationRegisterRunToTile(a1, tile, a2->elevation, actionPoints, 0);
@@ -1097,7 +1099,9 @@ int _action_use_an_item_on_object(Object* user, Object* targetObj, Object* item)
 
         reg_anim_begin(animationRequestOptions);
 
-        if (actionPoints != -1 || objectGetDistanceBetween(user, targetObj) < 5) {
+        int walkDistance = 5;
+        configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
+        if (actionPoints != -1 || objectGetDistanceBetween(user, targetObj) < walkDistance) {
             animationRegisterMoveToObject(user, targetObj, actionPoints, 0);
         } else {
             animationRegisterRunToObject(user, targetObj, -1, 0);
@@ -1166,14 +1170,16 @@ int actionPickUp(Object* critter, Object* item)
             reg_anim_clear(gDude);
         }
     }
+    
+    int walkDistance = 5;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
 
     if (isInCombat()) {
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
         animationRegisterMoveToObject(critter, item, critter->data.critter.combat.ap, 0);
     } else {
         reg_anim_begin(critter == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
-        if (objectGetDistanceBetween(critter, item) >= 5) {
-            animationRegisterRunToObject(critter, item, -1, 0);
+        if (objectGetDistanceBetween(critter, item) >= walkDistance) {            animationRegisterRunToObject(critter, item, -1, 0);
         } else {
             animationRegisterMoveToObject(critter, item, -1, 0);
         }
@@ -1271,6 +1277,9 @@ int _action_loot_container(Object* critter, Object* container)
             reg_anim_clear(gDude);
         }
     }
+    
+    int walkDistance = 5;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
 
     if (isInCombat()) {
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
@@ -1278,8 +1287,7 @@ int _action_loot_container(Object* critter, Object* container)
     } else {
         reg_anim_begin(critter == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
 
-        if (objectGetDistanceBetween(critter, container) < 5) {
-            animationRegisterMoveToObject(critter, container, -1, 0);
+        if (objectGetDistanceBetween(critter, container) < walkDistance) {            animationRegisterMoveToObject(critter, container, -1, 0);
         } else {
             animationRegisterRunToObject(critter, container, -1, 0);
         }
@@ -1475,14 +1483,17 @@ int actionUseSkill(Object* user, Object* target, int skill)
             }
         }
     }
-
+    
+    int walkDistance = 5;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_USE_WALK_DISTANCE, &walkDistance);
+    
     if (isInCombat()) {
         reg_anim_begin(ANIMATION_REQUEST_RESERVED);
         animationRegisterMoveToObject(performer, target, performer->data.critter.combat.ap, 0);
     } else {
         reg_anim_begin(user == gDude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
         if (target != gDude) {
-            if (objectGetDistanceBetween(performer, target) >= 5) {
+            if (objectGetDistanceBetween(performer, target) >= walkDistance) {
                 animationRegisterRunToObject(performer, target, -1, 0);
             } else {
                 animationRegisterMoveToObject(performer, target, -1, 0);
