@@ -906,13 +906,14 @@ int aiSetDisposition(Object* obj, int disposition)
         return -1;
     }
 
-    if (disposition == -1 || disposition >= 5) {
+    if (disposition < 0 || disposition >= 5) {
         return -1;
     }
 
     AiPacket* ai = aiGetPacket(obj);
-    obj->data.critter.combat.aiPacket = ai->packet_num - (disposition - ai->disposition);
-
+    ai->disposition = disposition;  // ACTUALLY SET THE DISPOSITION
+    obj->data.critter.combat.aiPacket = ai->packet_num;  // Keep original packet num
+    
     return 0;
 }
 
