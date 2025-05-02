@@ -36,6 +36,7 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
+#include "palette.h"
 #include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
@@ -1061,13 +1062,20 @@ int lsgLoadGame(int mode)
     _patches = settings.system.master_patches_path.c_str();
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
-        int quickSaveWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
-        int quickSaveWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
-        int window = windowCreate(quickSaveWindowX,
-            quickSaveWindowY,
-            LS_WINDOW_WIDTH,
-            LS_WINDOW_HEIGHT,
-            256,
+        
+        // Get the screen/window size
+        int screenWidth = screenGetWidth();
+        int screenHeight = screenGetHeight();
+        // Center the menu window on screen
+        int lsWindowX = 0;
+        int lsWindowY = 0;
+
+        // Create the save game window
+        int window = windowCreate(lsWindowX,
+            lsWindowY,
+                                  screenWidth,
+                                  screenHeight,
+            0,
             WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
         if (window != -1) {
             unsigned char* windowBuffer = windowGetBuffer(window);
@@ -1176,6 +1184,11 @@ int lsgLoadGame(int mode)
     windowRefresh(gLoadSaveWindow);
     renderPresent();
     _dbleclkcntr = 24;
+    
+    // palette handled here to allow fade in from black like other main menu pages
+    // fades into Load/Save screen from black (from Main Menu)
+    colorPaletteLoad("color.pal");
+    paletteFadeTo(_cmap);
 
     int rc = -1;
     int doubleClickSlot = -1;
@@ -1560,10 +1573,18 @@ int lsgLoadGame(int mode)
         renderPresent();
         sharedFpsLimiter.throttle();
     }
-
-    lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
-            ? LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU
-            : LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+    
+    if (mode == LOAD_SAVE_MODE_FROM_MAIN_MENU) {
+        if (rc == 0){
+            // fade to black on return to Main Menu
+            paletteFadeTo(gPaletteBlack);
+            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
+        } else {
+            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
+        }
+    } else {
+        lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+    }
 
     if (mode == LOAD_SAVE_MODE_QUICK) {
         if (rc == 1) {
@@ -1604,7 +1625,8 @@ static int lsgWindowInit(int windowType)
     scaledHeight = originalHeight;
     
     // Figure out how to stretch the character Selector depending on resolution + settings
-    if (loadsaveStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
+    // Only stretch when loading from Main Menu
+    if ((loadsaveStretchMode != 0 && windowType == LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) || screenWidth < originalWidth || screenHeight < originalHeight) {
         if (loadsaveStretchMode == 2) {
             // Fullscreen stretch
             scaledWidth = screenWidth;

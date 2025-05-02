@@ -23,6 +23,7 @@
 #include "mainmenu.h"
 #include "map.h"
 #include "mouse.h"
+#include "movie.h"
 #include "object.h"
 #include "palette.h"
 #include "platform_compat.h"
@@ -40,8 +41,6 @@
 #include "window_manager_private.h"
 #include "word_wrap.h"
 #include "worldmap.h"
-#include "movie.h"
-
 
 namespace fallout {
 
@@ -51,8 +50,8 @@ namespace fallout {
 static bool falloutInit(int argc, char** argv);
 static int main_reset_system();
 static void main_exit_system();
-static int _main_load_new(char* fname);
-static int main_loadgame_new();
+static int _main_newgame(char* fname);
+static int main_loadgame();
 static void main_unload_new();
 static void mainLoop();
 static void showDeath();
@@ -60,8 +59,8 @@ static void _main_death_voiceover_callback();
 static int _mainDeathGrabTextFile(const char* fileName, char* dest);
 static int _mainDeathWordWrap(char* text, int width, short* beginnings, short* count);
 
-//extern void* internal_malloc(size_t size);
-//extern void internal_free(void* ptr);
+// extern void* internal_malloc(size_t size);
+// extern void internal_free(void* ptr);
 
 // 0x5194C8
 static char _mainMap[] = "artemple.map";
@@ -85,7 +84,7 @@ int falloutMain(int argc, char** argv)
     if (!falloutInit(argc, argv)) {
         return 1;
     }
-    
+
     // added for movie stretching
     readMovieSettings();
 
@@ -131,7 +130,7 @@ int falloutMain(int argc, char** argv)
                     }
 
                     char* mapNameCopy = compat_strdup(mapName != nullptr ? mapName : _mainMap);
-                    _main_load_new(mapNameCopy);
+                    _main_newgame(mapNameCopy);
                     free(mapNameCopy);
 
                     // SFALL: AfterNewGameStartHook.
@@ -156,41 +155,50 @@ int falloutMain(int argc, char** argv)
 
                 break;
             case MAIN_MENU_LOAD_GAME:
+                mainMenuWindowHide(true);
+                mainMenuWindowFree();
                 if (1) {
                     int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
-                    mainMenuWindowHide(true);
-                    mainMenuWindowFree();
 
-                    // NOTE: Uninline.
-                    main_loadgame_new();
+                    main_loadgame(); // NOTE: Uninline.
 
-                    colorPaletteLoad("color.pal");
-                    paletteFadeTo(_cmap);
                     int loadGameRc = lsgLoadGame(LOAD_SAVE_MODE_FROM_MAIN_MENU);
+
                     if (loadGameRc == -1) {
                         debugPrint("\n ** Error running LoadGame()! **\n");
                     } else if (loadGameRc != 0) {
+                        // Handle successful load (non-zero return)
+                        // fade to white on entering loaded game
+                        paletteFadeTo(gPaletteWhite);
+
                         windowDestroy(win);
+
+                        // fade in from white on entering loaded game
+                        colorPaletteLoad("color.pal");
+                        paletteFadeTo(_cmap);
                         win = -1;
+
                         mainLoop();
+
+                        // fade to white when leaving game
+                        paletteFadeTo(gPaletteWhite);
                     }
-                    paletteFadeTo(gPaletteWhite);
+
+                    // Cleanup (runs whether loadGameRc was 0, -1, or non-zero)
                     if (win != -1) {
                         windowDestroy(win);
                     }
 
-                    // NOTE: Uninline.
-                    main_unload_new();
+                    main_unload_new(); // Called exactly once
+                    main_reset_system(); // Called exactly once
 
-                    // NOTE: Uninline.
-                    main_reset_system();
-
+                    // Show death scene if flagged
                     if (_main_show_death_scene != 0) {
                         showDeath();
                         _main_show_death_scene = 0;
                     }
-                    mainMenuWindowInit();
                 }
+                mainMenuWindowInit();
                 break;
             case MAIN_MENU_TIMEOUT:
                 debugPrint("Main menu timed-out\n");
@@ -266,7 +274,7 @@ static void main_exit_system()
 }
 
 // 0x480D4C
-static int _main_load_new(char* mapFileName)
+static int _main_newgame(char* mapFileName)
 {
     _game_user_wants_to_quit = 0;
     _main_show_death_scene = 0;
@@ -294,7 +302,7 @@ static int _main_load_new(char* mapFileName)
 // NOTE: Inlined.
 //
 // 0x480DF8
-static int main_loadgame_new()
+static int main_loadgame()
 {
     _game_user_wants_to_quit = 0;
     _main_show_death_scene = 0;
@@ -367,7 +375,8 @@ static void mainLoop()
 }
 
 // 0x48118C
-static void showDeath() {
+static void showDeath()
+{
     artCacheFlush();
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
@@ -432,7 +441,7 @@ static void showDeath() {
         if (scaled != nullptr) {
             // Perform stretching.
             blitBufferToBufferStretch(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
-            
+
             // Fix rightmost edge artifacts by copying the last good pixel horizontally.
             for (int y = 0; y < scaledHeight; y++) {
                 scaled[y * scaledWidth + (scaledWidth - 1)] = scaled[y * scaledWidth + (scaledWidth - 2)];
