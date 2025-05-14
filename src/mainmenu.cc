@@ -232,18 +232,10 @@ int mainMenuWindowInit()
             SDL_free(compositeBuffer);
             return main_menu_fatal_error();
         }
-
+        // blit without fixings edges - no errors appearing
         blitBufferToBufferStretch(
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
-        
-        // Fix the edge pixels to avoid glitches
-        for (int y = 0; y < scaledHeight; y++) {
-            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
-        }
-        for (int x = 0; x < scaledWidth; x++) {
-            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
-        }
 
         blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gMainMenuWindowBuffer, scaledWidth);
         SDL_free(stretched);
@@ -285,22 +277,12 @@ int mainMenuWindowInit()
     }
 
     // Stretch the button images
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _mainMenuButtonNormalFrmImage.getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
         scaledNormal, buttonWidth, buttonHeight, buttonWidth);
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _mainMenuButtonPressedFrmImage.getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
         scaledPressed, buttonWidth, buttonHeight, buttonWidth);
-
-    // Fix the edge pixels to avoid glitches
-    for (int y = 0; y < buttonHeight; y++) {
-        scaledPressed[y * buttonWidth + (buttonWidth - 1)] = scaledPressed[y * buttonWidth + (buttonWidth - 2)];
-        scaledNormal[y * buttonWidth + (buttonWidth - 1)] = scaledNormal[y * buttonWidth + (buttonWidth - 2)];
-    }
-    for (int x = 0; x < buttonWidth; x++) {
-        scaledPressed[(buttonHeight - 1) * buttonWidth + x] = scaledPressed[(buttonHeight - 2) * buttonWidth + x];
-        scaledNormal[(buttonHeight - 1) * buttonWidth + x] = scaledNormal[(buttonHeight - 2) * buttonWidth + x];
-    }
 
     // Apply any user-configured button offsets from Sfall (for button position tweaking)
     offsetX = offsetY = 0;
