@@ -203,7 +203,8 @@ static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
 };
 
 // Control max number of save/load pages with global 10, 100, or 1000
-const int saveLoadPages = 100;
+// More than 1000 slows the screen load
+const int saveLoadPages = 1000;
 
 // Global variable to track the current slot page
 static int _currentSlotPage = 0;
@@ -661,7 +662,7 @@ int lsgSaveGame(int mode)
 
                     // Mouse locations updated for stretching
                     // Calculate the clicked slot, adjusting for pagination
-                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / (3 * static_cast<int>(fontGetLineHeight() * scaleY) + 4);
+                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
                     if (relativeSlot < 0) {
                         relativeSlot = 0;
                     } else if (relativeSlot > 9) {
@@ -1326,7 +1327,7 @@ int lsgLoadGame(int mode)
 
                     // Mouse locations updated for stretching
                     // Calculate the clicked slot, adjusting for pagination
-                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / (3 * static_cast<int>(fontGetLineHeight() * scaleY) + 4);
+                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
                     if (relativeSlot < 0) {
                         relativeSlot = 0;
                     } else if (relativeSlot > 9) {
@@ -1765,7 +1766,7 @@ static int lsgWindowInit(int windowType)
     compositeBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
     // Clone the background again so we have a pure 'original' for updating
     compositeBaseBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
-    if (!compositeBuffer) {
+    if (!compositeBuffer || !compositeBaseBuffer) {
         _ls_error_code = 0;
         return -1;
     }
@@ -1871,15 +1872,16 @@ static int lsgWindowInit(int windowType)
         redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
         scaledRedPressed, redButtonWidth, redButtonHeight, redButtonWidth);
 
+    // Is this needed??
     // Fix edge pixels to avoid glitches
-    for (int y = 0; y < redButtonHeight; y++) {
+    /*for (int y = 0; y < redButtonHeight; y++) {
         scaledRedNormal[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedNormal[y * redButtonWidth + (redButtonWidth - 2)];
         scaledRedPressed[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedPressed[y * redButtonWidth + (redButtonWidth - 2)];
     }
     for (int x = 0; x < redButtonWidth; x++) {
         scaledRedNormal[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedNormal[(redButtonHeight - 2) * redButtonWidth + x];
         scaledRedPressed[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedPressed[(redButtonHeight - 2) * redButtonWidth + x];
-    }
+    }*/
 
     // Create round buttons (button 0 and 1)
     btn = buttonCreate(gLoadSaveWindow,
@@ -1996,7 +1998,6 @@ static int lsgWindowInit(int windowType)
     
     fontSetCurrent(101);
     memcpy(compositeBaseBuffer, compositeBuffer, originalWidth * originalHeight);
-
 
     return 0;
 }
