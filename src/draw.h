@@ -17,6 +17,12 @@ void _swap_color_buf(unsigned char* buf, int width, int height, int pitch, int c
 void bufferOutline(unsigned char* buf, int width, int height, int pitch, int a5);
 void srcCopy(unsigned char* dest, int destPitch, unsigned char* src, int srcPitch, int width, int height);
 void transSrcCopy(unsigned char* dest, int destPitch, unsigned char* src, int srcPitch, int width, int height);
+void blitBufferToBufferStretchAndFixEdges(
+    unsigned char* src, int srcW, int srcH, int srcPitch,
+    unsigned char* dst, int dstW, int dstH, int dstPitch,
+    int numStates = 1
+);
+
 
 } // namespace fallout
 

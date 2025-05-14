@@ -339,4 +339,34 @@ void transSrcCopy(unsigned char* dest, int destPitch, unsigned char* src, int sr
     }
 }
 
+void blitBufferToBufferStretchAndFixEdges(
+    unsigned char* src, int srcW, int srcH, int srcPitch,
+    unsigned char* dst, int dstW, int dstH, int dstPitch,
+    int numStates // e.g., 4 for primary buttons, 2 for secondary, 1 for single image
+)
+{
+    // Stretch the entire vertically stacked strip
+    blitBufferToBufferStretch(
+        src, srcW, srcH * numStates, srcPitch,
+        dst, dstW, dstH * numStates, dstPitch);
+
+    // Fix edge pixels per state
+    for (int state = 0; state < numStates; ++state) {
+        unsigned char* frame = dst + dstW * dstH * state;
+        if (dstW > 19 && dstH > 19) { // Only fix edges for non-tiny images
+            if (dstW >= 2) {
+                for (int y = 0; y < dstH; ++y) {
+                    frame[y * dstW + (dstW - 1)] = frame[y * dstW + (dstW - 2)];
+                }
+            }
+            
+            if (dstH >= 2) {
+                for (int x = 0; x < dstW; ++x) {
+                    frame[(dstH - 1) * dstW + x] = frame[(dstH - 2) * dstW + x];
+                }
+            }
+        }
+    }
+}
+
 } // namespace fallout
