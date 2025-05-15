@@ -559,6 +559,26 @@ static void wmFadeIn();
 static void wmFadeReset();
 static void wmBlinkRndEncounterIcon(bool special);
 
+// buffers for handling stretching
+static uint8_t* compositeBuffer = nullptr;
+static uint8_t* compositeBaseBuffer = nullptr;
+
+// static globals shared for stretching
+static int originalWidth = WM_WINDOW_WIDTH;
+static int originalHeight = WM_WINDOW_HEIGHT;
+static int scaledWidth = WM_WINDOW_WIDTH;
+static int scaledHeight = WM_WINDOW_HEIGHT;
+static int originalViewWidth = WM_VIEW_WIDTH;
+static int originalViewHeight = WM_VIEW_HEIGHT;
+static int scaledViewWidth = WM_VIEW_WIDTH;
+static int scaledViewHeight = WM_VIEW_HEIGHT;
+static int originalViewX = WM_VIEW_X;
+static int originalViewY = WM_VIEW_Y;
+static int scaledViewX = WM_VIEW_X;
+static int scaledViewY = WM_VIEW_Y;
+static float scaleX = 1.0f;
+static float scaleY = 1.0f;
+
 // 0x4BC860
 static const int _can_rest_here[ELEVATION_COUNT] = {
     MAP_CAN_REST_ELEVATION_0,
@@ -830,6 +850,160 @@ static inline bool cityIsValid(int city)
     return city >= 0 && city < wmMaxAreaNum;
 }
 
+inline void blitStretchedImageToBufferTrans(
+    const unsigned char* src,
+    int srcWidth,        // unscaled width
+    int srcHeight,       // unscaled height
+    int srcPitch,        // unscaled pitch
+    unsigned char* dst,  // scaled buffer start (e.g., wmBkWinBuf + offset)
+    int dstPitch         // scaled screen width (usually wmGetScreenWidth())
+) {
+    if (!src || !dst || srcWidth <= 0 || srcHeight <= 0 || srcPitch <= 0 || dstPitch <= 0) {
+        return;
+    }
+
+    // Compute scaled dimensions
+    int dstWidth = static_cast<int>(srcWidth * scaleX);
+    int dstHeight = static_cast<int>(srcHeight * scaleY);
+
+    if (dstWidth <= 0 || dstHeight <= 0) {
+        return;
+    }
+
+    // Allocate stretched temp buffer
+    unsigned char* stretched = static_cast<unsigned char*>(malloc(dstWidth * dstHeight));
+    if (stretched == nullptr) {
+        return;
+    }
+
+    // Stretch source image into temporary buffer
+    blitBufferToBufferStretch(
+        const_cast<unsigned char*>(src),
+        srcWidth,
+        srcHeight,
+        srcPitch,
+        stretched,
+        dstWidth,
+        dstHeight,
+        dstWidth
+    );
+
+    // Fix edge pixels to reduce artifacts (last row/column copies)
+    if (dstWidth >= 2) {
+        for (int y = 0; y < dstHeight; ++y) {
+            stretched[y * dstWidth + (dstWidth - 1)] = stretched[y * dstWidth + (dstWidth - 2)];
+        }
+    }
+    if (dstHeight >= 2) {
+        for (int x = 0; x < dstWidth; ++x) {
+            stretched[(dstHeight - 1) * dstWidth + x] = stretched[(dstHeight - 2) * dstWidth + x];
+        }
+    }
+
+    // Safety: prevent writing off the end of the screen buffer
+    int screenHeight = screenGetHeight();
+    int screenWidth = dstPitch;              // typically same as screenGetHeight()
+
+    ptrdiff_t offsetIntoScreen = dst - wmBkWinBuf;
+    int dstY = offsetIntoScreen / screenWidth;
+    int dstX = offsetIntoScreen % screenWidth;
+
+    if (dstX + dstWidth > screenWidth) {
+        dstWidth = screenWidth - dstX;
+    }
+    if (dstY + dstHeight > screenHeight) {
+        dstHeight = screenHeight - dstY;
+    }
+
+    if (dstWidth > 0 && dstHeight > 0) {
+        blitBufferToBufferTrans(
+            stretched,
+            dstWidth,
+            dstHeight,
+            dstWidth,
+            dst,
+            dstPitch
+        );
+    }
+
+    free(stretched);
+}
+
+
+inline void blitStretchedImageToBuffer(
+    const unsigned char* src,
+    int dstWidth,
+    int dstHeight,
+    int srcPitch,
+    unsigned char* dst,
+    int dstPitch
+) {
+    if (!src || !dst || dstWidth <= 0 || dstHeight <= 0 || srcPitch <= 0 || dstPitch <= 0) {
+        return;
+    }
+
+    int screenHeight = screenGetHeight();
+    int screenWidth = dstPitch;
+
+    // Compute src dimensions based on inverse scaling
+    int srcWidth = static_cast<int>(dstWidth / scaleX + 0.5f);
+    int srcHeight = static_cast<int>(dstHeight / scaleY + 0.5f);
+
+    if (srcWidth <= 0 || srcHeight <= 0) {
+        return;
+    }
+
+    unsigned char* stretched = static_cast<unsigned char*>(malloc(dstWidth * dstHeight));
+    if (!stretched) return;
+
+    blitBufferToBufferStretch(
+        const_cast<unsigned char*>(src),
+        srcWidth,
+        srcHeight,
+        srcPitch,
+        stretched,
+        dstWidth,
+        dstHeight,
+        dstWidth
+    );
+
+    // Edge fix
+    if (dstWidth >= 2) {
+        for (int y = 0; y < dstHeight; ++y)
+            stretched[y * dstWidth + (dstWidth - 1)] = stretched[y * dstWidth + (dstWidth - 2)];
+    }
+
+    if (dstHeight >= 2) {
+        for (int x = 0; x < dstWidth; ++x)
+            stretched[(dstHeight - 1) * dstWidth + x] = stretched[(dstHeight - 2) * dstWidth + x];
+    }
+
+    // Prevent out-of-bounds blit
+    ptrdiff_t offset = dst - wmBkWinBuf;
+    int dstY = offset / screenWidth;
+    int dstX = offset % screenWidth;
+
+    if (dstX + dstWidth > screenWidth) {
+        dstWidth = screenWidth - dstX;
+    }
+    if (dstY + dstHeight > screenHeight) {
+        dstHeight = screenHeight - dstY;
+    }
+
+    if (dstWidth > 0 && dstHeight > 0) {
+        blitBufferToBuffer(
+            stretched,
+            dstWidth,
+            dstHeight,
+            dstWidth,
+            dst,
+            dstPitch
+        );
+    }
+
+    free(stretched);
+}
+
 // 0x4BC890
 static void wmSetFlags(int* flagsPtr, int flag, int value)
 {
@@ -863,8 +1037,8 @@ int wmWorldMap_init()
         return -1;
     }
 
-    wmGenData.viewportMaxX = WM_TILE_WIDTH * wmNumHorizontalTiles - WM_VIEW_WIDTH;
-    wmGenData.viewportMaxY = WM_TILE_HEIGHT * (wmMaxTileNum / wmNumHorizontalTiles) - WM_VIEW_HEIGHT;
+    wmGenData.viewportMaxX = WM_TILE_WIDTH * wmNumHorizontalTiles - scaledViewWidth;
+    wmGenData.viewportMaxY = WM_TILE_HEIGHT * (wmMaxTileNum / wmNumHorizontalTiles) - scaledViewHeight;
     circleBlendTable = _getColorBlendTable(_colorTable[992]);
 
     wmMarkSubTileRadiusVisited(wmGenData.worldPosX, wmGenData.worldPosY);
@@ -2603,6 +2777,59 @@ static int wmMapInit()
     if (!configInit(&config)) {
         return -1;
     }
+    
+    // Load stretch mode from INI file
+    int worldmapStretchMode = 0;  // Default to 0, no stretch
+    int stretchGameMode = 0;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "WORLD_MAP_SIZE", &worldmapStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                worldmapStretchMode = stretchGameMode; // always override if key exists
+            }
+        }
+    }
+    
+    // Get the screen/window size
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+    
+    // Get the original image dimensions
+    originalWidth = WM_WINDOW_WIDTH;
+    originalHeight = WM_WINDOW_HEIGHT;
+    
+    scaledWidth = originalWidth;
+    scaledHeight = originalHeight;
+    
+    // Figure out how to stretch the character Selector depending on resolution + settings
+    // Only stretch when loading from Main Menu
+    if ((worldmapStretchMode != 0) || screenWidth < originalWidth || screenHeight < originalHeight) {
+        if (worldmapStretchMode == 2) {
+            // Fullscreen stretch
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            // Preserve aspect ratio
+            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * originalHeight / originalWidth;
+            } else {
+                scaledWidth = screenHeight * originalWidth / originalHeight;
+                scaledHeight = screenHeight;
+            }
+        }
+    }
+    
+    // Determine scaling factors based on the original and current window dimensions
+    scaleX = static_cast<float>(scaledWidth) / originalWidth;
+    scaleY = static_cast<float>(scaledHeight) / originalHeight;
+    
+    scaledViewWidth = (originalViewWidth * scaleX) + 1; // oversize by one to prevent gap on widescreens
+    scaledViewHeight = originalViewHeight * scaleY;
+    scaledViewX =originalViewX * scaleX;
+    scaledViewY = originalViewY * scaleY;
+
 
     if (configRead(&config, "data\\maps.txt", true)) {
         for (int mapIdx = 0;; mapIdx++) {
@@ -3006,8 +3233,8 @@ static int wmWorldMapFunc(int a1)
         int mouseY;
         mouseGetPositionInWindow(wmBkWin, &mouseX, &mouseY);
 
-        int worldX = wmWorldOffsetX + mouseX - WM_VIEW_X;
-        int worldY = wmWorldOffsetY + mouseY - WM_VIEW_Y;
+        int worldX = wmWorldOffsetX + mouseX - scaledViewX;
+        int worldY = wmWorldOffsetY + mouseY - scaledViewY;
 
         if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             showQuitConfirmationDialog();
@@ -3120,9 +3347,9 @@ static int wmWorldMapFunc(int a1)
                 }
             }
         }
-
+        //  471 is one less than the blacked out extent of map blacked out area (472) to prevent appearing one pixel outside/off map
         if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0 && (mouseEvent & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
-            if (mouseHitTestInWindow(wmBkWin, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+            if (mouseHitTestInWindow(wmBkWin, scaledViewX, scaledViewY, (472 * scaleX), (465 * scaleY))) {
                 if (!wmGenData.isWalking && !wmGenData.mousePressed && abs(wmGenData.worldPosX - worldX) < 5 && abs(wmGenData.worldPosY - worldY) < 5) {
                     wmGenData.mousePressed = true;
                     wmInterfaceRefresh();
@@ -3174,7 +3401,7 @@ static int wmWorldMapFunc(int a1)
                     }
                 }
             } else {
-                if (mouseHitTestInWindow(wmBkWin, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+                if (mouseHitTestInWindow(wmBkWin, scaledViewX, scaledViewY, (472 * scaleX), (465 * scaleY))) {
                     wmPartyInitWalking(worldX, worldY);
                 }
 
@@ -3242,8 +3469,8 @@ static int wmWorldMapFunc(int a1)
                         // assumes x/y are compensated for worldmap viewport
                         // offset (as can be seen earlier in this function).
                         CitySizeDescription* citySizeDescription = &(wmSphereData[city->size]);
-                        int destX = city->x + citySizeDescription->frmImage.getWidth() / 2 - WM_VIEW_X;
-                        int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - WM_VIEW_Y;
+                        int destX = city->x + citySizeDescription->frmImage.getWidth() / 2 - scaledViewX;
+                        int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - scaledViewY;
                         wmPartyInitWalking(destX, destY);
                         wmGenData.mousePressed = 0;
                     }
@@ -3256,9 +3483,9 @@ static int wmWorldMapFunc(int a1)
             int wheelY;
             mouseGetWheel(&wheelX, &wheelY);
 
-            if (mouseHitTestInWindow(wmBkWin, WM_VIEW_X, WM_VIEW_Y, 472, 465)) {
+            if (mouseHitTestInWindow(wmBkWin, scaledViewX, scaledViewY, (472 * scaleX), (465 * scaleY))) {
                 wmInterfaceScrollPixel(20, 20, wheelX, -wheelY, nullptr, true);
-            } else if (mouseHitTestInWindow(wmBkWin, 501, 135, 501 + 119, 135 + 178)) {
+            } else if (mouseHitTestInWindow(wmBkWin, (501 * scaleX), 135, (501 * scaleX) + 119, 135 + 178)) {
                 if (wheelY != 0) {
                     wmInterfaceScrollTabsStart(wheelY > 0 ? 27 : -27);
                 }
@@ -4388,13 +4615,13 @@ static void wmInterfaceScrollTabsStart(int delta)
     // SFALL: Fix world map cities list scrolling bug that might leave buttons
     // in the disabled state.
     if (delta >= 0) {
-        if (wmGenData.tabsOffsetY < wmGenData.tabsBackgroundFrmImage.getHeight() - 230) {
-            wmGenData.oldTabsOffsetY = std::min(wmGenData.tabsOffsetY + 7 * delta, wmGenData.tabsBackgroundFrmImage.getHeight() - 230);
+        if (wmGenData.tabsOffsetY < wmGenData.tabsBackgroundFrmImage.getHeight() - static_cast<int>(230 * scaleY)) {
+            wmGenData.oldTabsOffsetY = std::min(wmGenData.tabsOffsetY + delta, wmGenData.tabsBackgroundFrmImage.getHeight() - static_cast<int>(230 * scaleY));
             wmGenData.tabsScrollingDelta = delta;
         }
     } else {
         if (wmGenData.tabsOffsetY > 0) {
-            wmGenData.oldTabsOffsetY = std::max(wmGenData.tabsOffsetY + 7 * delta, 0);
+            wmGenData.oldTabsOffsetY = std::max(wmGenData.tabsOffsetY + delta, 0);
             wmGenData.tabsScrollingDelta = delta;
         }
     }
@@ -4443,6 +4670,8 @@ static void wmInterfaceScrollTabsUpdate()
     }
 }
 
+static FrmImage _worldmapBackgroundFrmImage;
+
 // 0x4C2324
 static int wmInterfaceInit()
 {
@@ -4480,30 +4709,74 @@ static int wmInterfaceInit()
 
     // CE: Stop all animations.
     animationStop();
-
-    int worldmapWindowX = (screenGetWidth() - WM_WINDOW_WIDTH) / 2;
-    int worldmapWindowY = (screenGetHeight() - WM_WINDOW_HEIGHT) / 2;
-    wmBkWin = windowCreate(worldmapWindowX, worldmapWindowY, WM_WINDOW_WIDTH, WM_WINDOW_HEIGHT, _colorTable[0], WINDOW_MOVE_ON_TOP);
+    
+    // Get the screen/window size
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+    
+    // Center the menu window on screen
+    int worldmapWindowX = (screenWidth - scaledWidth) / 2;
+    int worldmapWindowY = (screenHeight - scaledHeight) / 2;
+        
+    wmBkWin = windowCreate(worldmapWindowX, worldmapWindowY, scaledWidth,
+                           scaledHeight, _colorTable[0], WINDOW_MOVE_ON_TOP);
     if (wmBkWin == -1) {
         return -1;
     }
-
+    
+    wmBkWinBuf = windowGetBuffer(wmBkWin);
+    if (wmBkWinBuf == nullptr) {
+        return -1;
+    }
+    
+    // Load the background image
     fid = buildFid(OBJ_TYPE_INTERFACE, 136, 0, 0, 0);
     if (!_backgroundFrmImage.lock(fid)) {
         return -1;
     }
 
-    wmBkWinBuf = windowGetBuffer(wmBkWin);
-    if (wmBkWinBuf == nullptr) {
+    //unsigned char* backgroundData = _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData();
+    unsigned char* backgroundData = _backgroundFrmImage.getData();
+    
+    // Prepare buffer so we can draw text on it (before scaling)
+    compositeBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
+    // Prepare buffer to hold the stretched background again so we have a pure 'original' for updating
+    compositeBaseBuffer = (uint8_t*)SDL_malloc(scaledWidth * scaledHeight);
+    if (!compositeBuffer || !compositeBaseBuffer) {
         return -1;
     }
 
-    blitBufferToBuffer(_backgroundFrmImage.getData(),
-        _backgroundFrmImage.getWidth(),
-        _backgroundFrmImage.getHeight(),
-        _backgroundFrmImage.getWidth(),
-        wmBkWinBuf,
-        WM_WINDOW_WIDTH);
+    // copy the background to the composite buffer
+    memcpy(compositeBuffer, backgroundData, originalWidth * originalHeight);
+    
+    // Stretch and blit the text+background into our menu window
+    if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
+        unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
+        if (!stretched) {
+            SDL_free(compositeBuffer);
+            return -1;
+        }
+
+        blitBufferToBufferStretch(
+            compositeBuffer, originalWidth, originalHeight, originalWidth,
+            stretched, scaledWidth, scaledHeight, scaledWidth);
+        
+        // Fix the edge pixels to avoid glitches
+        for (int y = 0; y < scaledHeight; y++) {
+            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
+        }
+        for (int x = 0; x < scaledWidth; x++) {
+            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
+        }
+
+        blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, wmBkWinBuf, scaledWidth);
+        // copy the background to the composite buffer
+        memcpy(compositeBaseBuffer, stretched, scaledWidth * scaledHeight);
+        SDL_free(stretched);
+    } else {
+        blitBufferToBuffer(compositeBuffer, originalWidth, originalHeight, originalWidth, wmBkWinBuf, scaledWidth);
+        memcpy(compositeBaseBuffer, compositeBuffer, originalWidth * originalHeight);
+    }
 
     for (int citySize = 0; citySize < CITY_SIZE_COUNT; citySize++) {
         CitySizeDescription* citySizeDescription = &(wmSphereData[citySize]);
@@ -4601,47 +4874,6 @@ static int wmInterfaceInit()
         return -1;
     }
 
-    // create town/world switch button
-    int switchBtn = buttonCreate(wmBkWin,
-        WM_TOWN_WORLD_SWITCH_X,
-        WM_TOWN_WORLD_SWITCH_Y,
-        wmGenData.redButtonNormalFrmImage.getWidth(),
-        wmGenData.redButtonNormalFrmImage.getHeight(),
-        -1,
-        -1,
-        -1,
-        KEY_UPPERCASE_T,
-        wmGenData.redButtonNormalFrmImage.getData(),
-        wmGenData.redButtonPressedFrmImage.getData(),
-        nullptr,
-        BUTTON_FLAG_TRANSPARENT);
-
-    // SFALL: Add missing button sounds.
-    if (switchBtn != -1) {
-        buttonSetCallbacks(switchBtn, _gsound_red_butt_press, _gsound_red_butt_release);
-    }
-
-    for (int index = 0; index < 7; index++) {
-        wmTownMapSubButtonIds[index] = buttonCreate(wmBkWin,
-            508,
-            138 + 27 * index,
-            wmGenData.redButtonNormalFrmImage.getWidth(),
-            wmGenData.redButtonNormalFrmImage.getHeight(),
-            -1,
-            -1,
-            -1,
-            KEY_CTRL_F1 + index,
-            wmGenData.redButtonNormalFrmImage.getData(),
-            wmGenData.redButtonPressedFrmImage.getData(),
-            nullptr,
-            BUTTON_FLAG_TRANSPARENT);
-
-        // SFALL: Add missing button sounds.
-        if (wmTownMapSubButtonIds[index] != -1) {
-            buttonSetCallbacks(wmTownMapSubButtonIds[index], _gsound_red_butt_press, _gsound_red_butt_release);
-        }
-    }
-
     for (int index = 0; index < WORLDMAP_ARROW_FRM_COUNT; index++) {
         // 200 - uparwon.frm - character editor
         // 199 - uparwoff.frm - character editor
@@ -4661,19 +4893,131 @@ static int wmInterfaceInit()
             return -1;
         }
     }
+    
+    // Round buttons: get sizes and scale them
+    int redButtonBaseWidth = wmGenData.redButtonPressedFrmImage.getWidth();
+    int redButtonBaseHeight = wmGenData.redButtonPressedFrmImage.getHeight();
+    // added two pixel padding to account for discrepencies in background image buttons are placed over
+    int redButtonWidth = static_cast<int>(redButtonBaseWidth * scaleX + 2);
+    int redButtonHeight = static_cast<int>(redButtonBaseHeight * scaleY + 2);
+    
+    int arrowButtonBaseWidth = wmGenData.scrollUpButtonFrmImages[0].getWidth();
+    int arrowButtonBaseHeight = wmGenData.scrollUpButtonFrmImages[0].getHeight();
+    int arrowButtonWidth = static_cast<int>(arrowButtonBaseWidth * scaleX);
+    int arrowButtonHeight = static_cast<int>(arrowButtonBaseHeight * scaleY);
+
+    // Allocate and stretch the round button images
+    unsigned char* scaledRedNormal = reinterpret_cast<unsigned char*>(SDL_malloc((2 + redButtonWidth) * (redButtonHeight + 2)));
+    unsigned char* scaledRedPressed = reinterpret_cast<unsigned char*>(SDL_malloc((2 + redButtonWidth) * (redButtonHeight + 2)));
+    unsigned char* scaledArrowUpNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
+    unsigned char* scaledArrowDownNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
+    unsigned char* scaledArrowUpPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
+    unsigned char* scaledArrowDownPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
+    if (!scaledRedNormal || !scaledRedPressed) {
+        return -1;
+    }
+
+    // Red Button - Normal
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.redButtonNormalFrmImage.getData(),
+        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
+        scaledRedNormal,
+        redButtonWidth, redButtonHeight, redButtonWidth
+    );
+
+    // Red Button - Pressed
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.redButtonPressedFrmImage.getData(),
+        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
+        scaledRedPressed,
+        redButtonWidth, redButtonHeight, redButtonWidth
+    );
+
+    // Arrow Up - Normal
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.scrollUpButtonFrmImages[0].getData(),
+        arrowButtonBaseWidth, arrowButtonBaseHeight, arrowButtonBaseWidth,
+        scaledArrowUpNormal,
+        arrowButtonWidth, arrowButtonHeight, arrowButtonWidth
+    );
+
+    // Arrow Up - Pressed
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.scrollUpButtonFrmImages[1].getData(),
+        arrowButtonBaseWidth, arrowButtonBaseHeight, arrowButtonBaseWidth,
+        scaledArrowUpPressed,
+        arrowButtonWidth, arrowButtonHeight, arrowButtonWidth
+    );
+
+    // Arrow Down - Normal
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.scrollDownButtonFrmImages[0].getData(),
+        arrowButtonBaseWidth, arrowButtonBaseHeight, arrowButtonBaseWidth,
+        scaledArrowDownNormal,
+        arrowButtonWidth, arrowButtonHeight, arrowButtonWidth
+    );
+
+    // Arrow Down - Pressed
+    blitBufferToBufferStretchAndFixEdges(
+        wmGenData.scrollDownButtonFrmImages[1].getData(),
+        arrowButtonBaseWidth, arrowButtonBaseHeight, arrowButtonBaseWidth,
+        scaledArrowDownPressed,
+        arrowButtonWidth, arrowButtonHeight, arrowButtonWidth
+    );
+    
+    // create town/world switch button
+    int switchBtn = buttonCreate(wmBkWin,
+        (WM_TOWN_WORLD_SWITCH_X * scaleX),
+        (WM_TOWN_WORLD_SWITCH_Y * scaleY),
+        redButtonWidth,
+        redButtonHeight,
+        -1,
+        -1,
+        -1,
+        KEY_UPPERCASE_T,
+        scaledRedNormal,
+        scaledRedPressed,
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
+
+    // SFALL: Add missing button sounds.
+    if (switchBtn != -1) {
+        buttonSetCallbacks(switchBtn, _gsound_red_butt_press, _gsound_red_butt_release);
+    }
+
+    for (int index = 0; index < 7; index++) {
+        wmTownMapSubButtonIds[index] = buttonCreate(wmBkWin,
+            507 * scaleX,
+            (136 + (27 * index)) * scaleY,
+            redButtonWidth,
+            redButtonHeight,
+            -1,
+            -1,
+            -1,
+            KEY_CTRL_F1 + index,
+            scaledRedNormal,
+            scaledRedPressed,
+            nullptr,
+            BUTTON_FLAG_TRANSPARENT);
+
+        // SFALL: Add missing button sounds.
+        if (wmTownMapSubButtonIds[index] != -1) {
+            buttonSetCallbacks(wmTownMapSubButtonIds[index], _gsound_red_butt_press, _gsound_red_butt_release);
+        }
+    }
 
     // Scroll up button.
     int scrollUpBtn = buttonCreate(wmBkWin,
-        WM_TOWN_LIST_SCROLL_UP_X,
-        WM_TOWN_LIST_SCROLL_UP_Y,
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getWidth(),
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getHeight(),
+        WM_TOWN_LIST_SCROLL_UP_X * scaleX,
+        WM_TOWN_LIST_SCROLL_UP_Y * scaleY,
+        arrowButtonWidth,
+        arrowButtonHeight,
         -1,
         -1,
         -1,
         KEY_CTRL_ARROW_UP,
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getData(),
-        wmGenData.scrollUpButtonFrmImages[WORLDMAP_ARROW_FRM_PRESSED].getData(),
+        scaledArrowUpNormal,
+        scaledArrowUpPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
 
@@ -4684,16 +5028,16 @@ static int wmInterfaceInit()
 
     // Scroll down button.
     int scrollDownBtn = buttonCreate(wmBkWin,
-        WM_TOWN_LIST_SCROLL_DOWN_X,
-        WM_TOWN_LIST_SCROLL_DOWN_Y,
-        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getWidth(),
-        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getHeight(),
+        WM_TOWN_LIST_SCROLL_DOWN_X * scaleX,
+        WM_TOWN_LIST_SCROLL_DOWN_Y * scaleY,
+        arrowButtonWidth,
+        arrowButtonHeight,
         -1,
         -1,
         -1,
         KEY_CTRL_ARROW_DOWN,
-        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_NORMAL].getData(),
-        wmGenData.scrollDownButtonFrmImages[WORLDMAP_ARROW_FRM_PRESSED].getData(),
+        scaledArrowDownNormal,
+        scaledArrowDownPressed,
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
 
@@ -5171,11 +5515,11 @@ static int wmInterfaceRefresh()
     int y = 0;
     int x = 0;
     int v0 = wmWorldOffsetY / WM_TILE_HEIGHT * wmNumHorizontalTiles + wmWorldOffsetX / WM_TILE_WIDTH % wmNumHorizontalTiles;
-    while (y < WM_VIEW_HEIGHT) {
+    while (y < scaledViewHeight) {
         x = 0;
         int v23 = 0;
         int height;
-        while (x < WM_VIEW_WIDTH) {
+        while (x < scaledViewWidth) {
             if (wmTileGrabArt(v0) == -1) {
                 return -1;
             }
@@ -5188,8 +5532,8 @@ static int wmInterfaceRefresh()
                 width = v19;
             }
 
-            if (width + x > WM_VIEW_WIDTH) {
-                width = WM_VIEW_WIDTH - x;
+            if (width + x > scaledViewWidth) {
+                width = scaledViewWidth - x;
             }
 
             height = WM_TILE_HEIGHT;
@@ -5198,8 +5542,8 @@ static int wmInterfaceRefresh()
                 srcX += v21;
             }
 
-            if (height + y > WM_VIEW_HEIGHT) {
-                height = WM_VIEW_HEIGHT - y;
+            if (height + y > scaledViewHeight) {
+                height = scaledViewHeight - y;
             }
 
             TileInfo* tileInfo = &(wmTileInfoList[v0]);
@@ -5207,8 +5551,8 @@ static int wmInterfaceRefresh()
                 width,
                 height,
                 WM_TILE_WIDTH,
-                wmBkWinBuf + WM_WINDOW_WIDTH * (y + WM_VIEW_Y) + WM_VIEW_X + x,
-                WM_WINDOW_WIDTH);
+                wmBkWinBuf + scaledWidth * (y + scaledViewY) + scaledViewX + x,
+                scaledWidth);
             v0++;
 
             x += width;
@@ -5218,7 +5562,7 @@ static int wmInterfaceRefresh()
         v0 += wmNumHorizontalTiles - v23;
         y += height;
     }
-
+    
     // Render cities.
     for (int index = 0; index < wmMaxAreaNum; index++) {
         CityInfo* cityInfo = &(wmAreaInfoList[index]);
@@ -5226,8 +5570,8 @@ static int wmInterfaceRefresh()
             CitySizeDescription* citySizeDescription = &(wmSphereData[cityInfo->size]);
             int cityX = cityInfo->x - wmWorldOffsetX;
             int cityY = cityInfo->y - wmWorldOffsetY;
-            if (cityX >= 0 && cityX <= 472 - citySizeDescription->frmImage.getWidth()
-                && cityY >= 0 && cityY <= 465 - citySizeDescription->frmImage.getHeight()) {
+            if (cityX >= 0 && cityX <= (472 * scaleX) - citySizeDescription->frmImage.getWidth()
+                && cityY >= 0 && cityY <= (465 * scaleY) - citySizeDescription->frmImage.getHeight()) {
                 wmInterfaceDrawCircleOverlay(cityInfo, citySizeDescription, wmBkWinBuf, cityX, cityY);
             }
         }
@@ -5236,18 +5580,18 @@ static int wmInterfaceRefresh()
     // Hide unknown subtiles, dim unvisited.
     int v25 = wmWorldOffsetX / WM_TILE_WIDTH % wmNumHorizontalTiles + wmWorldOffsetY / WM_TILE_HEIGHT * wmNumHorizontalTiles;
     int v30 = 0;
-    while (v30 < WM_VIEW_HEIGHT) {
+    while (v30 < scaledViewHeight) {
         int v24 = 0;
         int v33 = 0;
         int v29;
-        while (v33 < WM_VIEW_WIDTH) {
+        while (v33 < scaledViewWidth) {
             int v31 = WM_TILE_WIDTH;
             if (v33 == 0) {
                 v31 = WM_TILE_WIDTH - v17;
             }
 
-            if (v33 + v31 > WM_VIEW_WIDTH) {
-                v31 = WM_VIEW_WIDTH - v33;
+            if (v33 + v31 > scaledViewWidth) {
+                v31 = scaledViewWidth - v33;
             }
 
             v29 = WM_TILE_HEIGHT;
@@ -5255,15 +5599,15 @@ static int wmInterfaceRefresh()
                 v29 -= v18;
             }
 
-            if (v30 + v29 > WM_VIEW_HEIGHT) {
-                v29 = WM_VIEW_HEIGHT - v30;
+            if (v30 + v29 > scaledViewHeight) {
+                v29 = scaledViewHeight - v30;
             }
 
             int v32;
             if (v30 != 0) {
-                v32 = WM_VIEW_Y;
+                v32 = scaledViewY;
             } else {
-                v32 = WM_VIEW_Y - v18;
+                v32 = scaledViewY - v18;
             }
 
             int v13 = 0;
@@ -5272,9 +5616,9 @@ static int wmInterfaceRefresh()
             for (int row = 0; row < SUBTILE_GRID_HEIGHT; row++) {
                 int v35;
                 if (v33 != 0) {
-                    v35 = WM_VIEW_X;
+                    v35 = scaledViewX;
                 } else {
-                    v35 = WM_VIEW_X - v17;
+                    v35 = scaledViewX - v17;
                 }
 
                 int v15 = v33 + v35;
@@ -5322,35 +5666,75 @@ static void wmInterfaceRefreshDate(bool shouldRefreshWindow)
     int numbersFrmHeight = wmGenData.numbersFrmImage.getHeight();
     unsigned char* numbersFrmData = wmGenData.numbersFrmImage.getData();
 
-    dest += WM_WINDOW_WIDTH * 12 + 487;
-    blitBufferToBuffer(numbersFrmData + 9 * (day / 10), 9, numbersFrmHeight, numbersFrmWidth, dest, WM_WINDOW_WIDTH);
-    blitBufferToBuffer(numbersFrmData + 9 * (day % 10), 9, numbersFrmHeight, numbersFrmWidth, dest + 9, WM_WINDOW_WIDTH);
+    // move down 12 px  → 12*scaleY rows
+    // move right 487 px → 487*scaleX cols
+    dest += scaledWidth * 12 + static_cast<int>(487 * scaleX);
 
-    int monthsFrmWidth = wmGenData.monthsFrmImage.getWidth();
+    /*-- day (two digits) --*/
+    blitStretchedImageToBuffer(
+        numbersFrmData + 9 * (day / 10),
+        static_cast<int>(9  * scaleX),                 // width
+        static_cast<int>(numbersFrmHeight * scaleY),   // height
+        numbersFrmWidth,
+        dest,
+        scaledWidth);
+
+    blitStretchedImageToBuffer(
+        numbersFrmData + 9 * (day % 10),
+        static_cast<int>(9  * scaleX),
+        static_cast<int>(numbersFrmHeight * scaleY),
+        numbersFrmWidth,
+        dest + static_cast<int>(9 * scaleX),           // shift one digit to the right
+        scaledWidth);
+
+    /*-- month name strip --*/
+    int monthsFrmWidth  = wmGenData.monthsFrmImage.getWidth();
     unsigned char* monthsFrmData = wmGenData.monthsFrmImage.getData();
-    blitBufferToBuffer(monthsFrmData + monthsFrmWidth * 15 * month, 29, 14, 29, dest + WM_WINDOW_WIDTH + 26, WM_WINDOW_WIDTH);
 
-    dest += 98;
-    for (int index = 0; index < 4; index++) {
-        dest -= 9;
-        blitBufferToBuffer(numbersFrmData + 9 * (year % 10), 9, numbersFrmHeight, numbersFrmWidth, dest, WM_WINDOW_WIDTH);
+    blitStretchedImageToBuffer(
+        monthsFrmData + monthsFrmWidth * 15 * month,
+        static_cast<int>(29 * scaleX),
+        static_cast<int>(14 * scaleY),
+        29,
+        dest + scaledWidth + static_cast<int>(26 * scaleX),
+        scaledWidth);
+
+    /*-- year (four digits) --*/
+    dest += static_cast<int>(98 * scaleX);
+    for (int i = 0; i < 4; ++i) {
+        dest -= static_cast<int>(9 * scaleX);
+        blitStretchedImageToBuffer(
+            numbersFrmData + 9 * (year % 10),
+            static_cast<int>(9  * scaleX),
+            static_cast<int>(numbersFrmHeight * scaleY),
+            numbersFrmWidth,
+            dest,
+            scaledWidth);
         year /= 10;
     }
 
+    /*-- time (hour, four digits) --*/
     int gameTimeHour = gameTimeGetHour();
-    dest += 72;
-    for (int index = 0; index < 4; index++) {
-        blitBufferToBuffer(numbersFrmData + 9 * (gameTimeHour % 10), 9, numbersFrmHeight, numbersFrmWidth, dest, WM_WINDOW_WIDTH);
-        dest -= 9;
+    dest += static_cast<int>(72 * scaleX);
+    for (int i = 0; i < 4; ++i) {
+        blitStretchedImageToBuffer(
+            numbersFrmData + 9 * (gameTimeHour % 10),
+            static_cast<int>(9  * scaleX),
+            static_cast<int>(numbersFrmHeight * scaleY),
+            numbersFrmWidth,
+            dest,
+            scaledWidth);
+        dest -= static_cast<int>(9 * scaleX);
         gameTimeHour /= 10;
     }
 
+
     if (shouldRefreshWindow) {
         Rect rect;
-        rect.left = 487;
+        rect.left = (487 * scaleX);
         rect.top = 12;
         rect.bottom = numbersFrmHeight + 12;
-        rect.right = 630;
+        rect.right = (630 * scaleX);
         windowRefreshRect(wmBkWin, &rect);
     }
 }
@@ -5358,8 +5742,8 @@ static void wmInterfaceRefreshDate(bool shouldRefreshWindow)
 // 0x4C3F00
 static int wmMatchWorldPosToArea(int x, int y, int* areaIdxPtr)
 {
-    int v3 = y + WM_VIEW_Y;
-    int v4 = x + WM_VIEW_X;
+    int v3 = y + scaledViewY;
+    int v4 = x + scaledViewX;
 
     int index;
     for (index = 0; index < wmMaxAreaNum; index++) {
@@ -5393,14 +5777,14 @@ static int wmInterfaceDrawCircleOverlay(CityInfo* city, CitySizeDescription* cit
         dest,
         x,
         y,
-        WM_WINDOW_WIDTH,
+        scaledWidth,
         0x10000,
         circleBlendTable,
         _commonGrayTable);
 
     // CE: Slightly increase whitespace between cirle and city name.
     int nameY = y + citySizeDescription->frmImage.getHeight() + 3;
-    int maxY = 464 - fontGetLineHeight();
+    int maxY = (464 * scaleY) - fontGetLineHeight();
     if (nameY < maxY) {
         MessageListItem messageListItem;
         char name[40];
@@ -5412,10 +5796,10 @@ static int wmInterfaceDrawCircleOverlay(CityInfo* city, CitySizeDescription* cit
         }
 
         int width = fontGetStringWidth(name);
-        fontDrawText(dest + WM_WINDOW_WIDTH * nameY + x + citySizeDescription->frmImage.getWidth() / 2 - width / 2,
+        fontDrawText(dest + scaledWidth * nameY + x + citySizeDescription->frmImage.getWidth() / 2 - width / 2,
             name,
             width,
-            WM_WINDOW_WIDTH,
+            scaledWidth,
             _colorTable[992] | FONT_SHADOW);
     }
 
@@ -5448,37 +5832,38 @@ static int wmInterfaceDrawSubTileList(TileInfo* tileInfo, int column, int row, i
     int destX = x;
 
     int height = WM_SUBTILE_SIZE;
-    if (y < WM_VIEW_Y) {
+    if (y < scaledViewY) {
         if (y < 0) {
             height = y + 29;
         } else {
-            height = WM_SUBTILE_SIZE - (WM_VIEW_Y - y);
+            height = WM_SUBTILE_SIZE - (scaledViewY - y);
         }
-        destY = WM_VIEW_Y;
+        destY = scaledViewY;
     }
 
-    if (height + y > 464) {
-        height -= height + y - 464;
+    if (height + y > (464 * scaleY)) {
+        height -= height + y - (464 * scaleY);
     }
 
     int width = WM_SUBTILE_SIZE * a6;
-    if (x < WM_VIEW_X) {
-        destX = WM_VIEW_X;
-        width -= WM_VIEW_X - x;
+    if (x < scaledViewX) {
+        destX = scaledViewX;
+        width -= scaledViewX - x;
     }
 
-    if (width + x > 472) {
-        width -= width + x - 472;
+    // 472 * scaleX marks the blacked out extent of the map
+    if (width + x > (472 * scaleX)) {
+        width -= width + x - (472 * scaleX);
     }
 
     if (width > 0 && height > 0) {
-        unsigned char* dest = wmBkWinBuf + WM_WINDOW_WIDTH * destY + destX;
+        unsigned char* dest = wmBkWinBuf + scaledWidth * destY + destX;
         switch (subtileInfo->state) {
         case SUBTILE_STATE_UNKNOWN:
-            bufferFill(dest, width, height, WM_WINDOW_WIDTH, _colorTable[0]);
+            bufferFill(dest, width, height, scaledWidth, _colorTable[0]);
             break;
         case SUBTILE_STATE_KNOWN:
-            wmInterfaceDrawSubTileRectFogged(dest, width, height, WM_WINDOW_WIDTH);
+            wmInterfaceDrawSubTileRectFogged(dest, width, height, scaledWidth);
             break;
         }
     }
@@ -5505,19 +5890,19 @@ static int wmDrawCursorStopped()
             height = wmGenData.locationMarkerFrmImage.getHeight();
         }
 
-        if (wmGenData.worldPosX >= wmWorldOffsetX && wmGenData.worldPosX < wmWorldOffsetX + WM_VIEW_WIDTH
-            && wmGenData.worldPosY >= wmWorldOffsetY && wmGenData.worldPosY < wmWorldOffsetY + WM_VIEW_HEIGHT) {
-            blitBufferToBufferTrans(src, width, height, width, wmBkWinBuf + WM_WINDOW_WIDTH * (WM_VIEW_Y - wmWorldOffsetY + wmGenData.worldPosY - height / 2) + WM_VIEW_X - wmWorldOffsetX + wmGenData.worldPosX - width / 2, WM_WINDOW_WIDTH);
+        if (wmGenData.worldPosX >= wmWorldOffsetX && wmGenData.worldPosX < wmWorldOffsetX + scaledViewWidth
+            && wmGenData.worldPosY >= wmWorldOffsetY && wmGenData.worldPosY < wmWorldOffsetY + scaledViewHeight) {
+            blitBufferToBufferTrans(src, width, height, width, wmBkWinBuf + scaledWidth * (scaledViewY - wmWorldOffsetY + wmGenData.worldPosY - height / 2) + scaledViewX - wmWorldOffsetX + wmGenData.worldPosX - width / 2, scaledWidth);
         }
 
-        if (wmGenData.walkDestinationX >= wmWorldOffsetX && wmGenData.walkDestinationX < wmWorldOffsetX + WM_VIEW_WIDTH
-            && wmGenData.walkDestinationY >= wmWorldOffsetY && wmGenData.walkDestinationY < wmWorldOffsetY + WM_VIEW_HEIGHT) {
+        if (wmGenData.walkDestinationX >= wmWorldOffsetX && wmGenData.walkDestinationX < wmWorldOffsetX + scaledViewWidth
+            && wmGenData.walkDestinationY >= wmWorldOffsetY && wmGenData.walkDestinationY < wmWorldOffsetY + scaledViewHeight) {
             blitBufferToBufferTrans(wmGenData.destinationMarkerFrmImage.getData(),
                 wmGenData.destinationMarkerFrmImage.getWidth(),
                 wmGenData.destinationMarkerFrmImage.getHeight(),
                 wmGenData.destinationMarkerFrmImage.getWidth(),
-                wmBkWinBuf + WM_WINDOW_WIDTH * (WM_VIEW_Y - wmWorldOffsetY + wmGenData.walkDestinationY - wmGenData.destinationMarkerFrmImage.getHeight() / 2) + WM_VIEW_X - wmWorldOffsetX + wmGenData.walkDestinationX - wmGenData.destinationMarkerFrmImage.getWidth() / 2,
-                WM_WINDOW_WIDTH);
+                wmBkWinBuf + scaledWidth * (scaledViewY - wmWorldOffsetY + wmGenData.walkDestinationY - wmGenData.destinationMarkerFrmImage.getHeight() / 2) + scaledViewX - wmWorldOffsetX + wmGenData.walkDestinationX - wmGenData.destinationMarkerFrmImage.getWidth() / 2,
+                scaledWidth);
         }
     } else {
         if (wmGenData.encounterIconIsVisible) {
@@ -5530,9 +5915,9 @@ static int wmDrawCursorStopped()
             height = wmGenData.hotspotNormalFrmImage.getHeight();
         }
 
-        if (wmGenData.worldPosX >= wmWorldOffsetX && wmGenData.worldPosX < wmWorldOffsetX + WM_VIEW_WIDTH
-            && wmGenData.worldPosY >= wmWorldOffsetY && wmGenData.worldPosY < wmWorldOffsetY + WM_VIEW_HEIGHT) {
-            blitBufferToBufferTrans(src, width, height, width, wmBkWinBuf + WM_WINDOW_WIDTH * (WM_VIEW_Y - wmWorldOffsetY + wmGenData.worldPosY - height / 2) + WM_VIEW_X - wmWorldOffsetX + wmGenData.worldPosX - width / 2, WM_WINDOW_WIDTH);
+        if (wmGenData.worldPosX >= wmWorldOffsetX && wmGenData.worldPosX < wmWorldOffsetX + scaledViewWidth
+            && wmGenData.worldPosY >= wmWorldOffsetY && wmGenData.worldPosY < wmWorldOffsetY + scaledViewHeight) {
+            blitBufferToBufferTrans(src, width, height, width, wmBkWinBuf + scaledWidth * (scaledViewY - wmWorldOffsetY + wmGenData.worldPosY - height / 2) + scaledViewX - wmWorldOffsetX + wmGenData.worldPosX - width / 2, scaledWidth);
         }
     }
 
@@ -5544,8 +5929,8 @@ static bool wmCursorIsVisible()
 {
     return wmGenData.worldPosX >= wmWorldOffsetX
         && wmGenData.worldPosY >= wmWorldOffsetY
-        && wmGenData.worldPosX < wmWorldOffsetX + WM_VIEW_WIDTH
-        && wmGenData.worldPosY < wmWorldOffsetY + WM_VIEW_HEIGHT;
+        && wmGenData.worldPosX < wmWorldOffsetX + scaledViewWidth
+        && wmGenData.worldPosY < wmWorldOffsetY + scaledViewHeight;
 }
 
 // NOTE: Inlined.
@@ -5817,8 +6202,8 @@ static int wmTownMapFunc(int* mapIdxPtr)
                         // CE: Fix incorrect destination positioning. See
                         // `wmWorldMapFunc` for explanation.
                         CitySizeDescription* citySizeDescription = &(wmSphereData[city->size]);
-                        int destX = city->x + citySizeDescription->frmImage.getWidth() / 2 - WM_VIEW_X;
-                        int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - WM_VIEW_Y;
+                        int destX = city->x + citySizeDescription->frmImage.getWidth() / 2 - scaledViewX;
+                        int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - scaledViewY;
                         wmPartyInitWalking(destX, destY);
 
                         wmGenData.mousePressed = false;
@@ -5884,8 +6269,8 @@ static int wmTownMapInit()
         }
 
         wmTownMapButtonId[index] = buttonCreate(wmBkWin,
-            entrance->x,
-            entrance->y,
+            (entrance->x) * scaleX,
+            (entrance->y) * scaleY,
             wmGenData.hotspotNormalFrmImage.getWidth(),
             wmGenData.hotspotNormalFrmImage.getHeight(),
             -1,
@@ -5914,12 +6299,13 @@ static int wmTownMapInit()
 // 0x4C4BD0
 static int wmTownMapRefresh()
 {
-    blitBufferToBuffer(_townFrmImage.getData(),
+    // Town entry screen
+    blitStretchedImageToBuffer(_townFrmImage.getData(),
+        (_townFrmImage.getWidth() * scaleX) + 1, // overstretch by 1 pixel to prevent gap on widescreens
+        _townFrmImage.getHeight() * scaleY,
         _townFrmImage.getWidth(),
-        _townFrmImage.getHeight(),
-        _townFrmImage.getWidth(),
-        wmBkWinBuf + WM_WINDOW_WIDTH * WM_VIEW_Y + WM_VIEW_X,
-        WM_WINDOW_WIDTH);
+        wmBkWinBuf + scaledWidth * scaledViewY + scaledViewX,
+        scaledWidth);
 
     wmRefreshInterfaceOverlay(false);
 
@@ -5941,11 +6327,12 @@ static int wmTownMapRefresh()
             if (messageListItem.text != nullptr) {
                 int width = fontGetStringWidth(messageListItem.text);
                 // CE: Slightly increase whitespace between marker and entrance name.
+                // Town location names
                 windowDrawText(wmBkWin,
                     messageListItem.text,
                     width,
-                    wmGenData.hotspotNormalFrmImage.getWidth() / 2 + entrance->x - width / 2,
-                    wmGenData.hotspotNormalFrmImage.getHeight() + entrance->y + 4,
+                    wmGenData.hotspotNormalFrmImage.getWidth() / 2 + ((entrance->x) * scaleX) - width / 2,
+                    wmGenData.hotspotNormalFrmImage.getHeight() + ((entrance->y) * scaleY) + 4,
                     _colorTable[992] | 0x2000000 | FONT_SHADOW);
             }
         }
@@ -6162,12 +6549,13 @@ int wmSfxIdxName(int sfxIdx, char** namePtr)
 // 0x4C50F4
 static int wmRefreshInterfaceOverlay(bool shouldRefreshWindow)
 {
-    blitBufferToBufferTrans(_backgroundFrmImage.getData(),
-        _backgroundFrmImage.getWidth(),
-        _backgroundFrmImage.getHeight(),
-        _backgroundFrmImage.getWidth(),
+    // Overlay copy of map screen border
+    blitBufferToBufferTrans(compositeBaseBuffer,
+        scaledWidth,
+        scaledHeight,
+        scaledWidth,
         wmBkWinBuf,
-        WM_WINDOW_WIDTH);
+        scaledWidth);
 
     wmRefreshTabs();
 
@@ -6182,28 +6570,28 @@ static int wmRefreshInterfaceOverlay(bool shouldRefreshWindow)
             return -1;
         }
 
-        blitBufferToBuffer(data,
+        blitStretchedImageToBuffer(data,
+            wmGenData.carImageFrmWidth * scaleX,
+            wmGenData.carImageFrmHeight * scaleY,
             wmGenData.carImageFrmWidth,
-            wmGenData.carImageFrmHeight,
-            wmGenData.carImageFrmWidth,
-            wmBkWinBuf + WM_WINDOW_WIDTH * WM_WINDOW_CAR_Y + WM_WINDOW_CAR_X,
-            WM_WINDOW_WIDTH);
+            wmBkWinBuf + scaledWidth * static_cast<int>(WM_WINDOW_CAR_Y * scaleY) + static_cast<int>(WM_WINDOW_CAR_X * scaleX),
+            scaledWidth);
 
-        blitBufferToBufferTrans(wmGenData.carOverlayFrmImage.getData(),
+        blitStretchedImageToBufferTrans(wmGenData.carOverlayFrmImage.getData(),
             wmGenData.carOverlayFrmImage.getWidth(),
             wmGenData.carOverlayFrmImage.getHeight(),
             wmGenData.carOverlayFrmImage.getWidth(),
-            wmBkWinBuf + WM_WINDOW_WIDTH * WM_WINDOW_CAR_OVERLAY_Y + WM_WINDOW_CAR_OVERLAY_X,
-            WM_WINDOW_WIDTH);
+            wmBkWinBuf + scaledWidth * static_cast<int>(WM_WINDOW_CAR_OVERLAY_Y * scaleY) + static_cast<int>(WM_WINDOW_CAR_OVERLAY_X * scaleX),
+            scaledWidth);
 
         wmInterfaceRefreshCarFuel();
     } else {
-        blitBufferToBufferTrans(wmGenData.globeOverlayFrmImage.getData(),
+        blitStretchedImageToBufferTrans(wmGenData.globeOverlayFrmImage.getData(),
             wmGenData.globeOverlayFrmImage.getWidth(),
             wmGenData.globeOverlayFrmImage.getHeight(),
             wmGenData.globeOverlayFrmImage.getWidth(),
-            wmBkWinBuf + WM_WINDOW_WIDTH * WM_WINDOW_GLOBE_OVERLAY_Y + WM_WINDOW_GLOBE_OVERLAY_X,
-            WM_WINDOW_WIDTH);
+            wmBkWinBuf + scaledWidth * static_cast<int>(WM_WINDOW_GLOBE_OVERLAY_Y * scaleY) + static_cast<int>(WM_WINDOW_GLOBE_OVERLAY_X * scaleX),
+            scaledWidth);
     }
 
     wmInterfaceRefreshDate(false);
@@ -6218,12 +6606,12 @@ static int wmRefreshInterfaceOverlay(bool shouldRefreshWindow)
 // 0x4C5244
 static void wmInterfaceRefreshCarFuel()
 {
-    int ratio = (WM_WINDOW_CAR_FUEL_BAR_HEIGHT * wmGenData.carFuel) / CAR_FUEL_MAX;
+    int ratio = ((WM_WINDOW_CAR_FUEL_BAR_HEIGHT * scaleY) * wmGenData.carFuel) / CAR_FUEL_MAX;
     if ((ratio & 1) != 0) {
         ratio -= 1;
     }
 
-    unsigned char* dest = wmBkWinBuf + WM_WINDOW_WIDTH * WM_WINDOW_CAR_FUEL_BAR_Y + WM_WINDOW_CAR_FUEL_BAR_X;
+    unsigned char* dest = wmBkWinBuf + scaledWidth * static_cast<int>(WM_WINDOW_CAR_FUEL_BAR_Y * scaleY) + static_cast<int>(WM_WINDOW_CAR_FUEL_BAR_X * scaleX);
 
     for (int index = WM_WINDOW_CAR_FUEL_BAR_HEIGHT; index > ratio; index--) {
         *dest = 14;
@@ -6232,10 +6620,10 @@ static void wmInterfaceRefreshCarFuel()
 
     while (ratio > 0) {
         *dest = 196;
-        dest += WM_WINDOW_WIDTH;
+        dest += scaledWidth;
 
         *dest = 14;
-        dest += WM_WINDOW_WIDTH;
+        dest += scaledWidth;
 
         ratio -= 2;
     }
@@ -6244,105 +6632,125 @@ static void wmInterfaceRefreshCarFuel()
 // 0x4C52B0
 static int wmRefreshTabs()
 {
-    unsigned char* v30;
-    unsigned char* v0;
-    int v31;
+    unsigned char* drawAreaBottomRight;
+    unsigned char* drawAreaStart;
+    int firstVisibleLabelIndexScaled;
     CityInfo* city;
-    int v10;
-    unsigned char* v11;
-    unsigned char* v12;
-    int v32;
-    unsigned char* v13;
+    int stretchedLabelHeight;
+    unsigned char* labelDataOffset;
+    unsigned char* blitDest;
+    int lastVisibleLabelIndex;
+    unsigned char* labelDrawPosition;
     FrmImage labelFrm;
 
-    // CE: Skip first empty tab (original code does this in the
-    // `wmInterfaceInit`).
-    unsigned char* src = wmGenData.tabsBackgroundFrmImage.getData() + wmGenData.tabsBackgroundFrmImage.getWidth() * 27;
-    blitBufferToBufferTrans(src + wmGenData.tabsBackgroundFrmImage.getWidth() * wmGenData.tabsOffsetY + 9,
-        119,
-        178,
-        wmGenData.tabsBackgroundFrmImage.getWidth(),
-        wmBkWinBuf + WM_WINDOW_WIDTH * 135 + 501,
-        WM_WINDOW_WIDTH);
+    // CE: Skip first empty tab (original code does this in the `wmInterfaceInit`).
+    int tabOffsetY = wmGenData.tabsOffsetY;
+    int srcPitch = wmGenData.tabsBackgroundFrmImage.getWidth();
+    int tabOffsetYPx = tabOffsetY;
+    int tabRowHeight = 27;
+    int tabAreaWidth = 119;
+    int tabAreaHeight = 178;
 
-    v30 = wmBkWinBuf + WM_WINDOW_WIDTH * 138 + 530;
-    v0 = wmBkWinBuf + WM_WINDOW_WIDTH * 138 + 530 - WM_WINDOW_WIDTH * (wmGenData.tabsOffsetY % 27);
-    v31 = wmGenData.tabsOffsetY / 27;
+    unsigned char* src = wmGenData.tabsBackgroundFrmImage.getData() + srcPitch * tabRowHeight;
 
-    if (v31 < wmLabelCount) {
-        city = &(wmAreaInfoList[wmLabelList[v31]]);
+    // City button list background
+    blitStretchedImageToBufferTrans(
+        src + srcPitch * tabOffsetYPx + 9,
+        tabAreaWidth,
+        tabAreaHeight,
+        srcPitch,
+        wmBkWinBuf + scaledWidth * static_cast<int>(135 * scaleY) + static_cast<int>(501 * scaleX),
+        scaledWidth
+    );
+
+    drawAreaBottomRight = wmBkWinBuf + scaledWidth * static_cast<int>(138 * scaleY) + static_cast<int>(530 * scaleX);
+    drawAreaStart = wmBkWinBuf + scaledWidth * static_cast<int>(138 * scaleY) + static_cast<int>(530 * scaleX) -
+                    scaledWidth * static_cast<int>((tabOffsetY % tabRowHeight) * scaleY);
+    firstVisibleLabelIndexScaled = ((tabOffsetY / tabRowHeight) * scaleY);
+
+    if (firstVisibleLabelIndexScaled < wmLabelCount) {
+        city = &(wmAreaInfoList[wmLabelList[firstVisibleLabelIndexScaled]]);
         if (city->labelFid != -1) {
             if (!labelFrm.lock(city->labelFid)) {
                 return -1;
             }
 
-            v10 = labelFrm.getHeight() - wmGenData.tabsOffsetY % 27;
-            v11 = labelFrm.getData() + labelFrm.getWidth() * (wmGenData.tabsOffsetY % 27);
+            int labelYOffset = (tabOffsetY % tabRowHeight) * scaleY;
+            stretchedLabelHeight = static_cast<int>(labelFrm.getHeight() * scaleY) - labelYOffset;
+            labelDataOffset = labelFrm.getData() + static_cast<int>(labelFrm.getWidth() * scaleX) * labelYOffset;
 
-            v12 = v0;
-            if (v0 < v30 - WM_WINDOW_WIDTH) {
-                v12 = v30 - WM_WINDOW_WIDTH;
+            blitDest = drawAreaStart;
+            if (drawAreaStart < drawAreaBottomRight - scaledWidth) {
+                blitDest = drawAreaBottomRight - scaledWidth;
             }
 
-            blitBufferToBuffer(v11,
+            blitStretchedImageToBuffer(
+                labelDataOffset,
+                static_cast<int>(labelFrm.getWidth() * scaleX),
+                stretchedLabelHeight,
                 labelFrm.getWidth(),
-                v10,
-                labelFrm.getWidth(),
-                v12,
-                WM_WINDOW_WIDTH);
+                blitDest,
+                scaledWidth
+            );
 
             labelFrm.unlock();
         }
     }
 
-    v13 = v0 + WM_WINDOW_WIDTH * 27;
-    v32 = v31 + 6;
+    labelDrawPosition = drawAreaStart + scaledWidth * static_cast<int>(tabRowHeight * scaleY);
+    lastVisibleLabelIndex = firstVisibleLabelIndexScaled + 6;
 
-    for (int v14 = v31 + 1; v14 < v32; v14++) {
-        if (v14 < wmLabelCount) {
-            city = &(wmAreaInfoList[wmLabelList[v14]]);
+    for (int labelIndex = firstVisibleLabelIndexScaled + 1; labelIndex < lastVisibleLabelIndex; labelIndex++) {
+        if (labelIndex < wmLabelCount) {
+            city = &(wmAreaInfoList[wmLabelList[labelIndex]]);
             if (city->labelFid != -1) {
                 if (!labelFrm.lock(city->labelFid)) {
                     return -1;
                 }
-
-                blitBufferToBuffer(labelFrm.getData(),
+                // Location Labels
+                blitStretchedImageToBuffer(
+                    labelFrm.getData(),
+                    static_cast<int>(labelFrm.getWidth() * scaleX),
+                    static_cast<int>(labelFrm.getHeight() * scaleY),
                     labelFrm.getWidth(),
-                    labelFrm.getHeight(),
-                    labelFrm.getWidth(),
-                    v13,
-                    WM_WINDOW_WIDTH);
+                    labelDrawPosition,
+                    scaledWidth
+                );
 
                 labelFrm.unlock();
             }
         }
-        v13 += WM_WINDOW_WIDTH * 27;
+        labelDrawPosition += scaledWidth * static_cast<int>(tabRowHeight * scaleY);
     }
 
-    if (v31 + 6 < wmLabelCount) {
-        city = &(wmAreaInfoList[wmLabelList[v31 + 6]]);
+    if (firstVisibleLabelIndexScaled + 6 < wmLabelCount) {
+        city = &(wmAreaInfoList[wmLabelList[firstVisibleLabelIndexScaled + 6]]);
         if (city->labelFid != -1) {
             if (!labelFrm.lock(city->labelFid)) {
                 return -1;
             }
-
-            blitBufferToBuffer(labelFrm.getData(),
+            // Location Labels
+            blitStretchedImageToBuffer(
+                labelFrm.getData(),
+                static_cast<int>(labelFrm.getWidth() * scaleX),
+                static_cast<int>((labelFrm.getHeight() - 5) * scaleY),
                 labelFrm.getWidth(),
-                labelFrm.getHeight() - 5,
-                labelFrm.getWidth(),
-                v13,
-                WM_WINDOW_WIDTH);
+                labelDrawPosition,
+                scaledWidth
+            );
 
             labelFrm.unlock();
         }
     }
-
-    blitBufferToBufferTrans(wmGenData.tabsBorderFrmImage.getData(),
+    // Location Labels
+    blitStretchedImageToBufferTrans(
+        wmGenData.tabsBorderFrmImage.getData(),
+        tabAreaWidth,
+        tabAreaHeight,
         119,
-        178,
-        119,
-        wmBkWinBuf + WM_WINDOW_WIDTH * 135 + 501,
-        WM_WINDOW_WIDTH);
+        wmBkWinBuf + scaledWidth * static_cast<int>(135 * scaleY) + static_cast<int>(501 * scaleX),
+        scaledWidth
+    );
 
     return 0;
 }
@@ -6423,17 +6831,17 @@ static int wmFreeTabsLabelList(int** quickDestinationsListPtr, int* quickDestina
 static void wmRefreshInterfaceDial(bool shouldRefreshWindow)
 {
     unsigned char* data = artGetFrameData(wmGenData.dialFrm, wmGenData.dialFrmCurrentFrameIndex, 0);
-    blitBufferToBufferTrans(data,
+    blitStretchedImageToBufferTrans(data,
         wmGenData.dialFrmWidth,
         wmGenData.dialFrmHeight,
         wmGenData.dialFrmWidth,
-        wmBkWinBuf + WM_WINDOW_WIDTH * WM_WINDOW_DIAL_Y + WM_WINDOW_DIAL_X,
-        WM_WINDOW_WIDTH);
+        wmBkWinBuf + scaledWidth * static_cast<int>(WM_WINDOW_DIAL_Y * scaleY) + static_cast<int>(WM_WINDOW_DIAL_X * scaleX),
+        scaledWidth);
 
     if (shouldRefreshWindow) {
         Rect rect;
-        rect.left = WM_WINDOW_DIAL_X;
-        rect.top = WM_WINDOW_DIAL_Y - 1;
+        rect.left = (WM_WINDOW_DIAL_X * scaleX);
+        rect.top = (WM_WINDOW_DIAL_Y * scaleY) - 1;
         rect.right = rect.left + wmGenData.dialFrmWidth;
         rect.bottom = rect.top + wmGenData.dialFrmHeight;
         windowRefreshRect(wmBkWin, &rect);
@@ -6582,8 +6990,8 @@ int wmTeleportToArea(int areaIdx)
         citySizeDescription->frmImage.lock(citySizeDescription->fid);
     }
 
-    wmGenData.worldPosX = city->x + citySizeDescription->frmImage.getWidth() / 2 - WM_VIEW_X;
-    wmGenData.worldPosY = city->y + citySizeDescription->frmImage.getHeight() / 2 - WM_VIEW_Y;
+    wmGenData.worldPosX = city->x + citySizeDescription->frmImage.getWidth() / 2 - scaledViewX;
+    wmGenData.worldPosY = city->y + citySizeDescription->frmImage.getHeight() / 2 - scaledViewY;
 
     if (!wasLocked) {
         citySizeDescription->frmImage.unlock();
