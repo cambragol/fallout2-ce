@@ -1200,10 +1200,15 @@ static void showHelp()
 
     // load the optional stretch setting from f2_res.ini
     int helpScreenStretchMode = 0;
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "HELP_SCRN_SIZE", &helpScreenStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                helpScreenStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }
@@ -1529,12 +1534,15 @@ static void showSplash()
     fileClose(stream);
 
     int splashScreenStretchMode = 0;
-
-    // Load the optional stretch mode from f2_res.ini
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &splashScreenStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                splashScreenStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }

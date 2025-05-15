@@ -85,6 +85,12 @@ static void endgameEndingFree();
 static int endgameDeathEndingValidate(int* percentage);
 static void endgameEndingUpdateOverlay();
 
+// static globals shared for stretching
+static int originalWidth = ENDGAME_ENDING_WINDOW_WIDTH;
+static int originalHeight = ENDGAME_ENDING_WINDOW_HEIGHT;
+static int scaledWidth = ENDGAME_ENDING_WINDOW_WIDTH;
+static int scaledHeight = ENDGAME_ENDING_WINDOW_HEIGHT;
+
 // The number of lines in current subtitles file.
 //
 // It's used as a length for two arrays:
@@ -213,6 +219,50 @@ void endgamePlaySlideshow()
     if (endgameEndingSlideshowWindowInit() == -1) {
         return;
     }
+    
+    int endSlideshowMode = 0;
+    int stretchGameMode = 0;
+    Config config;
+    if (configInit(&config)) {
+        if (configRead(&config, "f2_res.ini", false)) {
+            configGetInt(&config, "STATIC_SCREENS", "END_SLIDE_SIZE", &endSlideshowMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                endSlideshowMode = stretchGameMode; // always override if key exists
+            }
+        }
+        configFree(&config);
+    }
+    
+    // Get the screen/window size
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+    
+    // Get the original image dimensions
+    originalWidth = ENDGAME_ENDING_WINDOW_WIDTH;
+    originalHeight = ENDGAME_ENDING_WINDOW_HEIGHT;
+    
+    scaledWidth = originalWidth;
+    scaledHeight = originalHeight;
+    
+    // Figure out how to stretch the character Selector depending on resolution + settings
+    // Only stretch when loading from Main Menu
+    if ((endSlideshowMode != 0) || screenWidth < originalWidth || screenHeight < originalHeight) {
+        if (endSlideshowMode == 2) {
+            // Fullscreen stretch
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            // Preserve aspect ratio
+            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * originalHeight / originalWidth;
+            } else {
+                scaledWidth = screenHeight * originalWidth / originalHeight;
+                scaledHeight = screenHeight;
+            }
+        }
+    }
 
     for (int index = 0; index < gEndgameEndingsLength; index++) {
         EndgameEnding* ending = &(gEndgameEndings[index]);
@@ -332,16 +382,6 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
     endgameEndingLoadPalette(6, art_num); // not ideal
     endgameEndingUpdateOverlay();
 
-    // Read slideshow size config.
-    int size = 0;
-    Config config;
-    if (configInit(&config)) {
-        if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "END_SLIDE_SIZE", &size);
-        }
-        configFree(&config);
-    }
-
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
@@ -398,23 +438,7 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
                 ENDGAME_ENDING_WINDOW_WIDTH
             );
 
-            if (size == 2 || size == 1) {
-                // Stretch/crop based on screen size settings.
-                int scaledWidth, scaledHeight;
-                // Stretch full screen for setting 2.
-                if (size == 2) {
-                    scaledWidth = screenWidth;
-                    scaledHeight = screenHeight;
-                } else {
-                    // Scale but maintain aspect ratio for setting 1.
-                    if (screenHeight * ENDGAME_ENDING_WINDOW_WIDTH >= screenWidth * ENDGAME_ENDING_WINDOW_HEIGHT) {
-                        scaledWidth = screenWidth;
-                        scaledHeight = screenWidth * ENDGAME_ENDING_WINDOW_HEIGHT / ENDGAME_ENDING_WINDOW_WIDTH;
-                    } else {
-                        scaledWidth = screenHeight * ENDGAME_ENDING_WINDOW_WIDTH / ENDGAME_ENDING_WINDOW_HEIGHT;
-                        scaledHeight = screenHeight;
-                    }
-                }
+            if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
 
                 // Allocate buffer for stretched image.
                 unsigned char* stretchedBuffer = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
@@ -564,44 +588,15 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
         endgameEndingLoadPalette(FID_TYPE(backgroundFid), backgroundFid & 0xFFF);
         endgameEndingUpdateOverlay();
 
-        int slideScaleMode = 0;
-        Config config;
-        if (configInit(&config)) {
-            if (configRead(&config, "f2_res.ini", false)) {
-                configGetInt(&config, "STATIC_SCREENS", "END_SLIDE_SIZE", &slideScaleMode);
-            }
-            configFree(&config);
-        }
-
         int screenWidth = screenGetWidth();
         int screenHeight = screenGetHeight();
-        int finalWidth = ENDGAME_ENDING_WINDOW_WIDTH;
-        int finalHeight = ENDGAME_ENDING_WINDOW_HEIGHT;
+        
+        int offsetX = (screenWidth - scaledWidth) / 2;
+        int offsetY = (screenHeight - scaledHeight) / 2;
 
-        // Adjust slide size based on config or screen size.
-        if (slideScaleMode != 0 || screenWidth < ENDGAME_ENDING_WINDOW_WIDTH || screenHeight < ENDGAME_ENDING_WINDOW_HEIGHT) {
-            // Stretch full screen for setting 2.
-            if (slideScaleMode == 2) {
-                finalWidth = screenWidth;
-                finalHeight = screenHeight;
-            } else if (slideScaleMode == 1) {
-                // Scale while maintaining aspect ratio for setting 1.
-                if (screenHeight * ENDGAME_ENDING_WINDOW_WIDTH >= screenWidth * ENDGAME_ENDING_WINDOW_HEIGHT) {
-                    finalWidth = screenWidth;
-                    finalHeight = screenWidth * ENDGAME_ENDING_WINDOW_HEIGHT / ENDGAME_ENDING_WINDOW_WIDTH;
-                } else {
-                    finalWidth = screenHeight * ENDGAME_ENDING_WINDOW_WIDTH / ENDGAME_ENDING_WINDOW_HEIGHT;
-                    finalHeight = screenHeight;
-                }
-            }
-        }
-
-        int offsetX = (screenWidth - finalWidth) / 2;
-        int offsetY = (screenHeight - finalHeight) / 2;
-
-        if (slideScaleMode != 0) {
+        if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
             // Stretch background to screen size.
-            unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(finalWidth * finalHeight));
+            unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
             if (stretchedBackground != nullptr) {
                 blitBufferToBufferStretch(
                     backgroundData,
@@ -609,12 +604,12 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
                     ENDGAME_ENDING_WINDOW_HEIGHT,
                     ENDGAME_ENDING_WINDOW_WIDTH,
                     stretchedBackground,
-                    finalWidth + 1,
-                    finalHeight + 1,
-                    finalWidth
+                    scaledWidth + 1,
+                    scaledHeight + 1,
+                    scaledWidth
                 );
 
-                _scr_blit(stretchedBackground, finalWidth, finalHeight, 0, 0, finalWidth, finalHeight, offsetX, offsetY);
+                _scr_blit(stretchedBackground, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, offsetX, offsetY);
                 paletteFadeTo(_cmap);
                 internal_free(stretchedBackground);
             }
@@ -645,9 +640,9 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
             if (gEndgameEndingSubtitlesEnded) break;
             if (getTicksSince(referenceTime) > delay) break;
 
-            if (slideScaleMode != 0) {
+            if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
                 // Redraw stretched background for subtitles.
-                unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(finalWidth * finalHeight));
+                unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
                 if (stretchedBackground != nullptr) {
                     blitBufferToBufferStretch(
                         backgroundData,
@@ -655,19 +650,19 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
                         ENDGAME_ENDING_WINDOW_HEIGHT,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         stretchedBackground,
-                        finalWidth + 1,
-                        finalHeight + 1,
-                        finalWidth
+                        scaledWidth + 1,
+                        scaledHeight + 1,
+                        scaledWidth
                     );
 
-                    int cropX = (finalWidth - ENDGAME_ENDING_WINDOW_WIDTH) / 2;
-                    int cropY = (finalHeight - ENDGAME_ENDING_WINDOW_HEIGHT) / 2;
+                    int cropX = (scaledWidth - ENDGAME_ENDING_WINDOW_WIDTH) / 2;
+                    int cropY = (scaledHeight - ENDGAME_ENDING_WINDOW_HEIGHT) / 2;
 
                     blitBufferToBuffer(
-                        stretchedBackground + cropY * finalWidth + cropX,
+                        stretchedBackground + cropY * scaledWidth + cropX,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         ENDGAME_ENDING_WINDOW_HEIGHT,
-                        finalWidth,
+                        scaledWidth,
                         gEndgameEndingSlideshowWindowBuffer,
                         ENDGAME_ENDING_WINDOW_WIDTH
                     );

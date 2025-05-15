@@ -100,10 +100,15 @@ int mainMenuWindowInit()
 
     // Figure out how we want to scale the main menu (from .ini setting)
     int menuStretchMode = 0;
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "MAIN_MENU_SIZE", &menuStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                menuStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }

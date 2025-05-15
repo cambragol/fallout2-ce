@@ -1609,11 +1609,16 @@ static int lsgWindowInit(int windowType)
     int screenHeight = screenGetHeight();
 
     // Load stretch mode from INI file
-    int loadsaveStretchMode = 0;  // Default to 0, no stretch
+    int loadsaveStretchMode = 0;
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "LOADSAVE_SIZE", &loadsaveStretchMode);
+            configGetInt(&config, "STATIC_SCREENS", "LOAD_SAVE_SIZE", &loadsaveStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                loadsaveStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }

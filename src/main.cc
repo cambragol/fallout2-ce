@@ -388,10 +388,15 @@ static void showDeath()
 
     // Read stretching setting from f2_res.ini
     int deathScreenStretchMode = 0;
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "DEATH_SCRN_SIZE", &deathScreenStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                deathScreenStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }

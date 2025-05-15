@@ -276,10 +276,15 @@ static bool characterSelectorWindowInit()
 
     // Load stretch mode from INI file
     int menuStretchMode = 0; // Default to 0, no stretch
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "CHARACTER_SELECTOR_SIZE", &menuStretchMode);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                menuStretchMode = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }

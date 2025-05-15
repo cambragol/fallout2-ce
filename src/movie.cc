@@ -174,10 +174,15 @@ static int _movieSizeFlag = 0; // private to movie.cc
 void readMovieSettings()
 {
     int size = 0;
+    int stretchGameMode = 0;
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
             configGetInt(&config, "STATIC_SCREENS", "MOVIE_SIZE", &size);
+
+            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
+                size = stretchGameMode; // always override if key exists
+            }
         }
         configFree(&config);
     }
