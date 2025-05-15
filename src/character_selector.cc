@@ -67,18 +67,12 @@ namespace fallout {
 #define CS_WINDOW_SECONDARY_STAT_MID_X (379)
 #define CS_WINDOW_BIO_X (438)
 
-#define ORIGINAL_WIDTH 640
-#define ORIGINAL_HEIGHT 480
-
-// Stretching defines
-#define SCALE_COORD_X(x) ( \
-    (menuStretchMode == 2) ? ((x) * windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH) : ((x) * getLetterboxWidthScaleFactor()) + getLetterboxOffsetX())
-
-#define SCALE_COORD_Y(y) ( \
-    (menuStretchMode == 2) ? ((y) * windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT) : ((y) * getLetterboxHeightScaleFactor()) + getLetterboxOffsetY())
-
 static int gCharacterSelectorWindowWidth = 0;
 static int gCharacterSelectorWindowHeight = 0;
+
+// static globals shared for stretching
+static float scaleX = 1.0f;
+static float scaleY = 1.0f;
 
 typedef enum PremadeCharacter {
     PREMADE_CHARACTER_NARG,
@@ -158,34 +152,6 @@ static FrmImage _previousButtonNormalFrmImage;
 static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
-
-float getLetterboxWidthScaleFactor()
-{
-    float scaleX = (float)windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH;
-    float scaleY = (float)windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT;
-    return (scaleX < scaleY) ? scaleX : scaleY;
-}
-
-float getLetterboxHeightScaleFactor()
-{
-    float scaleX = (float)windowGetWidth(gCharacterSelectorWindow) / ORIGINAL_WIDTH;
-    float scaleY = (float)windowGetHeight(gCharacterSelectorWindow) / ORIGINAL_HEIGHT;
-    return (scaleX < scaleY) ? scaleX : scaleY;
-}
-
-int getLetterboxOffsetX()
-{
-    float scale = getLetterboxWidthScaleFactor();
-    int contentWidth = (int)(ORIGINAL_WIDTH * scale);
-    return (windowGetWidth(gCharacterSelectorWindow) - contentWidth) / 2;
-}
-
-int getLetterboxOffsetY()
-{
-    float scale = getLetterboxHeightScaleFactor();
-    int contentHeight = (int)(ORIGINAL_HEIGHT * scale);
-    return (windowGetHeight(gCharacterSelectorWindow) - contentHeight) / 2;
-}
 
 // 0x4A71D0
 int characterSelectorOpen()
@@ -397,8 +363,8 @@ static bool characterSelectorWindowInit()
     int roundBaseHeight = 16;
 
     // Scaling factors
-    float scaleX = static_cast<float>(scaledWidth) / originalWidth;
-    float scaleY = static_cast<float>(scaledHeight) / originalHeight;
+    scaleX = static_cast<float>(scaledWidth) / originalWidth;
+    scaleY = static_cast<float>(scaledHeight) / originalHeight;
     float buttonScale = scaleY;
 
     // Scaled sizes
@@ -465,8 +431,7 @@ static bool characterSelectorWindowInit()
 
     // Create Buttons
     gCharacterSelectorWindowPreviousButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_PREVIOUS_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_PREVIOUS_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_PREVIOUS_BUTTON_X * scaleX),static_cast<int>(CS_WINDOW_PREVIOUS_BUTTON_Y * scaleY),
         arrowWidth,
         arrowHeight,
         -1,
@@ -481,8 +446,8 @@ static bool characterSelectorWindowInit()
     buttonSetCallbacks(gCharacterSelectorWindowPreviousButton, _gsound_med_butt_press, _gsound_med_butt_release);
 
     gCharacterSelectorWindowNextButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_NEXT_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_NEXT_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_NEXT_BUTTON_X * scaleX),
+        static_cast<int>(CS_WINDOW_NEXT_BUTTON_Y * scaleY),
         arrowWidth,
         arrowHeight,
         -1,
@@ -497,8 +462,8 @@ static bool characterSelectorWindowInit()
     buttonSetCallbacks(gCharacterSelectorWindowNextButton, _gsound_med_butt_press, _gsound_med_butt_release);
 
     gCharacterSelectorWindowTakeButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_TAKE_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_TAKE_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_TAKE_BUTTON_X * scaleX),
+        static_cast<int>(CS_WINDOW_TAKE_BUTTON_Y * scaleY),
         roundWidth,
         roundHeight,
         -1,
@@ -513,8 +478,8 @@ static bool characterSelectorWindowInit()
     buttonSetCallbacks(gCharacterSelectorWindowTakeButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
     gCharacterSelectorWindowModifyButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_MODIFY_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_MODIFY_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_MODIFY_BUTTON_X * scaleX),
+        static_cast<int>(CS_WINDOW_MODIFY_BUTTON_Y * scaleY),
         roundWidth,
         roundHeight,
         -1,
@@ -529,8 +494,8 @@ static bool characterSelectorWindowInit()
     buttonSetCallbacks(gCharacterSelectorWindowModifyButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
     gCharacterSelectorWindowCreateButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_CREATE_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_CREATE_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_CREATE_BUTTON_X * scaleX),
+        static_cast<int>(CS_WINDOW_CREATE_BUTTON_Y * scaleY),
         roundWidth,
         roundHeight,
         -1,
@@ -545,8 +510,8 @@ static bool characterSelectorWindowInit()
     buttonSetCallbacks(gCharacterSelectorWindowCreateButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
     gCharacterSelectorWindowBackButton = buttonCreate(gCharacterSelectorWindow,
-        SCALE_COORD_X(CS_WINDOW_BACK_BUTTON_X),
-        SCALE_COORD_Y(CS_WINDOW_BACK_BUTTON_Y),
+        static_cast<int>(CS_WINDOW_BACK_BUTTON_X * scaleX),
+        static_cast<int>(CS_WINDOW_BACK_BUTTON_Y * scaleY),
         roundWidth,
         roundHeight,
         -1,
