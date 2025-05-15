@@ -1248,12 +1248,16 @@ int mapHandleTransition()
     if (gMapTransition.map == -1) {
         if (!isInCombat()) {
             animationStop();
+            // Remove text floaters when moving to the world map
+            textObjectsReset();
             wmTownMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
     } else if (gMapTransition.map == -2) {
         if (!isInCombat()) {
             animationStop();
+            // Remove text floaters when moving to the world map
+            textObjectsReset();
             wmWorldMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
