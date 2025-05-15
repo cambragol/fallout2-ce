@@ -372,6 +372,8 @@ void _InitLoadSave()
     if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadPages) {
         autoQuickSaveSlots = true;
     }
+    
+    pipboyMessageListInit();
 }
 
 // 0x47B85C
@@ -2607,18 +2609,32 @@ static void _ShowSlotList(int windowType)
     // Pagination navigation
     // Draw text to compositeBuffer for later stretching
     if (saveLoadPages > 10) {
-        if (_currentSlotPage == 0) {
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
+        int activeColor = _colorTable[992];
+        int inactiveColor = _colorTable[8804];
+        
+        {
+            MessageListItem messageListItemBack;
+            messageListItemBack.num = 201; // Back
+            messageListGetItem(&gPipboyMessageList, &messageListItemBack);
+            fontDrawText(
+                compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95,
+                messageListItemBack.text,
+                LS_WINDOW_WIDTH,
+                LS_WINDOW_WIDTH,
+                _currentSlotPage > 0 ? activeColor : inactiveColor);
         }
-        if (_currentSlotPage > 0) {
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95, "BACK", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
+        {
+            MessageListItem messageListItemMore;
+            messageListItemMore.num = 200; // More
+            messageListGetItem(&gPipboyMessageList, &messageListItemMore);
+            fontDrawText(
+                compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210,
+                messageListItemMore.text,
+                LS_WINDOW_WIDTH,
+                LS_WINDOW_WIDTH,
+                _currentSlotPage < saveLoadPages - 1 ? activeColor : inactiveColor);
         }
-        if (_currentSlotPage < totalPages - 1) {
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[992]);
-        }
-        if (_currentSlotPage == totalPages - 1) {
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210, "MORE", LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[8804]);
-        }
+
     }
     
 }
