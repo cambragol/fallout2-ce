@@ -426,36 +426,21 @@ static void showDeath()
         int scaledWidth;
         int scaledHeight;
 
-        // Stretch full screen for setting 2.
-        if (deathScreenStretchMode == 2) {
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Scale while maintaining aspect ratio for setting 1.
-            if (screenHeight * deathScreenWidth >= screenWidth * deathScreenHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = (screenWidth * deathScreenHeight + (deathScreenWidth)) / deathScreenWidth;
-            } else {
-                scaledWidth = (screenHeight * deathScreenWidth + (deathScreenHeight)) / deathScreenHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            deathScreenWidth,
+            deathScreenHeight,
+            screenWidth,
+            screenHeight,
+            deathScreenStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
 
         // Allocate memory for the scaled image.
         unsigned char* scaled = reinterpret_cast<unsigned char*>(SDL_malloc((scaledWidth + 1) * (scaledHeight + 1)));
         if (scaled != nullptr) {
             // Perform stretching.
-            blitBufferToBufferStretch(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
-
-            // Fix rightmost edge artifacts by copying the last good pixel horizontally.
-            for (int y = 0; y < scaledHeight; y++) {
-                scaled[y * scaledWidth + (scaledWidth - 1)] = scaled[y * scaledWidth + (scaledWidth - 2)];
-            }
-
-            // Fix bottom row artifacts by copying the last good pixel vertically.
-            for (int x = 0; x < scaledWidth; x++) {
-                scaled[(scaledHeight - 1) * scaledWidth + x] = scaled[(scaledHeight - 2) * scaledWidth + x];
-            }
+            blitBufferToBufferStretchAndFixEdges(deathData, deathScreenWidth, deathScreenHeight, deathScreenWidth, scaled, scaledWidth, scaledHeight, scaledWidth, 1);
 
             finalBuffer = scaled;
             finalWidth = scaledWidth;

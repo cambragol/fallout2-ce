@@ -245,7 +245,6 @@ static void movieDirectImpl(
         finalHeight = (int)(windowHeight * (1.0f - subtitleMarginRatio));
     }
 
-
     // buffer for rescaled image
     unsigned char* scaledFrame = (unsigned char*)internal_malloc_safe(finalWidth * finalHeight, __FILE__, __LINE__);
 

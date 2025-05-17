@@ -1240,37 +1240,26 @@ static void showHelp()
     // Check if stretching is needed (based on config or screen too small).
     if (helpScreenStretchMode != 0 || screenWidth < helpWidth || screenHeight < helpHeight) {
         int scaledWidth, scaledHeight;
-
-        // Fullscreen stretch
-        if (helpScreenStretchMode == 2) {
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Maintain aspect ratio
-            if (screenHeight * helpWidth >= screenWidth * helpHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * helpHeight / helpWidth;
-            } else {
-                scaledWidth = screenHeight * helpWidth / helpHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        
+        calculateScaledSize(
+            helpWidth,
+            helpHeight,
+            screenWidth,
+            screenHeight,
+            helpScreenStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
 
         // Allocate memory for the scaled image.
         unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth + 1) * (scaledHeight + 1)));
         if (scaled != nullptr) {
-            // Stretch the original help image into the new buffer.
-            blitBufferToBufferStretch(helpData, helpWidth, helpHeight, helpWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
-
-            // Fix rightmost column (copy last good pixel).
-            for (int i = 0; i < scaledHeight; i++) {
-                scaled[i * scaledWidth + (scaledWidth - 1)] = scaled[i * scaledWidth + (scaledWidth - 2)];
-            }
-
-            // Fix bottom row (copy last good pixel).
-            for (int i = 0; i < scaledWidth; i++) {
-                scaled[(scaledHeight - 1) * scaledWidth + i] = scaled[(scaledHeight - 2) * scaledWidth + i];
-            }
+            // Stretch and fix the original help image into the new buffer.
+            blitBufferToBufferStretchAndFixEdges(
+                helpData, helpWidth, helpHeight, helpWidth,  // Source buffer and dimensions
+                scaled, scaledWidth, scaledHeight, scaledWidth,  // Destination buffer and dimensions
+                1 // numStates = 1 for a single image
+            );
 
             bufferToBlit = scaled;
             blitWidth = scaledWidth;
@@ -1554,39 +1543,34 @@ static void showSplash()
     // Stretch image if required or if it doesn't fit the screen
     if (splashScreenStretchMode != 0 || screenWidth < splashWidth || screenHeight < splashHeight) {
         int scaledWidth, scaledHeight;
-
-        if (splashScreenStretchMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Maintianing aspect ratio
-            if (screenHeight * splashWidth >= screenWidth * splashHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * splashHeight / splashWidth;
-            } else {
-                scaledWidth = screenHeight * splashWidth / splashHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        
+        calculateScaledSize(
+            splashWidth,
+            splashHeight,
+            screenWidth,
+            screenHeight,
+            splashScreenStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
 
         unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth) * (scaledHeight)));
         if (scaled != nullptr) {
-            // Stretch the image buffer to fit target resolution
-            blitBufferToBufferStretch(splashData, splashWidth, splashHeight, splashWidth, scaled, scaledWidth, scaledHeight, scaledWidth);
+            // Stretch the splash screen and fix edge artifacts
+            blitBufferToBufferStretchAndFixEdges(
+                splashData,
+                splashWidth,
+                splashHeight,
+                splashWidth,
+                scaled,
+                scaledWidth,
+                scaledHeight,
+                scaledWidth,
+                1 // numStates = 1 for a single splash image
+            );
 
             int x = (screenWidth > scaledWidth) ? (screenWidth - scaledWidth) / 2 : 0;
             int y = (screenHeight > scaledHeight) ? (screenHeight - scaledHeight) / 2 : 0;
-
-            // Fix rightmost column (copy last good pixel).
-            for (int i = 0; i < scaledHeight; i++) {
-                scaled[i * scaledWidth + (scaledWidth - 1)] = scaled[i * scaledWidth + (scaledWidth - 2)];
-            }
-            
-            // Fix bottom row (copy last good pixel).
-            for (int i = 0; i < scaledWidth; i++) {
-                scaled[(scaledHeight - 1) * scaledWidth + i] = scaled[(scaledHeight - 2) * scaledWidth + i];
-            }
 
             _scr_blit(scaled, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, x, y);
             paletteFadeTo(palette);

@@ -2805,20 +2805,15 @@ static int wmMapInit()
     // Figure out how to stretch the character Selector depending on resolution + settings
     // Only stretch when loading from Main Menu
     if ((worldmapStretchMode != 0) || screenWidth < originalWidth || screenHeight < originalHeight) {
-        if (worldmapStretchMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Preserve aspect ratio
-            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * originalHeight / originalWidth;
-            } else {
-                scaledWidth = screenHeight * originalWidth / originalHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            originalWidth,
+            originalHeight,
+            screenWidth,
+            screenHeight,
+            worldmapStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
     }
     
     // Determine scaling factors based on the original and current window dimensions
@@ -2829,7 +2824,6 @@ static int wmMapInit()
     scaledViewHeight = originalViewHeight * scaleY;
     scaledViewX =originalViewX * scaleX;
     scaledViewY = originalViewY * scaleY;
-
 
     if (configRead(&config, "data\\maps.txt", true)) {
         for (int mapIdx = 0;; mapIdx++) {
@@ -4757,17 +4751,9 @@ static int wmInterfaceInit()
             return -1;
         }
 
-        blitBufferToBufferStretch(
+        blitBufferToBufferStretchAndFixEdges(
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
-        
-        // Fix the edge pixels to avoid glitches
-        for (int y = 0; y < scaledHeight; y++) {
-            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
-        }
-        for (int x = 0; x < scaledWidth; x++) {
-            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
-        }
 
         blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, wmBkWinBuf, scaledWidth);
         // copy the background to the composite buffer

@@ -248,20 +248,15 @@ void endgamePlaySlideshow()
     // Figure out how to stretch the character Selector depending on resolution + settings
     // Only stretch when loading from Main Menu
     if ((endSlideshowMode != 0) || screenWidth < originalWidth || screenHeight < originalHeight) {
-        if (endSlideshowMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Preserve aspect ratio
-            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * originalHeight / originalWidth;
-            } else {
-                scaledWidth = screenHeight * originalWidth / originalHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            originalWidth,
+            originalHeight,
+            screenWidth,
+            screenHeight,
+            endSlideshowMode,
+            scaledWidth,
+            scaledHeight
+        );
     }
 
     for (int index = 0; index < gEndgameEndingsLength; index++) {
@@ -443,14 +438,14 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
                 // Allocate buffer for stretched image.
                 unsigned char* stretchedBuffer = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
                 if (stretchedBuffer != nullptr) {
-                    blitBufferToBufferStretch(
+                    blitBufferToBufferStretchAndFixEdges(
                         gEndgameEndingSlideshowWindowBuffer,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         ENDGAME_ENDING_WINDOW_HEIGHT,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         stretchedBuffer,
-                        scaledWidth + 1,
-                        scaledHeight + 1,
+                        scaledWidth,
+                        scaledHeight,
                         scaledWidth
                     );
 
@@ -598,14 +593,14 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
             // Stretch background to screen size.
             unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
             if (stretchedBackground != nullptr) {
-                blitBufferToBufferStretch(
+                blitBufferToBufferStretchAndFixEdges(
                     backgroundData,
                     ENDGAME_ENDING_WINDOW_WIDTH,
                     ENDGAME_ENDING_WINDOW_HEIGHT,
                     ENDGAME_ENDING_WINDOW_WIDTH,
                     stretchedBackground,
-                    scaledWidth + 1,
-                    scaledHeight + 1,
+                    scaledWidth,
+                    scaledHeight,
                     scaledWidth
                 );
 
@@ -644,14 +639,14 @@ static void endgameEndingRenderStaticScene(int backgroundFid, const char* narrat
                 // Redraw stretched background for subtitles.
                 unsigned char* stretchedBackground = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
                 if (stretchedBackground != nullptr) {
-                    blitBufferToBufferStretch(
+                    blitBufferToBufferStretchAndFixEdges(
                         backgroundData,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         ENDGAME_ENDING_WINDOW_HEIGHT,
                         ENDGAME_ENDING_WINDOW_WIDTH,
                         stretchedBackground,
-                        scaledWidth + 1,
-                        scaledHeight + 1,
+                        scaledWidth,
+                        scaledHeight,
                         scaledWidth
                     );
 

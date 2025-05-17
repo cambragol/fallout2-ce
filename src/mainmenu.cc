@@ -123,20 +123,15 @@ int mainMenuWindowInit()
 
     // Figure out how to stretch the menu depending on resolution + settings
     if (menuStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
-        if (menuStretchMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Preserve aspect ratio
-            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * originalHeight / originalWidth;
-            } else {
-                scaledWidth = screenHeight * originalWidth / originalHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            originalWidth,
+            originalHeight,
+            screenWidth,
+            screenHeight,
+            menuStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
     }
 
     // Center the menu window on screen
@@ -238,9 +233,9 @@ int mainMenuWindowInit()
             return main_menu_fatal_error();
         }
         // blit without fixings edges - no errors appearing
-        blitBufferToBufferStretch(
+        blitBufferToBufferStretchAndFixEdges(
             compositeBuffer, originalWidth, originalHeight, originalWidth,
-            stretched, scaledWidth, scaledHeight, scaledWidth);
+            stretched, scaledWidth, scaledHeight, scaledWidth, 1);
 
         blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gMainMenuWindowBuffer, scaledWidth);
         SDL_free(stretched);

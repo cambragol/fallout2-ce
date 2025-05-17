@@ -298,20 +298,15 @@ static bool characterSelectorWindowInit()
 
     // Figure out how to stretch the character Selector depending on resolution + settings
     if (menuStretchMode != 0 || screenWidth < originalWidth || screenHeight < originalHeight) {
-        if (menuStretchMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Preserve aspect ratio
-            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * originalHeight / originalWidth;
-            } else {
-                scaledWidth = screenHeight * originalWidth / originalHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            originalWidth,
+            originalHeight,
+            screenWidth,
+            screenHeight,
+            menuStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
     }
 
     // Center the menu window on screen
@@ -390,49 +385,43 @@ static bool characterSelectorWindowInit()
         return characterSelectorWindowFatalError(false);
     }
 
-    // Stretch arrow buttons
-    blitBufferToBufferStretch(
+    // Stretch arrow buttons with edge fix
+    blitBufferToBufferStretchAndFixEdges(
         _previousButtonNormalFrmImage.getData(), arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledPreviousNormal, arrowWidth, arrowHeight, arrowWidth);
-    blitBufferToBufferStretch(
+        scaledPreviousNormal, arrowWidth, arrowHeight, arrowWidth,
+        1
+    );
+
+    blitBufferToBufferStretchAndFixEdges(
         _previousButtonPressedFrmImage.getData(), arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledPreviousPressed, arrowWidth, arrowHeight, arrowWidth);
-    blitBufferToBufferStretch(
+        scaledPreviousPressed, arrowWidth, arrowHeight, arrowWidth,
+        1
+    );
+
+    blitBufferToBufferStretchAndFixEdges(
         _nextButtonNormalFrmImage.getData(), arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledNextNormal, arrowWidth, arrowHeight, arrowWidth);
-    blitBufferToBufferStretch(
+        scaledNextNormal, arrowWidth, arrowHeight, arrowWidth,
+        1
+    );
+
+    blitBufferToBufferStretchAndFixEdges(
         _nextButtonPressedFrmImage.getData(), arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledNextPressed, arrowWidth, arrowHeight, arrowWidth);
+        scaledNextPressed, arrowWidth, arrowHeight, arrowWidth,
+        1
+    );
 
-    // Stretch round buttons
-    blitBufferToBufferStretch(
+    // Stretch round buttons with edge fix
+    blitBufferToBufferStretchAndFixEdges(
         _takeButtonNormalFrmImage.getData(), roundBaseWidth, roundBaseHeight, roundBaseWidth,
-        scaledRoundNormal, roundWidth, roundHeight, roundWidth);
-    blitBufferToBufferStretch(
-        _takeButtonPressedFrmImage.getData(), roundBaseWidth, roundBaseHeight, roundBaseWidth,
-        scaledRoundPressed, roundWidth, roundHeight, roundWidth);
+        scaledRoundNormal, roundWidth, roundHeight, roundWidth,
+        1
+    );
 
-    // Fix edge glitches
-    for (int y = 0; y < arrowHeight; y++) {
-        scaledPreviousNormal[y * arrowWidth + (arrowWidth - 1)] = scaledPreviousNormal[y * arrowWidth + (arrowWidth - 2)];
-        scaledPreviousPressed[y * arrowWidth + (arrowWidth - 1)] = scaledPreviousPressed[y * arrowWidth + (arrowWidth - 2)];
-        scaledNextNormal[y * arrowWidth + (arrowWidth - 1)] = scaledNextNormal[y * arrowWidth + (arrowWidth - 2)];
-        scaledNextPressed[y * arrowWidth + (arrowWidth - 1)] = scaledNextPressed[y * arrowWidth + (arrowWidth - 2)];
-    }
-    for (int x = 0; x < arrowWidth; x++) {
-        scaledPreviousNormal[(arrowHeight - 1) * arrowWidth + x] = scaledPreviousNormal[(arrowHeight - 2) * arrowWidth + x];
-        scaledPreviousPressed[(arrowHeight - 1) * arrowWidth + x] = scaledPreviousPressed[(arrowHeight - 2) * arrowWidth + x];
-        scaledNextNormal[(arrowHeight - 1) * arrowWidth + x] = scaledNextNormal[(arrowHeight - 2) * arrowWidth + x];
-        scaledNextPressed[(arrowHeight - 1) * arrowWidth + x] = scaledNextPressed[(arrowHeight - 2) * arrowWidth + x];
-    }
-    for (int y = 0; y < roundHeight; y++) {
-        scaledRoundNormal[y * roundWidth + (roundWidth - 1)] = scaledRoundNormal[y * roundWidth + (roundWidth - 2)];
-        scaledRoundPressed[y * roundWidth + (roundWidth - 1)] = scaledRoundPressed[y * roundWidth + (roundWidth - 2)];
-    }
-    for (int x = 0; x < roundWidth; x++) {
-        scaledRoundNormal[(roundHeight - 1) * roundWidth + x] = scaledRoundNormal[(roundHeight - 2) * roundWidth + x];
-        scaledRoundPressed[(roundHeight - 1) * roundWidth + x] = scaledRoundPressed[(roundHeight - 2) * roundWidth + x];
-    }
+    blitBufferToBufferStretchAndFixEdges(
+        _takeButtonPressedFrmImage.getData(), roundBaseWidth, roundBaseHeight, roundBaseWidth,
+        scaledRoundPressed, roundWidth, roundHeight, roundWidth,
+        1
+    );
 
     // Create Buttons
     gCharacterSelectorWindowPreviousButton = buttonCreate(gCharacterSelectorWindow,
@@ -643,7 +632,7 @@ static bool characterSelectorWindowRefresh()
     }
 
     // Step 3: Stretch the final result (background + Bio text) into the main window buffer
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         tempBuffer,
         CS_WINDOW_WIDTH,
         CS_WINDOW_HEIGHT,

@@ -1243,7 +1243,8 @@ int lsgLoadGame(int mode)
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             loadsaveBlitComposite();
                             _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            windowRefresh(gLoadSaveWindow);
                         } else {
                             // Normal movement within the page
                             _slot_cursor++;
@@ -1427,7 +1428,7 @@ int lsgLoadGame(int mode)
                             }
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
-                        soundPlayFile("ib1p1xx1");
+                        //soundPlayFile("ib1p1xx1");
                         _slot_cursor++;
 
                         // If moving down past the last slot of the page, go to the next page
@@ -1635,20 +1636,15 @@ static int lsgWindowInit(int windowType)
     // Figure out how to stretch the character Selector depending on resolution + settings
     // Only stretch when loading from Main Menu
     if ((loadsaveStretchMode != 0 && windowType == LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) || screenWidth < originalWidth || screenHeight < originalHeight) {
-        if (loadsaveStretchMode == 2) {
-            // Fullscreen stretch
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            // Preserve aspect ratio
-            if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * originalHeight / originalWidth;
-            } else {
-                scaledWidth = screenHeight * originalWidth / originalHeight;
-                scaledHeight = screenHeight;
-            }
-        }
+        calculateScaledSize(
+            originalWidth,
+            originalHeight,
+            screenWidth,
+            screenHeight,
+            loadsaveStretchMode,
+            scaledWidth,
+            scaledHeight
+        );
     }
 
     gLoadSaveWindowIsoWasEnabled = false;
@@ -1828,17 +1824,9 @@ static int lsgWindowInit(int windowType)
             return -1;
         }
 
-        blitBufferToBufferStretch(
+        blitBufferToBufferStretchAndFixEdges(
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
-        
-        // Fix the edge pixels to avoid glitches
-        for (int y = 0; y < scaledHeight; y++) {
-            stretched[y * scaledWidth + (scaledWidth - 1)] = stretched[y * scaledWidth + (scaledWidth - 2)];
-        }
-        for (int x = 0; x < scaledWidth; x++) {
-            stretched[(scaledHeight - 1) * scaledWidth + x] = stretched[(scaledHeight - 2) * scaledWidth + x];
-        }
 
         blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gLoadSaveWindowBuffer, scaledWidth);
         SDL_free(stretched);
@@ -1869,26 +1857,15 @@ static int lsgWindowInit(int windowType)
         return -1;
     }
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
         redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
         scaledRedNormal, redButtonWidth, redButtonHeight, redButtonWidth);
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
         scaledRedPressed, redButtonWidth, redButtonHeight, redButtonWidth);
-
-    // Is this needed??
-    // Fix edge pixels to avoid glitches
-    /*for (int y = 0; y < redButtonHeight; y++) {
-        scaledRedNormal[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedNormal[y * redButtonWidth + (redButtonWidth - 2)];
-        scaledRedPressed[y * redButtonWidth + (redButtonWidth - 1)] = scaledRedPressed[y * redButtonWidth + (redButtonWidth - 2)];
-    }
-    for (int x = 0; x < redButtonWidth; x++) {
-        scaledRedNormal[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedNormal[(redButtonHeight - 2) * redButtonWidth + x];
-        scaledRedPressed[(redButtonHeight - 1) * redButtonWidth + x] = scaledRedPressed[(redButtonHeight - 2) * redButtonWidth + x];
-    }*/
 
     // Create round buttons (button 0 and 1)
     btn = buttonCreate(gLoadSaveWindow,
@@ -1938,22 +1915,22 @@ static int lsgWindowInit(int windowType)
         return -1;
     }
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
         arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
         scaledArrowUpNormal, arrowWidth, arrowHeight, arrowWidth);
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
         arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
         scaledArrowUpPressed, arrowWidth, arrowHeight, arrowWidth);
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
         arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
         scaledArrowDownNormal, arrowWidth, arrowHeight, arrowWidth);
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchAndFixEdges(
         _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
         arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
         scaledArrowDownPressed, arrowWidth, arrowHeight, arrowWidth);

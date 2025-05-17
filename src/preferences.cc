@@ -400,12 +400,12 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &gPreferencesItemHighlight1 },
     { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &gPreferencesCombatSpeed1 },
     { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, nullptr },
-    { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
-    { 4, 0, 374, 247, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MUSIC_VOLUME_KEY, 0, 32767.0, &gPreferencesMusicVolume1 },
-    { 4, 0, 374, 298, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SNDFX_VOLUME_KEY, 0, 32767.0, &gPreferencesSoundEffectsVolume1 },
-    { 4, 0, 374, 349, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SPEECH_VOLUME_KEY, 0, 32767.0, &gPreferencesSpeechVolume1 },
-    { 2, 0, 374, 400, 0, 0, { 207, 223, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, nullptr },
-    { 2, 0, 374, 451, 0, 0, { 207, 218, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, nullptr },
+    { 4, 0, 374, 197, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
+    { 4, 0, 374, 248, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MUSIC_VOLUME_KEY, 0, 32767.0, &gPreferencesMusicVolume1 },
+    { 4, 0, 374, 299, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SNDFX_VOLUME_KEY, 0, 32767.0, &gPreferencesSoundEffectsVolume1 },
+    { 4, 0, 374, 350, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_SPEECH_VOLUME_KEY, 0, 32767.0, &gPreferencesSpeechVolume1 },
+    { 2, 0, 374, 401, 0, 0, { 207, 223, 0, 0 }, 0, GAME_CONFIG_BRIGHTNESS_KEY, 1.0, 1.17999267578125, nullptr },
+    { 2, 0, 374, 453, 0, 0, { 207, 218, 0, 0 }, 0, GAME_CONFIG_MOUSE_SENSITIVITY_KEY, 1.0, 2.5, nullptr },
 };
 
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
@@ -470,69 +470,54 @@ int gSecondarySwitchStretchedHeight = 0;
 
 void prepareStretchedButtons(double scaleX, double scaleY)
 {
-    constexpr int primaryButtonOrigW = 46;
-    constexpr int primaryButtonOrigH = 47;
-    constexpr int secondaryButtonOrigW = 22;
-    constexpr int secondaryButtonOrigH = 25;
+    // Original dimensions
+    constexpr int primaryW = 46, primaryH = 47, primaryStates = 4;
+    constexpr int secondaryW = 22, secondaryH = 25, secondaryStates = 2;
 
-    int stPrimaryW = static_cast<int>(primaryButtonOrigW * scaleX);
-    int stPrimaryH = static_cast<int>(primaryButtonOrigH * scaleY);
-
-    int stSecondaryW = static_cast<int>(secondaryButtonOrigW * scaleX);
-    int stSecondaryH = static_cast<int>(secondaryButtonOrigH * scaleY);
+    // Scaled dimensions
+    const int scaledPrimaryW = static_cast<int>(primaryW * scaleX);
+    const int scaledPrimaryH = static_cast<int>(primaryH * scaleY);
+    const int scaledSecondaryW = static_cast<int>(secondaryW * scaleX);
+    const int scaledSecondaryH = static_cast<int>(secondaryH * scaleY);
 
     // Free old buffers
     SDL_free(gPrimarySwitchStretched);
-    gPrimarySwitchStretched = nullptr;
     SDL_free(gSecondarySwitchStretched);
-    gSecondarySwitchStretched = nullptr;
 
-    gPrimarySwitchStretched = reinterpret_cast<unsigned char*>(
-        SDL_malloc(stPrimaryW * stPrimaryH * 4));
-    gSecondarySwitchStretched = reinterpret_cast<unsigned char*>(
-        SDL_malloc(stSecondaryW * stSecondaryH * 2));
+    // Allocate new buffers
+    gPrimarySwitchStretched = static_cast<unsigned char*>(
+        SDL_malloc(scaledPrimaryW * scaledPrimaryH * primaryStates));
+    gSecondarySwitchStretched = static_cast<unsigned char*>(
+        SDL_malloc(scaledSecondaryW * scaledSecondaryH * secondaryStates));
 
+    // Allocation failed
     if (!gPrimarySwitchStretched || !gSecondarySwitchStretched) {
         gPrimarySwitchStretchedWidth = gPrimarySwitchStretchedHeight = 0;
         gSecondarySwitchStretchedWidth = gSecondarySwitchStretchedHeight = 0;
         return;
     }
 
-    gPrimarySwitchStretchedWidth = stPrimaryW;
-    gPrimarySwitchStretchedHeight = stPrimaryH;
-    gSecondarySwitchStretchedWidth = stSecondaryW;
-    gSecondarySwitchStretchedHeight = stSecondaryH;
+    // Store scaled dimensions
+    gPrimarySwitchStretchedWidth = scaledPrimaryW;
+    gPrimarySwitchStretchedHeight = scaledPrimaryH;
+    gSecondarySwitchStretchedWidth = scaledSecondaryW;
+    gSecondarySwitchStretchedHeight = scaledSecondaryH;
 
-    // --- Stretch Primary (4 states vertically)
-    blitBufferToBufferStretch(
-        _preferencesFrmImages[PREFERENCES_WINDOW_FRM_PRIMARY_SWITCH].getData(),
-        primaryButtonOrigW, primaryButtonOrigH * 4, primaryButtonOrigW,
-        gPrimarySwitchStretched,
-        stPrimaryW, stPrimaryH * 4,
-        stPrimaryW);
-
-    // --- Stretch Secondary (2 states vertically)
-    blitBufferToBufferStretch(
-        _preferencesFrmImages[PREFERENCES_WINDOW_FRM_SECONDARY_SWITCH].getData(),
-        secondaryButtonOrigW, secondaryButtonOrigH * 2, secondaryButtonOrigW,
-        gSecondarySwitchStretched,
-        stSecondaryW, stSecondaryH * 2,
-        stSecondaryW);
-
+    // Stretch and fix edge pixels
     blitBufferToBufferStretchAndFixEdges(
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_PRIMARY_SWITCH].getData(),
-        46, 47, 46,
+        primaryW, primaryH, primaryW,
         gPrimarySwitchStretched,
-        gPrimarySwitchStretchedWidth, gPrimarySwitchStretchedHeight, gPrimarySwitchStretchedWidth,
-        4 // number of vertical states
+        scaledPrimaryW, scaledPrimaryH, scaledPrimaryW,
+        primaryStates
     );
 
     blitBufferToBufferStretchAndFixEdges(
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_SECONDARY_SWITCH].getData(),
-        22, 25, 22,
+        secondaryW, secondaryH, secondaryW,
         gSecondarySwitchStretched,
-        gSecondarySwitchStretchedWidth, gSecondarySwitchStretchedHeight, gSecondarySwitchStretchedWidth,
-        2 // number of vertical states
+        scaledSecondaryW, scaledSecondaryH, scaledSecondaryW,
+        secondaryStates
     );
 }
 
@@ -1288,28 +1273,15 @@ static int preferencesWindowInit()
     scaledHeight = originalHeight;
 
     // Figure out how to stretch the preferences depending on resolution + settings
-    if (menuStretchMode == 2) {
-        // Fullscreen stretch
-        scaledWidth = screenWidth;
-        scaledHeight = screenHeight;
-        // scaleX = static_cast<float>(screenWidth) / originalWidth;
-        // scaleY = static_cast<float>(screenHeight) / originalHeight;
-    } else if (menuStretchMode == 1) {
-        // Preserve aspect ratio
-        if (screenHeight * originalWidth >= screenWidth * originalHeight) {
-            scaledWidth = screenWidth;
-            scaledHeight = screenWidth * originalHeight / originalWidth;
-
-            scaleX = static_cast<float>(scaledWidth) / originalWidth;
-            scaleY = scaleX; // NOTE: preserve aspect ratio → uniform scale
-        } else {
-            scaledWidth = screenHeight * originalWidth / originalHeight;
-            scaledHeight = screenHeight;
-
-            scaleY = static_cast<float>(scaledHeight) / originalHeight;
-            scaleX = scaleY; // preserve aspect
-        }
-    }
+    calculateScaledSize(
+        originalWidth,
+        originalHeight,
+        screenWidth,
+        screenHeight,
+        menuStretchMode,
+        scaledWidth,
+        scaledHeight
+    );
 
     _changed = false;
 

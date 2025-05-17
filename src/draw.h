@@ -22,6 +22,7 @@ void blitBufferToBufferStretchAndFixEdges(
     unsigned char* dst, int dstW, int dstH, int dstPitch,
     int numStates = 1
 );
+void calculateScaledSize(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int mode, int& outWidth, int& outHeight);
 
 
 } // namespace fallout

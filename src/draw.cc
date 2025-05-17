@@ -1,6 +1,8 @@
 #include "draw.h"
 
 #include <string.h>
+#include <vector>
+#include <cstring>
 
 #include "color.h"
 #include "svga.h"
@@ -342,6 +344,40 @@ void transSrcCopy(unsigned char* dest, int destPitch, unsigned char* src, int sr
 void blitBufferToBufferStretchAndFixEdges(
     unsigned char* src, int srcW, int srcH, int srcPitch,
     unsigned char* dst, int dstW, int dstH, int dstPitch,
+    int numStates
+) {
+    // Temp buffer for over-stretched result (per state)
+    const int stretchW = dstW + 1;
+    const int stretchH = dstH + 1;
+    const int stretchPitch = stretchW;
+
+    std::vector<unsigned char> tempBuffer(stretchW * stretchH * numStates);
+
+    // Stretch all states to slightly larger temp buffer
+    blitBufferToBufferStretch(
+        src, srcW, srcH * numStates, srcPitch,
+        tempBuffer.data(), stretchW, stretchH * numStates, stretchPitch
+    );
+
+    // Now copy only the top-left dstW x dstH portion per state into the final buffer
+    for (int state = 0; state < numStates; ++state) {
+        unsigned char* tempFrame = tempBuffer.data() + stretchW * stretchH * state;
+        unsigned char* finalFrame = dst + dstW * dstH * state;
+
+        for (int y = 0; y < dstH; ++y) {
+            memcpy(
+                finalFrame + y * dstW,
+                tempFrame + y * stretchPitch,
+                dstW
+            );
+        }
+    }
+}
+
+// old algorithim for stretching
+/*void blitBufferToBufferStretchAndFixEdges(
+    unsigned char* src, int srcW, int srcH, int srcPitch,
+    unsigned char* dst, int dstW, int dstH, int dstPitch,
     int numStates // e.g., 4 for primary buttons, 2 for secondary, 1 for single image
 )
 {
@@ -367,6 +403,25 @@ void blitBufferToBufferStretchAndFixEdges(
             }
         }
     }
+}*/
+
+void calculateScaledSize(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int mode, int& outWidth, int& outHeight)
+{
+    if (mode == 2) {
+        // Fullscreen stretch
+        outWidth = targetWidth;
+        outHeight = targetHeight;
+    } else {
+        // Maintain aspect ratio
+        if (targetHeight * srcWidth >= targetWidth * srcHeight) {
+            outWidth = targetWidth;
+            outHeight = (targetWidth * srcHeight) / srcWidth;
+        } else {
+            outWidth = (targetHeight * srcWidth) / srcHeight;
+            outHeight = targetHeight;
+        }
+    }
 }
+
 
 } // namespace fallout
