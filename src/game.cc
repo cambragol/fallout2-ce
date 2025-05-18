@@ -164,7 +164,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     // SFALL: Allow to skip splash screen
     int skipOpeningMovies = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SKIP_OPENING_MOVIES_KEY, &skipOpeningMovies);
-    
+
     // load preferences before Splash screen to get proper brightness
     if (_init_options_menu() != 0) {
         debugPrint("Failed on init_options_menu\n");
@@ -1223,9 +1223,11 @@ static void showHelp()
     FrmImage helpFrmImage;
     int helpFid = buildFid(OBJ_TYPE_INTERFACE, 297, 0, 0, 0); // Load Help screen graphic (FID 297).
     if (!helpFrmImage.lock(helpFid)) {
-        if (colorCycleWasEnabled) colorCycleEnable();
+        if (colorCycleWasEnabled)
+            colorCycleEnable();
         gameMouseObjectsShow();
-        if (isoWasEnabled) isoEnable();
+        if (isoWasEnabled)
+            isoEnable();
         return;
     }
 
@@ -1240,7 +1242,7 @@ static void showHelp()
     // Check if stretching is needed (based on config or screen too small).
     if (helpScreenStretchMode != 0 || screenWidth < helpWidth || screenHeight < helpHeight) {
         int scaledWidth, scaledHeight;
-        
+
         calculateScaledSize(
             helpWidth,
             helpHeight,
@@ -1248,16 +1250,15 @@ static void showHelp()
             screenHeight,
             helpScreenStretchMode,
             scaledWidth,
-            scaledHeight
-        );
+            scaledHeight);
 
         // Allocate memory for the scaled image.
         unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth + 1) * (scaledHeight + 1)));
         if (scaled != nullptr) {
             // Stretch and fix the original help image into the new buffer.
             blitBufferToBufferStretchAndFixEdges(
-                helpData, helpWidth, helpHeight, helpWidth,  // Source buffer and dimensions
-                scaled, scaledWidth, scaledHeight, scaledWidth,  // Destination buffer and dimensions
+                helpData, helpWidth, helpHeight, helpWidth, // Source buffer and dimensions
+                scaled, scaledWidth, scaledHeight, scaledWidth, // Destination buffer and dimensions
                 1 // numStates = 1 for a single image
             );
 
@@ -1543,7 +1544,7 @@ static void showSplash()
     // Stretch image if required or if it doesn't fit the screen
     if (splashScreenStretchMode != 0 || screenWidth < splashWidth || screenHeight < splashHeight) {
         int scaledWidth, scaledHeight;
-        
+
         calculateScaledSize(
             splashWidth,
             splashHeight,
@@ -1551,8 +1552,7 @@ static void showSplash()
             screenHeight,
             splashScreenStretchMode,
             scaledWidth,
-            scaledHeight
-        );
+            scaledHeight);
 
         unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth) * (scaledHeight)));
         if (scaled != nullptr) {
@@ -1592,7 +1592,6 @@ static void showSplash()
     // Save index for next splash image
     settings.system.splash = splashIndex + 1;
 }
-
 
 int gameShowDeathDialog(const char* message)
 {

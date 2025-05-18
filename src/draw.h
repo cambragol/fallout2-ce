@@ -20,10 +20,8 @@ void transSrcCopy(unsigned char* dest, int destPitch, unsigned char* src, int sr
 void blitBufferToBufferStretchAndFixEdges(
     unsigned char* src, int srcW, int srcH, int srcPitch,
     unsigned char* dst, int dstW, int dstH, int dstPitch,
-    int numStates = 1
-);
+    int numStates = 1);
 void calculateScaledSize(int srcWidth, int srcHeight, int targetWidth, int targetHeight, int mode, int& outWidth, int& outHeight);
-
 
 } // namespace fallout
 
