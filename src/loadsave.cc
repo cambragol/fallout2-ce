@@ -60,6 +60,9 @@
 #include "window_manager.h"
 #include "word_wrap.h"
 #include "worldmap.h"
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#endif
 
 namespace fallout {
 
@@ -204,7 +207,10 @@ static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
 
 // Control max number of save/load pages with global 10, 100, or 1000
 // More than 1000 slows the screen load
-const int saveLoadPages = 1000;
+// Control max number of save/load pages
+const int saveLoadPages = 100;
+constexpr int slotsPerPage = 10;
+const int saveLoadTotalSlots = saveLoadPages * slotsPerPage;
 
 // Global variable to track the current slot page
 static int _currentSlotPage = 0;
@@ -298,10 +304,10 @@ static bool _loadingGame = false;
 static MessageList gLoadSaveMessageList;
 
 // 0x613D30
-static LoadSaveSlotData _LSData[saveLoadPages];
+static LoadSaveSlotData _LSData[saveLoadTotalSlots];
 
 // 0x614280
-static int _LSstatus[saveLoadPages];
+static int _LSstatus[saveLoadTotalSlots];
 
 // 0x6142A8
 static unsigned char* _thumbnail_image;
@@ -369,7 +375,7 @@ void _InitLoadSave()
     MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
-    if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadPages) {
+    if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadTotalSlots) {
         autoQuickSaveSlots = true;
     }
     
@@ -461,6 +467,8 @@ int lsgSaveGame(int mode)
 
         return -1;
     }
+    
+    //touch_set_touchscreen_mode(mode == LOAD_SAVE_MODE_NORMAL);
 
     _quick_done = false;
 
@@ -570,8 +578,8 @@ int lsgSaveGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                        if (_slot_cursor < (saveLoadPages - 1)) { // Prevent going above 99
-                            if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadPages / 10) - 1) {
+                        if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
+                            if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
                                 // Move to the next page and set cursor to the first slot on that page
                                 _currentSlotPage++;
                                 _slot_cursor++;
@@ -602,8 +610,8 @@ int lsgSaveGame(int mode)
                     _slot_cursor = (_currentSlotPage * 10) + 9;
 
                     // Prevent overflow on the last page
-                    if (_slot_cursor > (saveLoadPages - 1)) {
-                        _slot_cursor = (saveLoadPages - 1);
+                    if (_slot_cursor > (saveLoadTotalSlots - 1)) {
+                        _slot_cursor = (saveLoadTotalSlots - 1);
                     }
 
                     selectionChanged = true;
@@ -626,7 +634,7 @@ int lsgSaveGame(int mode)
                     // Mouse locations updated for stretching
                     // Check if the click was in the "Next Page" button area
                     if ((mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
-                        if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
+                        if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
@@ -674,8 +682,8 @@ int lsgSaveGame(int mode)
                     // Adjust for the current page
                     int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
 
-                    if (clickedSlot > (saveLoadPages - 1)) { // Ensure we don't go beyond max slots
-                        clickedSlot = (saveLoadPages - 1);
+                    if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
+                        clickedSlot = (saveLoadTotalSlots - 1);
                     }
 
                     _slot_cursor = clickedSlot;
@@ -773,7 +781,7 @@ int lsgSaveGame(int mode)
 
                         // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
+                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
                                 // updates and blits text to be stretched
                                 resetCompositeToBase();
@@ -784,7 +792,7 @@ int lsgSaveGame(int mode)
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                _slot_cursor = (saveLoadPages - 1); // Prevent overflow (last slot overall)
+                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -1233,8 +1241,8 @@ int lsgLoadGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                    if (_slot_cursor < (saveLoadPages - 1)) { // Prevent going above 99
-                        if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadPages / 10) - 1) {
+                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
+                        if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
                             // Move to the next page and set cursor to the first slot on that page
                             _currentSlotPage++;
                             _slot_cursor++;
@@ -1266,8 +1274,8 @@ int lsgLoadGame(int mode)
                     _slot_cursor = (_currentSlotPage * 10) + 9;
 
                     // Prevent overflow in the last page (e.g., last page may have less than 10 slots)
-                    if (_slot_cursor > (saveLoadPages - 1)) {
-                        _slot_cursor = (saveLoadPages - 1);
+                    if (_slot_cursor > (saveLoadTotalSlots - 1)) {
+                        _slot_cursor = (saveLoadTotalSlots - 1);
                     }
 
                     selectionChanged = true;
@@ -1291,7 +1299,7 @@ int lsgLoadGame(int mode)
                      mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) ||
                     keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
 
-                        if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max 10 pages (0-9)
+                        if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
                             _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
@@ -1340,8 +1348,8 @@ int lsgLoadGame(int mode)
                     // Adjust for the current page
                     int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
 
-                    if (clickedSlot > (saveLoadPages - 1)) { // Ensure we don't go beyond max slots
-                        clickedSlot = (saveLoadPages - 1);
+                    if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
+                        clickedSlot = (saveLoadTotalSlots - 1);
                     }
 
                     _slot_cursor = clickedSlot;
@@ -1433,7 +1441,7 @@ int lsgLoadGame(int mode)
 
                         // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < (saveLoadPages / 10) - 1) { // Max pages: 0-9
+                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
                                 // updates and blits text to be stretched
                                 resetCompositeToBase();
@@ -1443,7 +1451,7 @@ int lsgLoadGame(int mode)
                                 loadsaveBlitComposite();                                     windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                _slot_cursor = (saveLoadPages - 1); // Prevent overflow (last slot overall)
+                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -2504,7 +2512,7 @@ static int lsgLoadHeaderInSlot(int slot)
 static int _GetSlotList()
 {
     int index = 0;
-    for (; index < saveLoadPages; index += 1) {
+    for (; index < saveLoadTotalSlots; index += 1) {
         snprintf(_str, sizeof(_str), "%s\\%s%.2d\\%s", "SAVEGAME", "SLOT", index + 1, "SAVE.DAT");
 
         int fileSize;
@@ -2541,12 +2549,12 @@ static int _GetSlotList()
 static void _ShowSlotList(int windowType)
 {
     const int slotsPerPage = 10;  // Show 10 slots per page
-    const int totalPages = (saveLoadPages + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
+    const int totalPages = (saveLoadTotalSlots + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
 
     int y = 87;
     int startIndex = _currentSlotPage * slotsPerPage;
     int endIndex = startIndex + slotsPerPage;
-    if (endIndex > saveLoadPages) endIndex = saveLoadPages;
+    if (endIndex > saveLoadTotalSlots) endIndex = saveLoadTotalSlots;
 
     for (int index = startIndex; index < endIndex; index++) {
         int color = index == _slot_cursor ? _colorTable[32747] : _colorTable[992];
@@ -2585,7 +2593,7 @@ static void _ShowSlotList(int windowType)
 
     // Pagination navigation
     // Draw text to compositeBuffer for later stretching
-    if (saveLoadPages > 10) {
+    if (saveLoadTotalSlots > 10) {
         int activeColor = _colorTable[992];
         int inactiveColor = _colorTable[8804];
         
@@ -2609,7 +2617,7 @@ static void _ShowSlotList(int windowType)
                 messageListItemMore.text,
                 LS_WINDOW_WIDTH,
                 LS_WINDOW_WIDTH,
-                _currentSlotPage < saveLoadPages - 1 ? activeColor : inactiveColor);
+                _currentSlotPage < saveLoadTotalSlots - 1 ? activeColor : inactiveColor);
         }
 
     }
