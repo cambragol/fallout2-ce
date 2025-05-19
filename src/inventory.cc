@@ -1021,8 +1021,8 @@ static bool _setup_inventory(int inventoryWindowType)
     int buttonWidth = 21;
     int buttonHeight = 21;
     
-    unsigned char* scaledNormal = reinterpret_cast<unsigned char*>(SDL_malloc(22 * 21));
-    unsigned char* scaledPressed = reinterpret_cast<unsigned char*>(SDL_malloc(22 * 21));
+    unsigned char* scaledNormal = reinterpret_cast<unsigned char*>(SDL_malloc(21 * 21));
+    unsigned char* scaledPressed = reinterpret_cast<unsigned char*>(SDL_malloc(21 * 21));
     if (!scaledNormal || !scaledPressed) {
         return -1;
     }
