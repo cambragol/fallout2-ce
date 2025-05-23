@@ -208,7 +208,7 @@ static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
 // Control max number of save/load pages with global 10, 100, or 1000
 // More than 1000 slows the screen load
 // Control max number of save/load pages
-const int saveLoadPages = 100;
+const int saveLoadPages = 10;
 constexpr int slotsPerPage = 10;
 const int saveLoadTotalSlots = saveLoadPages * slotsPerPage;
 
@@ -358,6 +358,7 @@ static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 
 static int quickSaveSlots = 0;
 static bool autoQuickSaveSlots = false;
+static int extraSaveSlots = 0;
 
 // clearing and refreshing functions for stretching
 void resetCompositeToBase();
@@ -374,12 +375,12 @@ void _InitLoadSave()
     MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
     MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_EXTRA_SAVE_SLOTS, &extraSaveSlots);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
     if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadTotalSlots) {
         autoQuickSaveSlots = true;
     }
     
-    pipboyMessageListInit();
 }
 
 // 0x47B85C
@@ -479,6 +480,8 @@ int lsgSaveGame(int mode)
         debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
         return -1;
     }
+    
+    pipboyMessageListInit();
 
     if (_GetSlotList() == -1) {
         windowRefresh(gLoadSaveWindow);
@@ -578,25 +581,31 @@ int lsgSaveGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                        if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
-                            if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
-                                // Move to the next page and set cursor to the first slot on that page
-                                _currentSlotPage++;
-                                _slot_cursor++;
-                                // updates and blits text to be stretched
-                                resetCompositeToBase();
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();                                windowRefresh(gLoadSaveWindow);
-                            } else {
-                                // Normal movement within the page
-                                _slot_cursor++;
-                            }
+                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above max slot
+                        // Check if we can move to next page (only allowed if extraSaveSlots enabled or not on slot 9)
+                        if ((extraSaveSlots == 1 || _slot_cursor < 9) &&
+                            (_slot_cursor % 10 == 9) &&
+                            _currentSlotPage < (saveLoadTotalSlots / 10) - 1)
+                        {
+                            // Page transition allowed
+                            _currentSlotPage++;
+                            _slot_cursor++;
+                            resetCompositeToBase();
+                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                            loadsaveBlitComposite();
+                            _DrawInfoBox(_slot_cursor);
+                            loadsaveBlitComposite();
+                            windowRefresh(gLoadSaveWindow);
                         }
+                        else if (extraSaveSlots == 1 || _slot_cursor < 9) {
+                            // Normal movement within page (only allowed if extraSaveSlots enabled or below slot 9)
+                            _slot_cursor++;
+                        }
+                        // else: no movement allowed (cursor stays at slot 9 when extraSaveSlots disabled)
+                    }
 
-                        selectionChanged = true;
-                        doubleClickSlot = -1;
+                    selectionChanged = true;
+                    doubleClickSlot = -1;
             break;
             case KEY_HOME:
                     // Move to the first slot of the current page
@@ -625,79 +634,80 @@ int lsgSaveGame(int mode)
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_DOWN;
                 break;
 
-            case KEY_ARROW_RIGHT:
-            case KEY_ARROW_LEFT:
-            case 502: { // Mouse click detected
+                case KEY_ARROW_RIGHT:
+                case KEY_ARROW_LEFT:
+                case 502: { // Mouse click detected
                     int mouseX, mouseY;
-                    mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
+                    if (keyCode == 502) {
+                        mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
+                    }
 
-                    // Mouse locations updated for stretching
-                    // Check if the click was in the "Next Page" button area
-                    if ((mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
-                        if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
-                            soundPlayFile("ib1p1xx1");
-                            _currentSlotPage++;
-                            _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
-                            selectionChanged = true;
-                            doubleClickSlot = -1;
-                            // updates and blits text to be stretched
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
+                    // First handle arrow key behavior (for both actual arrow keys AND mouse clicks)
+                    if (keyCode == KEY_ARROW_RIGHT || keyCode == KEY_ARROW_LEFT || keyCode == 502) {
+                        if (extraSaveSlots != 0) {
+                            // Next Page (right arrow OR right-side mouse click)
+                            if ((keyCode == KEY_ARROW_RIGHT) ||
+                                (keyCode == 502 && mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) &&
+                                                   mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY))) {
+                                if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
+                                    soundPlayFile("ib1p1xx1");
+                                    _currentSlotPage++;
+                                    _slot_cursor = _currentSlotPage * 10;
+                                    selectionChanged = true;
+                                    doubleClickSlot = -1;
+                                    resetCompositeToBase();
+                                    _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                                    loadsaveBlitComposite();
+                                    _DrawInfoBox(_slot_cursor);
+                                    loadsaveBlitComposite();
+                                    windowRefresh(gLoadSaveWindow);
+                                }
+                                break;
+                            }
+                            // Previous Page (left arrow OR left-side mouse click)
+                            else if ((keyCode == KEY_ARROW_LEFT) ||
+                                     (keyCode == 502 && mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
+                                                       mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY))) {
+                                if (_currentSlotPage > 0) {
+                                    soundPlayFile("ib1p1xx1");
+                                    _currentSlotPage--;
+                                    _slot_cursor = (_currentSlotPage * 10) + 9;
+                                    selectionChanged = true;
+                                    doubleClickSlot = -1;
+                                    resetCompositeToBase();
+                                    _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                                    loadsaveBlitComposite();
+                                    _DrawInfoBox(_slot_cursor);
+                                    loadsaveBlitComposite();
+                                    windowRefresh(gLoadSaveWindow);
+                                }
+                                break;
+                            }
                         }
-                        break;
                     }
 
-                    // Mouse locations updated for stretching
-                    // Check if the click was in the "Previous Page" button area
-                    if ((mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
-                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) || keyCode == KEY_ARROW_LEFT) { // Previous Page coordinates
-                        if (_currentSlotPage > 0) {
-                            soundPlayFile("ib1p1xx1");
-                            _currentSlotPage--;
-                            _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
-                            selectionChanged = true;
-                            doubleClickSlot = -1;
-                            // updates and blits text to be stretched
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();                            windowRefresh(gLoadSaveWindow);
+                    // Then handle slot selection (only for mouse clicks)
+                    if (keyCode == 502) {
+                        int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
+                        relativeSlot = std::clamp(relativeSlot, 0, 9);
+
+                        int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
+                        if (clickedSlot > (saveLoadTotalSlots - 1)) {
+                            clickedSlot = (saveLoadTotalSlots - 1);
                         }
-                        break;
+
+                        _slot_cursor = clickedSlot;
+                        if (clickedSlot == doubleClickSlot) {
+                            keyCode = 500;
+                            soundPlayFile("ib1p1xx1");
+                        }
+
+                        selectionChanged = true;
+                        doubleClickSlot = _slot_cursor;
+                        scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
                     }
-
-                    // Mouse locations updated for stretching
-                    // Calculate the clicked slot, adjusting for pagination
-                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
-                    if (relativeSlot < 0) {
-                        relativeSlot = 0;
-                    } else if (relativeSlot > 9) {
-                        relativeSlot = 9;
-                    }
-
-                    // Adjust for the current page
-                    int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-
-                    if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
-                        clickedSlot = (saveLoadTotalSlots - 1);
-                    }
-
-                    _slot_cursor = clickedSlot;
-                    if (clickedSlot == doubleClickSlot) {
-                        keyCode = 500;
-                        soundPlayFile("ib1p1xx1");
-                    }
-
-                    selectionChanged = true;
-                    doubleClickSlot = _slot_cursor;
-                    scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+                    break;
                 }
-            break;
-
             case KEY_CTRL_Q:
             case KEY_CTRL_X:
             case KEY_F10:
@@ -777,22 +787,24 @@ int lsgSaveGame(int mode)
                             }
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
-                        _slot_cursor++;
-
-                        // If moving down past the last slot of the page, go to the next page
+                        // Only increment cursor if below slot 10 OR extraSaveSlots is enabled
+                        if (_slot_cursor < 10 || extraSaveSlots == 1) {
+                            _slot_cursor++;
+                        }
+                        // Handle page transitions (only allowed if extraSaveSlots == 1)
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
+                            if (extraSaveSlots == 1 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
                                 _currentSlotPage++;
-                                // updates and blits text to be stretched
                                 resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
                                 loadsaveBlitComposite();
                                 _DrawInfoBox(_slot_cursor);
                                 loadsaveBlitComposite();
                                 windowRefresh(gLoadSaveWindow);
-                                _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
+                                _slot_cursor = _currentSlotPage * 10; // Jump to first slot of next page
                             } else {
-                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
+                                // Clamp to last allowed slot (either last in page or last overall)
+                                _slot_cursor = (extraSaveSlots == 1) ? (saveLoadTotalSlots - 1) : (_currentSlotPage * 10) + 9;
                             }
                         }
                     }
@@ -1004,6 +1016,8 @@ int lsgSaveGame(int mode)
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+    
+    pipboyMessageListFree();
 
     tileWindowRefresh();
 
@@ -1151,6 +1165,8 @@ int lsgLoadGame(int mode)
         debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
         return -1;
     }
+    
+    pipboyMessageListInit();
 
     if (_GetSlotList() == -1) {
         gameMouseSetCursor(MOUSE_CURSOR_ARROW);
@@ -1241,12 +1257,15 @@ int lsgLoadGame(int mode)
             break;
 
             case KEY_ARROW_DOWN:
-                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
-                        if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
-                            // Move to the next page and set cursor to the first slot on that page
+                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above max slot
+                        // Check for page transition (only allowed if extraSaveSlots=1 or cursor≠9)
+                        if ((extraSaveSlots == 1 || _slot_cursor != 9) &&
+                            (_slot_cursor % 10 == 9) &&
+                            _currentSlotPage < (saveLoadTotalSlots / 10) - 1)
+                        {
+                            // Move to next page
                             _currentSlotPage++;
                             _slot_cursor++;
-                            // updates and blits text to be stretched
                             resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             loadsaveBlitComposite();
@@ -1254,8 +1273,10 @@ int lsgLoadGame(int mode)
                             loadsaveBlitComposite();
                             windowRefresh(gLoadSaveWindow);
                         } else {
-                            // Normal movement within the page
-                            _slot_cursor++;
+                            // Only increment cursor if allowed
+                            if (extraSaveSlots != 0 || _slot_cursor != 9) {
+                                _slot_cursor++;
+                            }
                         }
                     }
 
@@ -1290,65 +1311,58 @@ int lsgLoadGame(int mode)
             case KEY_ARROW_RIGHT:
             case KEY_ARROW_LEFT:
             case 502: { // Mouse click
-                    int mouseX, mouseY;
+                int mouseX, mouseY;
+                bool isMouseClick = (keyCode == 502);
+
+                if (isMouseClick) {
                     mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
+                }
 
-                    // Mouse locations updated for stretching
-                    // Check if the click was in the "Next Page" button area
-                    if ((mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) &&
-                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) ||
-                    keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
-
-                        if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
+                // Handle page navigation (for both arrow keys and mouse button clicks)
+                if (keyCode == KEY_ARROW_RIGHT || keyCode == KEY_ARROW_LEFT || isMouseClick) {
+                    // Next Page (right arrow OR right-side mouse click)
+                    if ((keyCode == KEY_ARROW_RIGHT || (isMouseClick && mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)))) {
+                        if (extraSaveSlots != 0 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage++;
-                            _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
+                            _slot_cursor = _currentSlotPage * 10;
                             selectionChanged = true;
                             doubleClickSlot = -1;
-                            // updates and blits text to be stretched
                             resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             loadsaveBlitComposite();
                             _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();                                 windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
-
-                    // Mouse locations updated for stretching
-                    // Check if the click was in the "Previous Page" button area
-                    if ((mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
-                     mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)) ||
-                    keyCode == KEY_ARROW_LEFT) { // Coordinates for Previous Page button
+                    // Previous Page (left arrow OR left-side mouse click)
+                    else if ((keyCode == KEY_ARROW_LEFT || (isMouseClick && mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)))) {
                         if (_currentSlotPage > 0) {
                             soundPlayFile("ib1p1xx1");
                             _currentSlotPage--;
-                            _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
+                            _slot_cursor = (_currentSlotPage * 10) + 9;
                             selectionChanged = true;
                             doubleClickSlot = -1;
-                            // updates and blits text to be stretched
                             resetCompositeToBase();
                             _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                             loadsaveBlitComposite();
                             _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();                                 windowRefresh(gLoadSaveWindow);
+                            loadsaveBlitComposite();
+                            windowRefresh(gLoadSaveWindow);
                         }
                         break;
                     }
+                }
 
-                    // Mouse locations updated for stretching
-                    // Calculate the clicked slot, adjusting for pagination
+                // Handle slot selection (only for mouse clicks)
+                if (isMouseClick) {
                     int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
-                    if (relativeSlot < 0) {
-                        relativeSlot = 0;
-                    } else if (relativeSlot > 9) {
-                        relativeSlot = 9;
-                    }
+                    relativeSlot = std::clamp(relativeSlot, 0, 9);
 
-                    // Adjust for the current page
                     int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-
-                    if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
+                    if (clickedSlot > (saveLoadTotalSlots - 1)) {
                         clickedSlot = (saveLoadTotalSlots - 1);
                     }
 
@@ -1362,8 +1376,8 @@ int lsgLoadGame(int mode)
                     doubleClickSlot = _slot_cursor;
                     scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
                 }
-            break;
-
+                break;
+            }
             case KEY_MINUS:
             case KEY_UNDERSCORE:
                 brightnessDecrease();
@@ -1437,21 +1451,26 @@ int lsgLoadGame(int mode)
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
                         //soundPlayFile("ib1p1xx1");
-                        _slot_cursor++;
 
-                        // If moving down past the last slot of the page, go to the next page
+                        // Only increment cursor if below slot 10 OR extraSaveSlots is enabled
+                        if (_slot_cursor < 10 || extraSaveSlots == 1) {
+                            _slot_cursor++;
+                        }
+                        // Handle page transitions (only allowed if extraSaveSlots == 1)
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
+                            if (extraSaveSlots == 1 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
                                 _currentSlotPage++;
                                 // updates and blits text to be stretched
                                 resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                                 loadsaveBlitComposite();
                                 _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();                                     windowRefresh(gLoadSaveWindow);
+                                loadsaveBlitComposite();
+                                windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
+                                // Clamp to the last allowed slot (either last in current page or last overall)
+                                _slot_cursor = (extraSaveSlots == 1) ? (saveLoadTotalSlots - 1) : (_currentSlotPage * 10) + 9;
                             }
                         }
                     }
@@ -1597,6 +1616,8 @@ int lsgLoadGame(int mode)
     } else {
         lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
     }
+    
+    pipboyMessageListFree();
 
     if (mode == LOAD_SAVE_MODE_QUICK) {
         if (rc == 1) {
@@ -2593,14 +2614,16 @@ static void _ShowSlotList(int windowType)
 
     // Pagination navigation
     // Draw text to compositeBuffer for later stretching
-    if (saveLoadTotalSlots > 10) {
+    if (saveLoadTotalSlots > 10 && extraSaveSlots != 0) {
         int activeColor = _colorTable[992];
         int inactiveColor = _colorTable[8804];
         
         {
-            MessageListItem messageListItemBack;
-            messageListItemBack.num = 201; // Back
-            messageListGetItem(&gPipboyMessageList, &messageListItemBack);
+            MessageListItem messageListItemBack = { 201, 0, nullptr, nullptr };
+            if (!messageListGetItem(&gPipboyMessageList, &messageListItemBack)) {
+                debugPrint("Error: Couldn't find LoadSave Message!");
+                messageListItemBack.text = "BACK";
+            }
             fontDrawText(
                 compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95,
                 messageListItemBack.text,
@@ -2609,15 +2632,17 @@ static void _ShowSlotList(int windowType)
                 _currentSlotPage > 0 ? activeColor : inactiveColor);
         }
         {
-            MessageListItem messageListItemMore;
-            messageListItemMore.num = 200; // More
-            messageListGetItem(&gPipboyMessageList, &messageListItemMore);
+            MessageListItem messageListItemMore = { 200, 0, nullptr, nullptr };
+            if (!messageListGetItem(&gPipboyMessageList, &messageListItemMore)) {
+                debugPrint("Error: Couldn't find LoadSave Message!");
+                messageListItemMore.text = "MORE";
+            }
             fontDrawText(
                 compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210,
                 messageListItemMore.text,
                 LS_WINDOW_WIDTH,
                 LS_WINDOW_WIDTH,
-                _currentSlotPage < saveLoadTotalSlots - 1 ? activeColor : inactiveColor);
+                _currentSlotPage < saveLoadPages - 1 ? activeColor : inactiveColor);
         }
 
     }

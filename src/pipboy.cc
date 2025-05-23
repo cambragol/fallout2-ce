@@ -581,13 +581,7 @@ int pipboyOpen(int intent)
 
 int pipboyMessageListInit()
 {
-    if (gPipboyMessageList.entries != nullptr) {
-        messageListFree(&gPipboyMessageList);
-    }
-
-    if (!messageListInit(&gPipboyMessageList)) {
-        return -1;
-    }
+    pipboyMessageListFree();
 
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", asc_5186C8, "pipboy.msg");
@@ -686,8 +680,9 @@ static int pipboyWindowInit(int intent)
         buttonSetCallbacks(alarmButton, _gsound_med_butt_press, _gsound_med_butt_release);
     }
 
-    int y = 341;
+    int y = 340;
     int eventCode = 500;
+    int yOffsets[] = {27, 27, 29, 25, 27};  // handles slighlty misaligned buttons on background
     for (int index = 0; index < 5; index += 1) {
         if (index != 1) {
             int btn = buttonCreate(gPipboyWindow,
@@ -709,8 +704,7 @@ static int pipboyWindowInit(int intent)
 
             eventCode += 1;
         }
-
-        y += 27;
+        y += yOffsets[index];
     }
 
     if (intent == PIPBOY_OPEN_INTENT_REST) {
@@ -808,6 +802,14 @@ static int pipboyWindowInit(int intent)
     return intent;
 }
 
+void pipboyMessageListFree()
+{
+    if (gPipboyMessageList.entries != nullptr) {
+        messageListFree(&gPipboyMessageList);
+    }
+    messageListInit(&gPipboyMessageList);
+}
+
 // 0x497828
 static void pipboyWindowFree()
 {
@@ -818,6 +820,8 @@ static void pipboyWindowFree()
     scriptsExecMapUpdateProc();
 
     windowDestroy(gPipboyWindow);
+    
+    pipboyMessageListFree();
 
     messageListFree(&gPipboyMessageList);
 
