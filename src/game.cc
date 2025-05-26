@@ -1253,7 +1253,7 @@ static void showHelp()
             scaledHeight);
 
         // Allocate memory for the scaled image.
-        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth + 1) * (scaledHeight + 1)));
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth) * (scaledHeight)));
         if (scaled != nullptr) {
             // Stretch and fix the original help image into the new buffer.
             blitBufferToBufferStretchAndFixEdges(
