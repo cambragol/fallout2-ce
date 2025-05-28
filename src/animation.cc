@@ -3032,6 +3032,10 @@ void _dude_fidget()
     if (_game_user_wants_to_quit != 0) {
         return;
     }
+    
+    if (isWorldMapActive()) {
+        return;
+    }
 
     if (isInCombat()) {
         return;

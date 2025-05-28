@@ -104,7 +104,7 @@ namespace fallout {
 #define WM_VIEW_X (22)
 #define WM_VIEW_Y (21)
 #define WM_VIEW_WIDTH (450)
-#define WM_VIEW_HEIGHT (443)
+#define WM_VIEW_HEIGHT (445)
 
 typedef enum EncounterFormationType {
     ENCOUNTER_FORMATION_TYPE_SURROUNDING,
@@ -534,7 +534,7 @@ static int wmTileGrabArt(int tileIdx);
 static int wmInterfaceRefresh();
 static void wmInterfaceRefreshDate(bool shouldRefreshWindow);
 static int wmMatchWorldPosToArea(int x, int y, int* areaIdxPtr);
-static int wmInterfaceDrawCircleOverlay(CityInfo* cityInfo, CitySizeDescription* citySizeInfo, unsigned char* buffer, int x, int y);
+static int wmInterfaceDrawCircleOverlay(CityInfo* cityInfo, CitySizeDescription* citySizeInfo, unsigned char* buffer, int x, int y, int destPitch);
 static void wmInterfaceDrawSubTileRectFogged(unsigned char* dest, int width, int height, int pitch);
 static int wmInterfaceDrawSubTileList(TileInfo* tileInfo, int column, int row, int x, int y, int a6);
 static int wmDrawCursorStopped();
@@ -578,6 +578,8 @@ static int scaledViewX = WM_VIEW_X;
 static int scaledViewY = WM_VIEW_Y;
 static float scaleX = 1.0f;
 static float scaleY = 1.0f;
+
+static bool inWorldMap = false;
 
 // 0x4BC860
 static const int _can_rest_here[ELEVATION_COUNT] = {
@@ -750,6 +752,13 @@ static const int wmRndCursorFids[WORLD_MAP_ENCOUNTER_FRM_COUNT] = {
     439,
 };
 
+#define MAX_TRAIL_LENGTH 1000
+
+typedef struct {
+    int x;
+    int y;
+} TrailDot;
+
 // 0x51DE94
 static int* wmLabelList = nullptr;
 
@@ -848,6 +857,10 @@ static unsigned int wmForceEncounterFlags = 0;
 static inline bool cityIsValid(int city)
 {
     return city >= 0 && city < wmMaxAreaNum;
+}
+
+bool isWorldMapActive() {
+    return inWorldMap;
 }
 
 inline void blitStretchedImageToBufferTrans(
@@ -3198,6 +3211,8 @@ static int wmWorldMapFunc(int a1)
     ScopedGameMode gm(GameMode::kWorldmap);
 
     wmFadeOut();
+    
+    inWorldMap = true;
 
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();
@@ -3500,6 +3515,8 @@ static int wmWorldMapFunc(int a1)
     }
 
     wmFadeIn();
+    
+    inWorldMap = false;
 
     return rc;
 }
@@ -4884,8 +4901,8 @@ static int wmInterfaceInit()
     int redButtonBaseWidth = wmGenData.redButtonPressedFrmImage.getWidth();
     int redButtonBaseHeight = wmGenData.redButtonPressedFrmImage.getHeight();
     // added two pixel padding to account for discrepencies in background image buttons are placed over
-    int redButtonWidth = static_cast<int>(redButtonBaseWidth * scaleX + 2);
-    int redButtonHeight = static_cast<int>(redButtonBaseHeight * scaleY + 2);
+    int redButtonWidth = static_cast<int>(redButtonBaseWidth * scaleX);
+    int redButtonHeight = static_cast<int>(redButtonBaseHeight * scaleY);
     
     int arrowButtonBaseWidth = wmGenData.scrollUpButtonFrmImages[0].getWidth();
     int arrowButtonBaseHeight = wmGenData.scrollUpButtonFrmImages[0].getHeight();
@@ -4893,8 +4910,8 @@ static int wmInterfaceInit()
     int arrowButtonHeight = static_cast<int>(arrowButtonBaseHeight * scaleY);
 
     // Allocate and stretch the round button images
-    unsigned char* scaledRedNormal = reinterpret_cast<unsigned char*>(SDL_malloc((2 + redButtonWidth) * (redButtonHeight + 2)));
-    unsigned char* scaledRedPressed = reinterpret_cast<unsigned char*>(SDL_malloc((2 + redButtonWidth) * (redButtonHeight + 2)));
+    unsigned char* scaledRedNormal = reinterpret_cast<unsigned char*>(SDL_malloc((redButtonWidth) * (redButtonHeight)));
+    unsigned char* scaledRedPressed = reinterpret_cast<unsigned char*>(SDL_malloc((redButtonWidth) * (redButtonHeight)));
     unsigned char* scaledArrowUpNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
     unsigned char* scaledArrowDownNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
     unsigned char* scaledArrowUpPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowButtonWidth * arrowButtonHeight));
@@ -5158,7 +5175,7 @@ static int wmInterfaceExit()
     wmInterfaceWasInitialized = 0;
 
     scriptsEnable();
-
+    
     return 0;
 }
 
@@ -5549,19 +5566,53 @@ static int wmInterfaceRefresh()
         y += height;
     }
     
-    // Render cities.
-    for (int index = 0; index < wmMaxAreaNum; index++) {
-        CityInfo* cityInfo = &(wmAreaInfoList[index]);
-        if (cityInfo->state != CITY_STATE_UNKNOWN) {
-            CitySizeDescription* citySizeDescription = &(wmSphereData[cityInfo->size]);
-            int cityX = cityInfo->x - wmWorldOffsetX;
-            int cityY = cityInfo->y - wmWorldOffsetY;
-            if (cityX >= 0 && cityX <= (472 * scaleX) - citySizeDescription->frmImage.getWidth()
-                && cityY >= 0 && cityY <= (465 * scaleY) - citySizeDescription->frmImage.getHeight()) {
-                wmInterfaceDrawCircleOverlay(cityInfo, citySizeDescription, wmBkWinBuf, cityX, cityY);
+    
+        constexpr int PADDING = 100;
+
+        int viewportWidth = 472 * scaleX;
+        int viewportHeight = 465 * scaleY;
+
+        int bufferWidth = viewportWidth + PADDING * 2;
+        int bufferHeight = viewportHeight + PADDING * 2;
+
+        unsigned char* paddedBuf = (unsigned char*)malloc(bufferWidth * bufferHeight);
+        if (paddedBuf != nullptr) {
+            // Copy current wmBkWinBuf into center of paddedBuf
+            memset(paddedBuf, 0, bufferWidth * bufferHeight); // Clear padding
+
+            for (int y = 0; y < viewportHeight; y++) {
+                memcpy(
+                    paddedBuf + bufferWidth * (y + PADDING) + PADDING,
+                    wmBkWinBuf + y * scaledWidth,
+                    viewportWidth);
             }
+
+            // Draw cities onto padded buffer
+            for (int index = 0; index < wmMaxAreaNum; index++) {
+                CityInfo* cityInfo = &wmAreaInfoList[index];
+                if (cityInfo->state != CITY_STATE_UNKNOWN) {
+                    CitySizeDescription* citySizeDescription = &wmSphereData[cityInfo->size];
+                    int cityX = cityInfo->x - wmWorldOffsetX + PADDING;
+                    int cityY = cityInfo->y - wmWorldOffsetY + PADDING;
+
+                    if (cityX >= 0 && cityX <= bufferWidth - citySizeDescription->frmImage.getWidth() &&
+                        cityY >= 0 && cityY <= bufferHeight - citySizeDescription->frmImage.getHeight()) {
+                        wmInterfaceDrawCircleOverlay(cityInfo, citySizeDescription, paddedBuf, cityX, cityY, bufferWidth);
+                    }
+                }
+            }
+
+            // Copy center portion back to wmBkWinBuf
+            for (int y = 0; y < viewportHeight; y++) {
+                memcpy(
+                    wmBkWinBuf + y * scaledWidth,
+                    paddedBuf + bufferWidth * (y + PADDING) + PADDING,
+                    viewportWidth);
+            }
+
+            free(paddedBuf);
         }
-    }
+    
 
     // Hide unknown subtiles, dim unvisited.
     int v25 = wmWorldOffsetX / WM_TILE_WIDTH % wmNumHorizontalTiles + wmWorldOffsetY / WM_TILE_HEIGHT * wmNumHorizontalTiles;
@@ -5754,38 +5805,44 @@ static int wmMatchWorldPosToArea(int x, int y, int* areaIdxPtr)
 }
 
 // 0x4C3FA8
-static int wmInterfaceDrawCircleOverlay(CityInfo* city, CitySizeDescription* citySizeDescription, unsigned char* dest, int x, int y)
+static int wmInterfaceDrawCircleOverlay(
+    CityInfo* city,
+    CitySizeDescription* citySizeDescription,
+    unsigned char* dest,
+    int x,
+    int y,
+    int destPitch)
 {
-    _dark_translucent_trans_buf_to_buf(citySizeDescription->frmImage.getData(),
+    _dark_translucent_trans_buf_to_buf(
+        citySizeDescription->frmImage.getData(),
         citySizeDescription->frmImage.getWidth(),
         citySizeDescription->frmImage.getHeight(),
         citySizeDescription->frmImage.getWidth(),
         dest,
         x,
         y,
-        scaledWidth,
+        destPitch, // <<--- use correct pitch here!
         0x10000,
         circleBlendTable,
         _commonGrayTable);
 
-    // CE: Slightly increase whitespace between cirle and city name.
     int nameY = y + citySizeDescription->frmImage.getHeight() + 3;
-    int maxY = (464 * scaleY) - fontGetLineHeight();
+    int maxY = (464 * scaleY) + 200 - fontGetLineHeight(); // 200 for the PADDING
     if (nameY < maxY) {
         MessageListItem messageListItem;
         char name[40];
         if (wmAreaIsKnown(city->areaId)) {
-            // NOTE: Uninline.
             wmGetAreaName(city, name);
         } else {
             strncpy(name, getmsg(&wmMsgFile, &messageListItem, 1004), 40);
         }
 
         int width = fontGetStringWidth(name);
-        fontDrawText(dest + scaledWidth * nameY + x + citySizeDescription->frmImage.getWidth() / 2 - width / 2,
+        fontDrawText(
+            dest + destPitch * nameY + x + citySizeDescription->frmImage.getWidth() / 2 - width / 2,
             name,
             width,
-            scaledWidth,
+            destPitch,
             _colorTable[992] | FONT_SHADOW);
     }
 
@@ -5864,13 +5921,16 @@ static int wmDrawCursorStopped()
     int width;
     int height;
 
-    if (wmGenData.walkDestinationX >= 1 || wmGenData.walkDestinationY >= 1) {
+    bool isWalkingNow = (wmGenData.walkDestinationX != 0 || wmGenData.walkDestinationY != 0);
 
+    if (isWalkingNow) {
+        // moving cursor
         if (wmGenData.encounterIconIsVisible) {
             src = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getData();
             width = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getWidth();
             height = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getHeight();
         } else {
+            // current location (+)
             src = wmGenData.locationMarkerFrmImage.getData();
             width = wmGenData.locationMarkerFrmImage.getWidth();
             height = wmGenData.locationMarkerFrmImage.getHeight();
@@ -5904,6 +5964,76 @@ static int wmDrawCursorStopped()
         if (wmGenData.worldPosX >= wmWorldOffsetX && wmGenData.worldPosX < wmWorldOffsetX + scaledViewWidth
             && wmGenData.worldPosY >= wmWorldOffsetY && wmGenData.worldPosY < wmWorldOffsetY + scaledViewHeight) {
             blitBufferToBufferTrans(src, width, height, width, wmBkWinBuf + scaledWidth * (scaledViewY - wmWorldOffsetY + wmGenData.worldPosY - height / 2) + scaledViewX - wmWorldOffsetX + wmGenData.worldPosX - width / 2, scaledWidth);
+        }
+    }
+
+    // Dotted Trail logic
+
+    static bool wasWalking = false;
+    static uint32_t lastTrailDropTick = 0;
+    const int baseCooldown = 25;    // base time between potential dot drops
+    static int trailDotCount = 0;
+    static TrailDot trailDots[MAX_TRAIL_LENGTH];
+    static int patternCounter = 0;
+
+    // Clear the trail when player stops - needs to be done when reloading map too
+    if (wasWalking && !isWalkingNow) {
+        trailDotCount = 0;
+    }
+    wasWalking = isWalkingNow;
+
+    if (isWalkingNow) {
+        uint32_t now = getTicks();
+        if (now - lastTrailDropTick >= baseCooldown) {
+            lastTrailDropTick = now;
+            patternCounter++;
+
+            // Figure out current terrain difficulty
+            wmPartyFindCurSubTile();
+            int difficulty = 1;
+            if (wmGenData.currentSubtile) {
+                Terrain* t = &wmTerrainTypeList[wmGenData.currentSubtile->terrain];
+                difficulty = t->difficulty;
+                if (difficulty < 1) difficulty = 1;
+            }
+
+            // Decide whether to drop on this step, based on terrain (difficulty)
+            bool shouldDrop;
+            if (difficulty >= 4) {
+                shouldDrop = (patternCounter % 4) != 0;  // Drop 3 out of every 4 steps --- used?
+            } else if (difficulty == 3) {
+                shouldDrop = (patternCounter % 3) != 0;  // Drop 2 out of every 3
+            } else if (difficulty == 2) {
+                shouldDrop = (patternCounter % 2) == 0;  // Drop every other step
+            } else {
+                shouldDrop = (patternCounter % 3) == 0;  // Drop only once every 3 steps
+            }
+
+            if (shouldDrop) {
+                int cx = wmGenData.worldPosX;
+                int cy = wmGenData.worldPosY;
+                if (trailDotCount < MAX_TRAIL_LENGTH) {
+                    trailDots[trailDotCount++] = { cx, cy };
+                } else {
+                    // shift left, add more dots
+                    memmove(trailDots, trailDots + 1, sizeof(TrailDot) * (MAX_TRAIL_LENGTH - 1));
+                    trailDots[MAX_TRAIL_LENGTH - 1] = { cx, cy };
+                }
+            }
+        }
+    }
+    
+    // 4) Render the trail dots (1×1 bright-red pixels)
+    for (int i = 0; i < trailDotCount; i++) {
+        int x = trailDots[i].x;
+        int y = trailDots[i].y;
+        if (x >= wmWorldOffsetX && x < wmWorldOffsetX + scaledViewWidth
+         && y >= wmWorldOffsetY && y < wmWorldOffsetY + scaledViewHeight)
+        {
+            unsigned char* dst = wmBkWinBuf
+                + scaledWidth * (scaledViewY - wmWorldOffsetY + y)
+                + (scaledViewX - wmWorldOffsetX + x);
+            *dst = 136;  // bright-red palette index
         }
     }
 
