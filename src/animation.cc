@@ -3033,7 +3033,7 @@ void _dude_fidget()
         return;
     }
     
-    if (isWorldMapActive()) {
+    if (GameMode::getCurrentGameMode() == GameMode::kWorldmap) {
         return;
     }
 

@@ -579,8 +579,6 @@ static int scaledViewY = WM_VIEW_Y;
 static float scaleX = 1.0f;
 static float scaleY = 1.0f;
 
-static bool inWorldMap = false;
-
 // 0x4BC860
 static const int _can_rest_here[ELEVATION_COUNT] = {
     MAP_CAN_REST_ELEVATION_0,
@@ -853,14 +851,11 @@ static FrmImage _townFrmImage;
 static bool wmFaded = false;
 static int wmForceEncounterMapId = -1;
 static unsigned int wmForceEncounterFlags = 0;
+static int worldmapTrailMarkers;
 
 static inline bool cityIsValid(int city)
 {
     return city >= 0 && city < wmMaxAreaNum;
-}
-
-bool isWorldMapActive() {
-    return inWorldMap;
 }
 
 inline void blitStretchedImageToBufferTrans(
@@ -1059,7 +1054,9 @@ int wmWorldMap_init()
 
     // SFALL
     gTownMapHotkeysFix = true;
+    worldmapTrailMarkers = 0;
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_TOWN_MAP_HOTKEYS_FIX_KEY, &gTownMapHotkeysFix);
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS, &worldmapTrailMarkers);
 
     // CE: City size fids should be initialized during startup. They are used
     // during |wmTeleportToArea| to calculate worldmap position when jumping
@@ -3212,8 +3209,6 @@ static int wmWorldMapFunc(int a1)
 
     wmFadeOut();
     
-    inWorldMap = true;
-
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();
         wmFadeReset();
@@ -3516,8 +3511,6 @@ static int wmWorldMapFunc(int a1)
 
     wmFadeIn();
     
-    inWorldMap = false;
-
     return rc;
 }
 
@@ -5877,7 +5870,7 @@ static int wmInterfaceDrawSubTileList(TileInfo* tileInfo, int column, int row, i
     int height = WM_SUBTILE_SIZE;
     if (y < scaledViewY) {
         if (y < 0) {
-            height = y + 29;
+            height = y + (50 - (21 * scaleY) + 1); // this kludge works, but it may be possible to cut this completely
         } else {
             height = WM_SUBTILE_SIZE - (scaledViewY - y);
         }
@@ -5969,71 +5962,73 @@ static int wmDrawCursorStopped()
 
     // Dotted Trail logic
 
-    static bool wasWalking = false;
-    static uint32_t lastTrailDropTick = 0;
-    const int baseCooldown = 25;    // base time between potential dot drops
-    static int trailDotCount = 0;
-    static TrailDot trailDots[MAX_TRAIL_LENGTH];
-    static int patternCounter = 0;
-
-    // Clear the trail when player stops - needs to be done when reloading map too
-    if (wasWalking && !isWalkingNow) {
-        trailDotCount = 0;
-    }
-    wasWalking = isWalkingNow;
-
-    if (isWalkingNow) {
-        uint32_t now = getTicks();
-        if (now - lastTrailDropTick >= baseCooldown) {
-            lastTrailDropTick = now;
-            patternCounter++;
-
-            // Figure out current terrain difficulty
-            wmPartyFindCurSubTile();
-            int difficulty = 1;
-            if (wmGenData.currentSubtile) {
-                Terrain* t = &wmTerrainTypeList[wmGenData.currentSubtile->terrain];
-                difficulty = t->difficulty;
-                if (difficulty < 1) difficulty = 1;
-            }
-
-            // Decide whether to drop on this step, based on terrain (difficulty)
-            bool shouldDrop;
-            if (difficulty >= 4) {
-                shouldDrop = (patternCounter % 4) != 0;  // Drop 3 out of every 4 steps --- used?
-            } else if (difficulty == 3) {
-                shouldDrop = (patternCounter % 3) != 0;  // Drop 2 out of every 3
-            } else if (difficulty == 2) {
-                shouldDrop = (patternCounter % 2) == 0;  // Drop every other step
-            } else {
-                shouldDrop = (patternCounter % 3) == 0;  // Drop only once every 3 steps
-            }
-
-            if (shouldDrop) {
-                int cx = wmGenData.worldPosX;
-                int cy = wmGenData.worldPosY;
-                if (trailDotCount < MAX_TRAIL_LENGTH) {
-                    trailDots[trailDotCount++] = { cx, cy };
+    if (worldmapTrailMarkers) {
+        static bool wasWalking = false;
+        static uint32_t lastTrailDropTick = 0;
+        const int baseCooldown = 25;    // base time between potential dot drops
+        static int trailDotCount = 0;
+        static TrailDot trailDots[MAX_TRAIL_LENGTH];
+        static int patternCounter = 0;
+        
+        // Clear the trail when player stops - needs to be done when reloading map too
+        if (wasWalking && !isWalkingNow) {
+            trailDotCount = 0;
+        }
+        wasWalking = isWalkingNow;
+        
+        if (isWalkingNow) {
+            uint32_t now = getTicks();
+            if (now - lastTrailDropTick >= baseCooldown) {
+                lastTrailDropTick = now;
+                patternCounter++;
+                
+                // Figure out current terrain difficulty
+                wmPartyFindCurSubTile();
+                int difficulty = 1;
+                if (wmGenData.currentSubtile) {
+                    Terrain* t = &wmTerrainTypeList[wmGenData.currentSubtile->terrain];
+                    difficulty = t->difficulty;
+                    if (difficulty < 1) difficulty = 1;
+                }
+                
+                // Decide whether to drop on this step, based on terrain (difficulty)
+                bool shouldDrop;
+                if (difficulty >= 4) {
+                    shouldDrop = (patternCounter % 4) != 0;  // Drop 3 out of every 4 steps --- used?
+                } else if (difficulty == 3) {
+                    shouldDrop = (patternCounter % 3) != 0;  // Drop 2 out of every 3
+                } else if (difficulty == 2) {
+                    shouldDrop = (patternCounter % 2) == 0;  // Drop every other step
                 } else {
-                    // shift left, add more dots
-                    memmove(trailDots, trailDots + 1, sizeof(TrailDot) * (MAX_TRAIL_LENGTH - 1));
-                    trailDots[MAX_TRAIL_LENGTH - 1] = { cx, cy };
+                    shouldDrop = (patternCounter % 3) == 0;  // Drop only once every 3 steps
+                }
+                
+                if (shouldDrop) {
+                    int cx = wmGenData.worldPosX;
+                    int cy = wmGenData.worldPosY;
+                    if (trailDotCount < MAX_TRAIL_LENGTH) {
+                        trailDots[trailDotCount++] = { cx, cy };
+                    } else {
+                        // shift left, add more dots
+                        memmove(trailDots, trailDots + 1, sizeof(TrailDot) * (MAX_TRAIL_LENGTH - 1));
+                        trailDots[MAX_TRAIL_LENGTH - 1] = { cx, cy };
+                    }
                 }
             }
         }
-    }
-    
-    // 4) Render the trail dots (1×1 bright-red pixels)
-    for (int i = 0; i < trailDotCount; i++) {
-        int x = trailDots[i].x;
-        int y = trailDots[i].y;
-        if (x >= wmWorldOffsetX && x < wmWorldOffsetX + scaledViewWidth
-         && y >= wmWorldOffsetY && y < wmWorldOffsetY + scaledViewHeight)
-        {
-            unsigned char* dst = wmBkWinBuf
+        
+        // 4) Render the trail dots (1×1 bright-red pixels)
+        for (int i = 0; i < trailDotCount; i++) {
+            int x = trailDots[i].x;
+            int y = trailDots[i].y;
+            if (x >= wmWorldOffsetX && x < wmWorldOffsetX + scaledViewWidth
+                && y >= wmWorldOffsetY && y < wmWorldOffsetY + scaledViewHeight)
+            {
+                unsigned char* dst = wmBkWinBuf
                 + scaledWidth * (scaledViewY - wmWorldOffsetY + y)
                 + (scaledViewX - wmWorldOffsetX + x);
-            *dst = 136;  // bright-red palette index
+                *dst = 136;  // bright-red palette index
+            }
         }
     }
 
