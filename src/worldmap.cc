@@ -5869,11 +5869,11 @@ static int wmInterfaceDrawSubTileList(TileInfo* tileInfo, int column, int row, i
 
     int height = WM_SUBTILE_SIZE;
     if (y < scaledViewY) {
-        if (y < 0) {
+        /*if (y < 0) {
             height = y + (50 - (21 * scaleY) + 1); // this kludge works, but it may be possible to cut this completely
-        } else {
+        } else {*/
             height = WM_SUBTILE_SIZE - (scaledViewY - y);
-        }
+        //}
         destY = scaledViewY;
     }
 
@@ -5888,8 +5888,8 @@ static int wmInterfaceDrawSubTileList(TileInfo* tileInfo, int column, int row, i
     }
 
     // 472 * scaleX marks the blacked out extent of the map
-    if (width + x > (472 * scaleX)) {
-        width -= width + x - (472 * scaleX);
+    if (width + x > (473 * scaleX)) {  //changed 472 to 473 for a one pix fix at the edge.
+        width -= width + x - (473 * scaleX);
     }
 
     if (width > 0 && height > 0) {
