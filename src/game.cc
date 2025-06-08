@@ -120,7 +120,7 @@ MessageList gMiscMessageList;
 static void** gGameGlobalPointers = nullptr;
 
 // 0x442580
-int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4, int argc, char** argv)
+int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int flags, int argc, char** argv)
 {
     char path[COMPAT_MAX_PATH];
 
@@ -147,7 +147,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int a4
     messageListRepositoryInit();
 
     programWindowSetTitle(windowTitle);
-    _initWindow(1, a4);
+    _initWindow(1, flags);
     paletteInit();
 
     const char* language = settings.system.language.c_str();
@@ -1431,7 +1431,7 @@ static int gameDbInit()
         showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
-
+    
     // SFALL: custom patch file name.
     char* path_file_name_template = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &path_file_name_template);
@@ -1523,7 +1523,20 @@ static void showSplash()
     fileRead(palette, 1, 768, stream);
     fileRead(splashData, 1, splashWidth * splashHeight, stream);
     fileClose(stream);
+    
+    // Fix of wrong Palette, without it this makes background bright
+    // Basically just swapping first and last colors, this problem presented ONLY in F2, F1 has right palette in every splash
+    memcpy(palette + (255 * 3), palette, 3);
+    memset(palette, 0, 3);
 
+    for (int i = 0; i < splashWidth * splashHeight; i++) {
+        if (splashData[i] == 0) {
+            splashData[i] = 255;
+        } else if (splashData[i] == 255) {
+            splashData[i] = 0;
+        }
+    }
+    
     int splashScreenStretchMode = 0;
     int stretchGameMode = 0;
     Config config;
