@@ -552,6 +552,15 @@ static int inventoryMessageListFree()
     return 0;
 }
 
+// Helper function to flip the button buffer horizontally
+void flipBufferHorizontally(unsigned char* src, int width, int height, int pitch) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width / 2; x++) {
+            std::swap(src[y * pitch + x], src[y * pitch + (width - 1 - x)]);
+        }
+    }
+}
+
 // 0x46E7B0
 void inventoryOpen()
 {
@@ -1027,13 +1036,33 @@ static bool _setup_inventory(int inventoryWindowType)
         return -1;
     }
     
-    // Stretch the button images
+    // Create flipped copies (to align highlights to top right light source)
+    unsigned char* flippedNormal = reinterpret_cast<unsigned char*>(SDL_malloc(buttonBaseWidth * buttonBaseHeight));
+    unsigned char* flippedPressed = reinterpret_cast<unsigned char*>(SDL_malloc(buttonBaseWidth * buttonBaseHeight));
+
+    if (!flippedNormal || !flippedPressed) {
+        return -1;
+    }
+
+    // Copy and flip the original images
+    memcpy(flippedNormal, _inventoryFrmImages[0].getData(), buttonBaseWidth * buttonBaseHeight);
+    memcpy(flippedPressed, _inventoryFrmImages[1].getData(), buttonBaseWidth * buttonBaseHeight);
+
+    // Flip them with the helper
+    flipBufferHorizontally(flippedNormal, buttonBaseWidth, buttonBaseHeight, buttonBaseWidth);
+    flipBufferHorizontally(flippedPressed, buttonBaseWidth, buttonBaseHeight, buttonBaseWidth);
+
+    // Use the flipped buffers as source
     blitBufferToBufferStretchAndFixEdges(
-        _inventoryFrmImages[0].getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
+        flippedNormal, buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
         scaledNormal, buttonWidth, buttonHeight, buttonWidth);
     blitBufferToBufferStretchAndFixEdges(
-        _inventoryFrmImages[1].getData(), buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
+        flippedPressed, buttonBaseWidth, buttonBaseHeight, buttonBaseWidth,
         scaledPressed, buttonWidth, buttonHeight, buttonWidth);
+
+    // Free the temp buffers
+    SDL_free(flippedNormal);
+    SDL_free(flippedPressed);
 
     if (_inventoryFrmImages[0].isLocked() && _inventoryFrmImages[1].isLocked()) {
         btn = -1;
@@ -1105,10 +1134,10 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[2].isLocked() && _inventoryFrmImages[3].isLocked()) {
             // Left inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                109,
-                56,
+                111,
+                57,
+                22,
                 23,
-                24,
                 -1,
                 -1,
                 KEY_ARROW_UP,
@@ -1124,9 +1153,9 @@ static bool _setup_inventory(int inventoryWindowType)
             // Right inventory up button.
             btn = buttonCreate(gInventoryWindow,
                 342,
-                56,
+                57,
+                22,
                 23,
-                24,
                 -1,
                 -1,
                 KEY_CTRL_ARROW_UP,
@@ -1211,10 +1240,10 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[5].isLocked() && _inventoryFrmImages[6].isLocked()) {
             // Left inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                109,
+                111,
                 82,
-                24,
-                25,
+                22,
+                23,
                 -1,
                 -1,
                 KEY_ARROW_DOWN,
@@ -1231,8 +1260,8 @@ static bool _setup_inventory(int inventoryWindowType)
             btn = buttonCreate(gInventoryWindow,
                 342,
                 82,
-                24,
-                25,
+                22,
+                23,
                 -1,
                 -1,
                 KEY_CTRL_ARROW_DOWN,
@@ -1420,7 +1449,7 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[8].isLocked() && _inventoryFrmImages[9].isLocked()) {
             // Left offered inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                128,
+                118,
                 113,
                 22,
                 23,
@@ -1438,7 +1467,7 @@ static bool _setup_inventory(int inventoryWindowType)
 
             // Right offered inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                333,
+                336,
                 113,
                 22,
                 23,
@@ -1466,7 +1495,7 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[10].isLocked() && _inventoryFrmImages[11].isLocked()) {
             // Left offered inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                128,
+                118,
                 136,
                 22,
                 23,
@@ -1484,7 +1513,7 @@ static bool _setup_inventory(int inventoryWindowType)
 
             // Right offered inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                333,
+                336,
                 136,
                 22,
                 23,
@@ -2092,34 +2121,51 @@ static void _display_body(int fid, int inventoryWindowType)
             unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
             int windowPitch = windowGetWidth(gInventoryWindow);
 
+            FrmImage backgroundFrmImage;
+            int Fid = 114;
+            int sourceXOffset = 0;
+
             if (index == 1) {
                 if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
-                    rect.left = 426;
+                    rect.left = 426; // loot right cha window (or container)
                     rect.top = 39;
+                    Fid = 114;
+                    sourceXOffset = 538;
                 } else {
-                    rect.left = 297;
+                    rect.left = 297; // inventory data window? ?not used?
                     rect.top = 37;
+                    Fid = 48;
+                    sourceXOffset = 229;
                 }
             } else {
                 if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
-                    rect.left = 48;
+                    rect.left = 48; // loot left cha window
                     rect.top = 39;
-                } else {
-                    rect.left = 176;
+                    Fid = 114;
+                    sourceXOffset = 0;
+                } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_USE_ITEM_ON) {
+                    rect.left = 176; // Use item cha window
                     rect.top = 37;
+                    Fid = 113;
+                    sourceXOffset = 292;
+                } else {
+                    rect.left = 176; // inventory cha window (same as use on)
+                    rect.top = 37;
+                    Fid = 48;
+                    sourceXOffset = 0;
                 }
             }
+            
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, Fid, 0, 0, 0);
 
             rect.right = rect.left + INVENTORY_BODY_VIEW_WIDTH - 1;
             rect.bottom = rect.top + INVENTORY_BODY_VIEW_HEIGHT - 1;
-
-            FrmImage backgroundFrmImage;
-            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 114, 0, 0, 0);
+            
             if (backgroundFrmImage.lock(backgroundFid)) {
-                blitBufferToBuffer(backgroundFrmImage.getData() + INVENTORY_LOOT_WINDOW_WIDTH * rect.top + rect.left,
+                blitBufferToBuffer(backgroundFrmImage.getData() + backgroundFrmImage.getWidth() * rect.top + rect.left + sourceXOffset,
                     INVENTORY_BODY_VIEW_WIDTH,
                     INVENTORY_BODY_VIEW_HEIGHT,
-                    INVENTORY_LOOT_WINDOW_WIDTH,
+                    backgroundFrmImage.getWidth(),
                     windowBuffer + windowPitch * rect.top + rect.left,
                     windowPitch);
             }
@@ -2327,7 +2373,8 @@ static void _inven_pickup(int buttonCode, int indexOffset)
         break;
     }
 
-    if (itemIndex == -1 || _pud->items[indexOffset + itemIndex].quantity <= 1) {
+    // fix for disappearing/not disappearing inventory items
+    if (itemIndex == -1 || _pud->items[_pud->length - (itemIndex + indexOffset + 1)].quantity <= 1) {
         unsigned char* windowBuffer = windowGetBuffer(gInventoryWindow);
         if (gInventoryRightHandItem != gInventoryLeftHandItem || item != gInventoryLeftHandItem) {
             int height;
@@ -5872,7 +5919,7 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     if (_moveFrmImages[2].isLocked() && _moveFrmImages[3].isLocked()) {
         btn = buttonCreate(_mt_wid,
             x,
-            y + 12,
+            y + 11,
             17,
             12,
             -1,
