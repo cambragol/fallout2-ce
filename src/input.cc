@@ -1037,4 +1037,48 @@ void endTextInput()
     SDL_StopTextInput();
 }
 
+// captures background for new windows, to allow 'transparency'
+unsigned char* captureScreenArea(int x, int y, int width, int height) {
+    unsigned char* buffer = (unsigned char*)internal_malloc(width * height);
+    if (!buffer) return nullptr;
+
+    static struct {
+        int x, y, width, height;
+        unsigned char* buffer;
+    } context;
+
+    context = {x, y, width, height, buffer};
+
+    static auto blitter = [](unsigned char* src, int srcPitch, int _,
+                           int srcX, int srcY, int blitWidth, int blitHeight,
+                           int destX, int destY) {
+        int bufferX = destX - context.x;
+        int bufferY = destY - context.y;
+        
+        if (bufferX >= 0 && bufferY >= 0 &&
+            bufferX < context.width &&
+            bufferY < context.height) {
+            unsigned char* dest = context.buffer + bufferY * context.width + bufferX;
+            blitBufferToBuffer(
+                src + srcY * srcPitch + srcX,
+                blitWidth,
+                blitHeight,
+                srcPitch,
+                dest,
+                context.width
+            );
+        }
+    };
+
+    WINDOWDRAWINGPROC oldBlitter = _scr_blit;
+    _scr_blit = blitter;
+
+    Rect rect = {x, y, x + width - 1, y + height - 1};
+    windowRefreshAll(&rect);
+
+    _scr_blit = oldBlitter;
+    return buffer;
+}
+
+
 } // namespace fallout

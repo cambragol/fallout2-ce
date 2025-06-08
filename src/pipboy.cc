@@ -648,6 +648,16 @@ static int pipboyWindowInit(int intent)
 
     int pipboyWindowX = (screenGetWidth() - PIPBOY_WINDOW_WIDTH) / 2;
     int pipboyWindowY = (screenGetHeight() - PIPBOY_WINDOW_HEIGHT) / 2;
+    
+    // Capture background BEFORE creating window
+    unsigned char* background = captureScreenArea(
+        pipboyWindowX,
+        pipboyWindowY,
+        PIPBOY_WINDOW_WIDTH,
+        PIPBOY_WINDOW_HEIGHT
+    );
+    if (!background) return -1;
+    
     gPipboyWindow = windowCreate(pipboyWindowX, pipboyWindowY, PIPBOY_WINDOW_WIDTH, PIPBOY_WINDOW_HEIGHT, _colorTable[0], WINDOW_MODAL);
     if (gPipboyWindow == -1) {
         debugPrint("\n** Error opening pipboy window! **\n");
@@ -658,7 +668,19 @@ static int pipboyWindowInit(int intent)
     }
 
     gPipboyWindowBuffer = windowGetBuffer(gPipboyWindow);
-    memcpy(gPipboyWindowBuffer, _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData(), PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_HEIGHT);
+    if (gPipboyWindowBuffer) {
+        memcpy(gPipboyWindowBuffer, background,
+               PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_HEIGHT);
+    }
+
+    internal_free(background);
+    
+    blitBufferToBufferTrans(_pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getData(),
+    _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getWidth(),
+    _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getHeight(),
+    _pipboyFrmImages[PIPBOY_FRM_BACKGROUND].getWidth(),
+    gPipboyWindowBuffer,
+    PIPBOY_WINDOW_WIDTH);
 
     pipboyDrawNumber(gameTimeGetHour(), 4, PIPBOY_WINDOW_TIME_X, PIPBOY_WINDOW_TIME_Y);
     pipboyDrawDate();

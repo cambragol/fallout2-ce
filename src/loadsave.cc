@@ -1758,6 +1758,15 @@ static int lsgWindowInit(int windowType)
     // Center the menu window on screen
     int lsWindowX = (screenWidth - scaledWidth) / 2;
     int lsWindowY = (screenHeight - scaledHeight) / 2;
+    
+    // Capture background BEFORE creating window
+    unsigned char* background = captureScreenArea(
+        lsWindowX,
+        lsWindowY,
+        LS_WINDOW_WIDTH,
+        LS_WINDOW_HEIGHT
+    );
+    if (!background) return -1;
 
     // Create the save game window
     gLoadSaveWindow = windowCreate(lsWindowX,
@@ -1784,12 +1793,25 @@ static int lsgWindowInit(int windowType)
     }
 
     gLoadSaveWindowBuffer = windowGetBuffer(gLoadSaveWindow);
+    if (gLoadSaveWindowBuffer) {
+        memcpy(gLoadSaveWindowBuffer, background,
+               LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
+    }
+    internal_free(background);
     
     // Load the background image
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 237, 0, 0, 0);
     if (!_loadsaveBackgroundFrmImage.lock(backgroundFid)) {
         return -1;
     }
+    
+    // Paint background to window to simulate transparency
+    blitBufferToBufferTrans(_loadsaveBackgroundFrmImage.getData(),
+                            _loadsaveBackgroundFrmImage.getWidth(),
+                            _loadsaveBackgroundFrmImage.getHeight(),
+                            _loadsaveBackgroundFrmImage.getWidth(),
+                            gLoadSaveWindowBuffer,
+                            LS_WINDOW_WIDTH);
 
     //unsigned char* backgroundData = _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData();
     unsigned char* backgroundData = _loadsaveBackgroundFrmImage.getData();
@@ -1846,7 +1868,8 @@ static int lsgWindowInit(int windowType)
     
     // Stretch and blit the text+background into our menu window
     if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
-        unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
+        //unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
+        unsigned char* stretched = (unsigned char*)internal_malloc(scaledWidth * scaledHeight);
         if (!stretched) {
             SDL_free(compositeBuffer);
             _ls_error_code = 0;
@@ -1857,10 +1880,10 @@ static int lsgWindowInit(int windowType)
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
 
-        blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gLoadSaveWindowBuffer, scaledWidth);
-        SDL_free(stretched);
+        blitBufferToBufferTrans(stretched, scaledWidth, scaledHeight, scaledWidth, gLoadSaveWindowBuffer, scaledWidth);
+        internal_free(stretched);
     } else {
-        blitBufferToBuffer(compositeBuffer, originalWidth, originalHeight, originalWidth, gLoadSaveWindowBuffer, scaledWidth);
+        blitBufferToBufferTrans(compositeBuffer, originalWidth, originalHeight, originalWidth, gLoadSaveWindowBuffer, scaledWidth);
     }
 
     SDL_free(compositeBuffer);
@@ -2026,7 +2049,7 @@ void resetCompositeToBase() {
 void loadsaveBlitComposite() {
     if (compositeBuffer == nullptr) return;
 
-    blitBufferToBufferStretch(
+    blitBufferToBufferStretchTrans(
         compositeBuffer,
         originalWidth,
         originalHeight,
@@ -2036,7 +2059,7 @@ void loadsaveBlitComposite() {
         scaledHeight,
         scaledWidth
     );
-
+    
     windowRefresh(gLoadSaveWindow);
 }
 

@@ -16,6 +16,7 @@
 #include "input.h"
 #include "kb.h"
 #include "message.h"
+#include "memory.h"
 #include "mouse.h"
 #include "palette.h"
 #include "scripts.h"
@@ -1288,6 +1289,15 @@ static int preferencesWindowInit()
     // Center the menu window on screen
     int preferencesWindowX = (screenGetWidth() - scaledWidth) / 2;
     int preferencesWindowY = (screenGetHeight() - scaledHeight) / 2;
+    
+    // Capture background BEFORE creating window
+    unsigned char* background = captureScreenArea(
+                                                  preferencesWindowX,
+                                                  preferencesWindowY,
+                                                  PREFERENCES_WINDOW_WIDTH,
+                                                  PREFERENCES_WINDOW_HEIGHT
+    );
+    if (!background) return -1;
 
     // Create the Preferences window after the stretching calculations
     gPreferencesWindow = windowCreate(preferencesWindowX,
@@ -1304,12 +1314,26 @@ static int preferencesWindowInit()
     }
 
     gPreferencesWindowBuffer = windowGetBuffer(gPreferencesWindow);
+    if (gPreferencesWindowBuffer) {
+        memcpy(gPreferencesWindowBuffer, background,
+               PREFERENCES_WINDOW_WIDTH * PREFERENCES_WINDOW_HEIGHT);
+    }
+
+    internal_free(background);
 
     // Load the background image
     int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 240, 0, 0, 0);
     if (!_preferencesBackgroundFrmImage.lock(backgroundFid)) {
         return preferences_fatal_error();
     }
+    
+    // Paint background to window to simulate transparency
+    blitBufferToBufferTrans(_preferencesBackgroundFrmImage.getData(),
+                            _preferencesBackgroundFrmImage.getWidth(),
+                            _preferencesBackgroundFrmImage.getHeight(),
+                            _preferencesBackgroundFrmImage.getWidth(),
+                            gPreferencesWindowBuffer,
+                            PREFERENCES_WINDOW_WIDTH);
 
     unsigned char* backgroundData = _preferencesBackgroundFrmImage.getData();
 
@@ -1511,10 +1535,10 @@ static int preferencesWindowInit()
             compositeBuffer, originalWidth, originalHeight, originalWidth,
             stretched, scaledWidth, scaledHeight, scaledWidth);
 
-        blitBufferToBuffer(stretched, scaledWidth, scaledHeight, scaledWidth, gPreferencesWindowBuffer, scaledWidth);
+        blitBufferToBufferTrans(stretched, scaledWidth, scaledHeight, scaledWidth, gPreferencesWindowBuffer, scaledWidth);
         SDL_free(stretched);
     } else {
-        blitBufferToBuffer(compositeBuffer, originalWidth, originalHeight, originalWidth, gPreferencesWindowBuffer, scaledWidth);
+        blitBufferToBufferTrans(compositeBuffer, originalWidth, originalHeight, originalWidth, gPreferencesWindowBuffer, scaledWidth);
     }
 
     // Copy the stretched gPreferencesWindowBuffer to the clean buffer (after stretching)

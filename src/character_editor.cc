@@ -434,13 +434,13 @@ static const int gCharacterEditorDerivedStatFrmIds[EDITOR_DERIVED_STAT_COUNT] = 
 //
 // 0x431D50
 static const int gCharacterEditorPrimaryStatY[7] = {
-    37,
-    70,
-    103,
-    136,
-    169,
-    202,
-    235,
+    38,
+    71,
+    104,
+    137,
+    170,
+    203,
+    236,
 };
 
 // stat ids for derived stats panel
@@ -1366,14 +1366,59 @@ static int characterEditorWindowInit()
         return -1;
     }
 
-    int editorWindowX = (screenGetWidth() - EDITOR_WINDOW_WIDTH) / 2;
-    int editorWindowY = (screenGetHeight() - EDITOR_WINDOW_HEIGHT) / 2;
-    gCharacterEditorWindow = windowCreate(editorWindowX,
+    // Determine window position
+    int screenWidth = screenGetWidth();
+    int screenHeight = screenGetHeight();
+    int editorWindowX = (screenWidth - EDITOR_WINDOW_WIDTH) / 2;
+    int editorWindowY = (screenHeight - EDITOR_WINDOW_HEIGHT) / 2;
+
+    // Check bounds
+    if (editorWindowX < 0 || editorWindowY < 0 ||
+        editorWindowX + EDITOR_WINDOW_WIDTH > screenWidth ||
+        editorWindowY + EDITOR_WINDOW_HEIGHT > screenHeight) {
+        return -1;
+    }
+
+    // Capture background BEFORE creating window
+    unsigned char* background = captureScreenArea(
+        editorWindowX,
+        editorWindowY,
+        EDITOR_WINDOW_WIDTH,
+        EDITOR_WINDOW_HEIGHT
+    );
+    if (!background) return -1;
+
+    // Create the window
+    gCharacterEditorWindow = windowCreate(
+        editorWindowX,
         editorWindowY,
         EDITOR_WINDOW_WIDTH,
         EDITOR_WINDOW_HEIGHT,
-        256,
-        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+        0,  // MUST be 0 for transparency
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT
+    );
+
+    if (gCharacterEditorWindow == -1) {
+        internal_free(background);
+        return -1;
+    }
+
+    // Copy captured background to window
+    gCharacterEditorWindowBuffer = windowGetBuffer(gCharacterEditorWindow);
+    if (gCharacterEditorWindowBuffer) {
+        memcpy(gCharacterEditorWindowBuffer, background,
+              EDITOR_WINDOW_WIDTH * EDITOR_WINDOW_HEIGHT);
+    }
+
+    internal_free(background);
+    
+    blitBufferToBufferTrans(_editorBackgroundFrmImage.getData(),
+     _editorBackgroundFrmImage.getWidth(),
+     _editorBackgroundFrmImage.getHeight(),
+     _editorBackgroundFrmImage.getWidth(),
+     gCharacterEditorWindowBuffer,
+     EDITOR_WINDOW_WIDTH);
+
     if (gCharacterEditorWindow == -1) {
         for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
             if (gCharacterEditorFrmShouldCopy[i]) {
@@ -1395,8 +1440,8 @@ static int characterEditorWindowInit()
         return -1;
     }
 
-    gCharacterEditorWindowBuffer = windowGetBuffer(gCharacterEditorWindow);
-    memcpy(gCharacterEditorWindowBuffer, _editorBackgroundFrmImage.getData(), 640 * 480);
+    //gCharacterEditorWindowBuffer = windowGetBuffer(gCharacterEditorWindow);
+    //memcpy(gCharacterEditorWindowBuffer, _editorBackgroundFrmImage.getData(), 640 * 480);
 
     if (gCharacterEditorIsCreationMode) {
         fontSetCurrent(103);
@@ -1607,7 +1652,7 @@ static int characterEditorWindowInit()
         x += _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth();
         btn = buttonCreate(
             gCharacterEditorWindow,
-            x,
+            x - 1, // align button correctly (they overlap)
             NAME_BUTTON_Y,
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getHeight(),
@@ -1699,7 +1744,7 @@ static int characterEditorWindowInit()
             gCharacterEditorWindowBuffer + (EDITOR_WINDOW_WIDTH * NAME_BUTTON_Y) + x,
             EDITOR_WINDOW_WIDTH);
 
-        x += _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth();
+        x += _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth() - 1;
         blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF],
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getHeight(),
@@ -1747,7 +1792,7 @@ static int characterEditorWindowInit()
 
             gCharacterEditorPrimaryStatMinusBtns[i] = buttonCreate(gCharacterEditorWindow,
                 SPECIAL_STATS_BTN_X,
-                gCharacterEditorPrimaryStatY[i] + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight() - 1,
+                gCharacterEditorPrimaryStatY[i] + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getHeight(),
                 -1,
@@ -2937,7 +2982,7 @@ static void characterEditorDrawSkills(int a1)
         gCharacterEditorSliderPlusBtn = -1;
     }
 
-    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + 370, 270, 252, 640, gCharacterEditorWindowBuffer + 370, 640);
+    blitBufferToBufferTrans(_editorBackgroundFrmImage.getData() + 370, 270, 252, 640, gCharacterEditorWindowBuffer + 370, 640);
 
     fontSetCurrent(103);
 
@@ -5799,6 +5844,16 @@ static int perkDialogShow()
     int perkWindowY = screenGetHeight() != 480
         ? (screenGetHeight() - PERK_WINDOW_HEIGHT) / 2
         : PERK_WINDOW_Y;
+    
+    // Capture background BEFORE creating window
+    unsigned char* background = captureScreenArea(
+        perkWindowX,
+        perkWindowY,
+        PERK_WINDOW_WIDTH,
+        PERK_WINDOW_HEIGHT
+    );
+    if (!background) return -1;
+    
     gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (gPerkDialogWindow == -1) {
         _perkDialogBackgroundFrmImage.unlock();
@@ -5807,7 +5862,20 @@ static int perkDialogShow()
     }
 
     gPerkDialogWindowBuffer = windowGetBuffer(gPerkDialogWindow);
-    memcpy(gPerkDialogWindowBuffer, _perkDialogBackgroundFrmImage.getData(), PERK_WINDOW_WIDTH * PERK_WINDOW_HEIGHT);
+    if (gPerkDialogWindowBuffer) {
+        memcpy(gPerkDialogWindowBuffer, background,
+               PERK_WINDOW_WIDTH * PERK_WINDOW_HEIGHT);
+    }
+
+    internal_free(background);
+    
+    // Paint background to window to simulate transparency
+    blitBufferToBufferTrans(_perkDialogBackgroundFrmImage.getData(),
+    _perkDialogBackgroundFrmImage.getWidth(),
+    _perkDialogBackgroundFrmImage.getHeight(),
+    _perkDialogBackgroundFrmImage.getWidth(),
+    gPerkDialogWindowBuffer,
+    PERK_WINDOW_WIDTH);
 
     int btn;
 
