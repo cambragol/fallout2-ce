@@ -36,7 +36,6 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
-#include "palette.h"
 #include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
@@ -180,18 +179,6 @@ static int _LoadObjDudeCid(File* stream);
 static int _SaveObjDudeCid(File* stream);
 static int _EraseSave();
 
-// buffers for handling stretching
-static uint8_t* compositeBuffer = nullptr;
-static uint8_t* compositeBaseBuffer = nullptr;
-
-// static globals shared for stretching
-static int originalWidth = LS_WINDOW_WIDTH;
-static int originalHeight = LS_WINDOW_HEIGHT;
-static int scaledWidth = LS_WINDOW_WIDTH;
-static int scaledHeight = LS_WINDOW_HEIGHT;
-static float scaleX = 1.0f;
-static float scaleY = 1.0f;
-
 // 0x47B7C0
 static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     237, // lsgame.frm - load/save game
@@ -205,8 +192,6 @@ static const int gLoadSaveFrmIds[LOAD_SAVE_FRM_COUNT] = {
     200, // uparwon.frm - character editor
 };
 
-// Control max number of save/load pages with global 10, 100, or 1000
-// More than 1000 slows the screen load
 // Control max number of save/load pages
 const int saveLoadPages = 10;
 constexpr int slotsPerPage = 10;
@@ -358,11 +343,6 @@ static FrmImage _loadsaveFrmImages[LOAD_SAVE_FRM_COUNT];
 
 static int quickSaveSlots = 0;
 static bool autoQuickSaveSlots = false;
-static int extraSaveSlots = 0;
-
-// clearing and refreshing functions for stretching
-void resetCompositeToBase();
-void loadsaveBlitComposite();
 
 // 0x47B7E4
 void _InitLoadSave()
@@ -375,12 +355,10 @@ void _InitLoadSave()
     MapDirErase(PROTO_DIR_NAME "\\" CRITTERS_DIR_NAME "\\", PROTO_FILE_EXT);
     MapDirErase(PROTO_DIR_NAME "\\" ITEMS_DIR_NAME "\\", PROTO_FILE_EXT);
 
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_EXTRA_SAVE_SLOTS, &extraSaveSlots);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_QUICK_SAVE, &quickSaveSlots);
     if (quickSaveSlots > 0 && quickSaveSlots <= saveLoadTotalSlots) {
         autoQuickSaveSlots = true;
     }
-    
 }
 
 // 0x47B85C
@@ -468,8 +446,8 @@ int lsgSaveGame(int mode)
 
         return -1;
     }
-    
-    //touch_set_touchscreen_mode(mode == LOAD_SAVE_MODE_NORMAL);
+
+    touch_set_touchscreen_mode(mode == LOAD_SAVE_MODE_NORMAL);
 
     _quick_done = false;
 
@@ -480,7 +458,7 @@ int lsgSaveGame(int mode)
         debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
         return -1;
     }
-    
+
     pipboyMessageListInit();
 
     if (_GetSlotList() == -1) {
@@ -509,7 +487,6 @@ int lsgSaveGame(int mode)
         return -1;
     }
 
-    // compositeBaseBuffer added to handle stretched thumbnails/snapshots
     switch (_LSstatus[_slot_cursor]) {
     case SLOT_STATE_EMPTY:
     case SLOT_STATE_ERROR:
@@ -518,7 +495,7 @@ int lsgSaveGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     default:
@@ -527,17 +504,13 @@ int lsgSaveGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     }
-    
-    // updates and blits text to be stretched
-    resetCompositeToBase();
+
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-    loadsaveBlitComposite();
     _DrawInfoBox(_slot_cursor);
-    loadsaveBlitComposite();
     windowRefresh(gLoadSaveWindow);
 
     _dbleclkcntr = 24;
@@ -559,155 +532,127 @@ int lsgSaveGame(int mode)
         } else {
             switch (keyCode) {
             case KEY_ARROW_UP:
-                        if (_slot_cursor > 0) { // Prevent going below 0
-                            if (_slot_cursor % 10 == 0 && _currentSlotPage > 0) {
-                                // Move to the previous page and set cursor to the last slot on that page
-                                _currentSlotPage--;
-                                _slot_cursor--;
-                                // updates and blits text to be stretched
-                                resetCompositeToBase();
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();                                windowRefresh(gLoadSaveWindow);
-                            } else {
-                                // Normal movement within the page
-                                _slot_cursor--;
-                            }
-                        }
+                if (_slot_cursor > 0) { // Prevent going below 0
+                    if (_slot_cursor % 10 == 0 && _currentSlotPage > 0) {
+                        // Move to the previous page and set cursor to the last slot on that page
+                        _currentSlotPage--;
+                        _slot_cursor--;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    } else {
+                        // Normal movement within the page
+                        _slot_cursor--;
+                    }
+                }
 
-                        selectionChanged = true;
-                        doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
 
             case KEY_ARROW_DOWN:
-                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above max slot
-                        // Check if we can move to next page (only allowed if extraSaveSlots enabled or not on slot 9)
-                        if ((extraSaveSlots == 1 || _slot_cursor < 9) &&
-                            (_slot_cursor % 10 == 9) &&
-                            _currentSlotPage < (saveLoadTotalSlots / 10) - 1)
-                        {
-                            // Page transition allowed
-                            _currentSlotPage++;
-                            _slot_cursor++;
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();
-                            windowRefresh(gLoadSaveWindow);
-                        }
-                        else if (extraSaveSlots == 1 || _slot_cursor < 9) {
-                            // Normal movement within page (only allowed if extraSaveSlots enabled or below slot 9)
-                            _slot_cursor++;
-                        }
-                        // else: no movement allowed (cursor stays at slot 9 when extraSaveSlots disabled)
+                if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
+                    if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
+                        // Move to the next page and set cursor to the first slot on that page
+                        _currentSlotPage++;
+                        _slot_cursor++;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    } else {
+                        // Normal movement within the page
+                        _slot_cursor++;
                     }
+                }
 
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
             case KEY_HOME:
-                    // Move to the first slot of the current page
-                    _slot_cursor = _currentSlotPage * 10;
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                // Move to the first slot of the current page
+                _slot_cursor = _currentSlotPage * 10;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
 
             case KEY_END:
-                    // Move to the last slot of the current page
-                    _slot_cursor = (_currentSlotPage * 10) + 9;
+                // Move to the last slot of the current page
+                _slot_cursor = (_currentSlotPage * 10) + 9;
 
-                    // Prevent overflow on the last page
-                    if (_slot_cursor > (saveLoadTotalSlots - 1)) {
-                        _slot_cursor = (saveLoadTotalSlots - 1);
-                    }
+                // Prevent overflow on the last page
+                if (_slot_cursor > (saveLoadTotalSlots - 1)) {
+                    _slot_cursor = (saveLoadTotalSlots - 1);
+                }
 
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
             case 506:
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_UP;
                 break;
-                    
+
             case 504:
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_DOWN;
                 break;
 
-                case KEY_ARROW_RIGHT:
-                case KEY_ARROW_LEFT:
-                case 502: { // Mouse click detected
-                    int mouseX, mouseY;
-                    if (keyCode == 502) {
-                        mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
-                    }
+            case KEY_ARROW_RIGHT:
+            case KEY_ARROW_LEFT:
+            case 502: { // Mouse click detected
+                int mouseX, mouseY;
+                mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
-                    // First handle arrow key behavior (for both actual arrow keys AND mouse clicks)
-                    if (keyCode == KEY_ARROW_RIGHT || keyCode == KEY_ARROW_LEFT || keyCode == 502) {
-                        if (extraSaveSlots != 0) {
-                            // Next Page (right arrow OR right-side mouse click)
-                            if ((keyCode == KEY_ARROW_RIGHT) ||
-                                (keyCode == 502 && mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) &&
-                                                   mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY))) {
-                                if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
-                                    soundPlayFile("ib1p1xx1");
-                                    _currentSlotPage++;
-                                    _slot_cursor = _currentSlotPage * 10;
-                                    selectionChanged = true;
-                                    doubleClickSlot = -1;
-                                    resetCompositeToBase();
-                                    _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                    loadsaveBlitComposite();
-                                    _DrawInfoBox(_slot_cursor);
-                                    loadsaveBlitComposite();
-                                    windowRefresh(gLoadSaveWindow);
-                                }
-                                break;
-                            }
-                            // Previous Page (left arrow OR left-side mouse click)
-                            else if ((keyCode == KEY_ARROW_LEFT) ||
-                                     (keyCode == 502 && mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) &&
-                                                       mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY))) {
-                                if (_currentSlotPage > 0) {
-                                    soundPlayFile("ib1p1xx1");
-                                    _currentSlotPage--;
-                                    _slot_cursor = (_currentSlotPage * 10) + 9;
-                                    selectionChanged = true;
-                                    doubleClickSlot = -1;
-                                    resetCompositeToBase();
-                                    _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                    loadsaveBlitComposite();
-                                    _DrawInfoBox(_slot_cursor);
-                                    loadsaveBlitComposite();
-                                    windowRefresh(gLoadSaveWindow);
-                                }
-                                break;
-                            }
-                        }
-                    }
-
-                    // Then handle slot selection (only for mouse clicks)
-                    if (keyCode == 502) {
-                        int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
-                        relativeSlot = std::clamp(relativeSlot, 0, 9);
-
-                        int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-                        if (clickedSlot > (saveLoadTotalSlots - 1)) {
-                            clickedSlot = (saveLoadTotalSlots - 1);
-                        }
-
-                        _slot_cursor = clickedSlot;
-                        if (clickedSlot == doubleClickSlot) {
-                            keyCode = 500;
-                            soundPlayFile("ib1p1xx1");
-                        }
-
+                // Check if the click was in the "Next Page" button area
+                if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // Next Page coordinates
+                    if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
+                        soundPlayFile("ib1p1xx1");
+                        _currentSlotPage++;
+                        _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
                         selectionChanged = true;
-                        doubleClickSlot = _slot_cursor;
-                        scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+                        doubleClickSlot = -1;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                        windowRefresh(gLoadSaveWindow);
                     }
                     break;
                 }
+
+                // Check if the click was in the "Previous Page" button area
+                if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Previous Page coordinates
+                    if (_currentSlotPage > 0) {
+                        soundPlayFile("ib1p1xx1");
+                        _currentSlotPage--;
+                        _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
+                        selectionChanged = true;
+                        doubleClickSlot = -1;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    }
+                    break;
+                }
+
+                // Calculate the clicked slot, adjusting for pagination
+                int relativeSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                if (relativeSlot < 0) {
+                    relativeSlot = 0;
+                } else if (relativeSlot > 9) {
+                    relativeSlot = 9;
+                }
+
+                // Adjust for the current page
+                int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
+
+                if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
+                    clickedSlot = (saveLoadTotalSlots - 1);
+                }
+
+                _slot_cursor = clickedSlot;
+                if (clickedSlot == doubleClickSlot) {
+                    keyCode = 500;
+                    soundPlayFile("ib1p1xx1");
+                }
+
+                selectionChanged = true;
+                doubleClickSlot = _slot_cursor;
+                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+            } break;
+
             case KEY_CTRL_Q:
             case KEY_CTRL_X:
             case KEY_F10:
@@ -774,12 +719,7 @@ int lsgSaveGame(int mode)
                         if (_slot_cursor < _currentSlotPage * 10) {
                             if (_currentSlotPage > 0) {
                                 _currentSlotPage--;
-                                // updates and blits text to be stretched
-                                resetCompositeToBase();
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();
+                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = (_currentSlotPage * 10) + 9; // Move to the last slot of the previous page
                             } else {
@@ -787,24 +727,17 @@ int lsgSaveGame(int mode)
                             }
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
-                        // Only increment cursor if below slot 10 OR extraSaveSlots is enabled
-                        if (_slot_cursor < 10 || extraSaveSlots == 1) {
-                            _slot_cursor++;
-                        }
-                        // Handle page transitions (only allowed if extraSaveSlots == 1)
+                        _slot_cursor++;
+
+                        // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (extraSaveSlots == 1 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
+                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
-                                resetCompositeToBase();
-                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();
+                                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                                 windowRefresh(gLoadSaveWindow);
-                                _slot_cursor = _currentSlotPage * 10; // Jump to first slot of next page
+                                _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                // Clamp to last allowed slot (either last in page or last overall)
-                                _slot_cursor = (extraSaveSlots == 1) ? (saveLoadTotalSlots - 1) : (_currentSlotPage * 10) + 9;
+                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -819,7 +752,7 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -828,22 +761,19 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-                    // updates and blits text to be stretched
-                    resetCompositeToBase();
+
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
-                    loadsaveBlitComposite();
                     windowRefresh(gLoadSaveWindow);
                 }
 
@@ -869,7 +799,7 @@ int lsgSaveGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     break;
                 default:
@@ -878,22 +808,19 @@ int lsgSaveGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         LS_WINDOW_WIDTH,
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     blitBufferToBuffer(_thumbnail_image,
                         LS_PREVIEW_WIDTH - 1,
                         LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                         LS_WINDOW_WIDTH);
-                    break;                }
+                    break;
+                }
 
-                // updates and blits text to be stretched
-                resetCompositeToBase();
-                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                loadsaveBlitComposite();
                 _DrawInfoBox(_slot_cursor);
-                loadsaveBlitComposite();
+                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
             }
 
             windowRefresh(gLoadSaveWindow);
@@ -978,7 +905,7 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -987,22 +914,19 @@ int lsgSaveGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-                    // updates and blits text to be stretched
-                    resetCompositeToBase();
+
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
-                    loadsaveBlitComposite();
                     windowRefresh(gLoadSaveWindow);
                     _dbleclkcntr = 24;
                 }
@@ -1016,7 +940,7 @@ int lsgSaveGame(int mode)
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
-    
+
     pipboyMessageListFree();
 
     tileWindowRefresh();
@@ -1087,20 +1011,13 @@ int lsgLoadGame(int mode)
     _patches = settings.system.master_patches_path.c_str();
 
     if (mode == LOAD_SAVE_MODE_QUICK && _quick_done) {
-        
-        // Get the screen/window size
-        int screenWidth = screenGetWidth();
-        int screenHeight = screenGetHeight();
-        // Center the menu window on screen
-        int lsWindowX = 0;
-        int lsWindowY = 0;
-
-        // Create the save game window
-        int window = windowCreate(lsWindowX,
-            lsWindowY,
-                                  screenWidth,
-                                  screenHeight,
-            0,
+        int quickSaveWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
+        int quickSaveWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
+        int window = windowCreate(quickSaveWindowX,
+            quickSaveWindowY,
+            LS_WINDOW_WIDTH,
+            LS_WINDOW_HEIGHT,
+            256,
             WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
         if (window != -1) {
             unsigned char* windowBuffer = windowGetBuffer(window);
@@ -1161,11 +1078,13 @@ int lsgLoadGame(int mode)
         assert(false && "Should be unreachable");
     }
 
+    touch_set_touchscreen_mode(windowType == LOAD_SAVE_WINDOW_TYPE_LOAD_GAME || windowType == LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
+
     if (lsgWindowInit(windowType) == -1) {
         debugPrint("\nLOADSAVE: ** Error loading save game screen data! **\n");
         return -1;
     }
-    
+
     pipboyMessageListInit();
 
     if (_GetSlotList() == -1) {
@@ -1189,7 +1108,7 @@ int lsgLoadGame(int mode)
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
             LS_WINDOW_WIDTH);
         break;
     default:
@@ -1198,24 +1117,16 @@ int lsgLoadGame(int mode)
             LS_PREVIEW_WIDTH - 1,
             LS_PREVIEW_HEIGHT - 1,
             LS_PREVIEW_WIDTH,
-            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
             LS_WINDOW_WIDTH);
         break;
     }
-    // updates and blits text to be stretched
-    resetCompositeToBase();
+
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-    loadsaveBlitComposite();
     _DrawInfoBox(_slot_cursor);
-    loadsaveBlitComposite();
     windowRefresh(gLoadSaveWindow);
     renderPresent();
     _dbleclkcntr = 24;
-    
-    // palette handled here to allow fade in from black like other main menu pages
-    // fades into Load/Save screen from black (from Main Menu)
-    colorPaletteLoad("color.pal");
-    paletteFadeTo(_cmap);
 
     int rc = -1;
     int doubleClickSlot = -1;
@@ -1234,74 +1145,59 @@ int lsgLoadGame(int mode)
         } else {
             switch (keyCode) {
             case KEY_ARROW_UP:
-                    if (_slot_cursor > 0) { // Prevent going below 0
-                        if (_slot_cursor % 10 == 0 && _currentSlotPage > 0) {
-                            // Move to the previous page and set cursor to the last slot on that page
-                            _currentSlotPage--;
-                            _slot_cursor--;
-                            // updates and blits text to be stretched
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();
-                            windowRefresh(gLoadSaveWindow);
-                        } else {
-                            // Normal movement within the page
-                            _slot_cursor--;
-                        }
+                if (_slot_cursor > 0) { // Prevent going below 0
+                    if (_slot_cursor % 10 == 0 && _currentSlotPage > 0) {
+                        // Move to the previous page and set cursor to the last slot on that page
+                        _currentSlotPage--;
+                        _slot_cursor--;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    } else {
+                        // Normal movement within the page
+                        _slot_cursor--;
                     }
+                }
 
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
 
             case KEY_ARROW_DOWN:
-                    if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above max slot
-                        // Check for page transition (only allowed if extraSaveSlots=1 or cursor≠9)
-                        if ((extraSaveSlots == 1 || _slot_cursor != 9) &&
-                            (_slot_cursor % 10 == 9) &&
-                            _currentSlotPage < (saveLoadTotalSlots / 10) - 1)
-                        {
-                            // Move to next page
-                            _currentSlotPage++;
-                            _slot_cursor++;
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();
-                            windowRefresh(gLoadSaveWindow);
-                        } else {
-                            // Only increment cursor if allowed
-                            if (extraSaveSlots != 0 || _slot_cursor != 9) {
-                                _slot_cursor++;
-                            }
-                        }
+                if (_slot_cursor < (saveLoadTotalSlots - 1)) { // Prevent going above 99
+                    if (_slot_cursor % 10 == 9 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
+                        // Move to the next page and set cursor to the first slot on that page
+                        _currentSlotPage++;
+                        _slot_cursor++;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    } else {
+                        // Normal movement within the page
+                        _slot_cursor++;
                     }
+                }
 
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
             case KEY_HOME:
-                    // Move to the first slot of the current page
-                    _slot_cursor = _currentSlotPage * 10;
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                // Move to the first slot of the current page
+                _slot_cursor = _currentSlotPage * 10;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
 
             case KEY_END:
-                    // Move to the last slot of the current page
-                    _slot_cursor = (_currentSlotPage * 10) + 9;
+                // Move to the last slot of the current page
+                _slot_cursor = (_currentSlotPage * 10) + 9;
 
-                    // Prevent overflow in the last page (e.g., last page may have less than 10 slots)
-                    if (_slot_cursor > (saveLoadTotalSlots - 1)) {
-                        _slot_cursor = (saveLoadTotalSlots - 1);
-                    }
+                // Prevent overflow in the last page (e.g., last page may have less than 10 slots)
+                if (_slot_cursor > (saveLoadTotalSlots - 1)) {
+                    _slot_cursor = (saveLoadTotalSlots - 1);
+                }
 
-                    selectionChanged = true;
-                    doubleClickSlot = -1;
-            break;
+                selectionChanged = true;
+                doubleClickSlot = -1;
+                break;
             case 506:
                 scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_UP;
                 break;
@@ -1312,72 +1208,63 @@ int lsgLoadGame(int mode)
             case KEY_ARROW_LEFT:
             case 502: { // Mouse click
                 int mouseX, mouseY;
-                bool isMouseClick = (keyCode == 502);
+                mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
 
-                if (isMouseClick) {
-                    mouseGetPositionInWindow(gLoadSaveWindow, &mouseX, &mouseY);
-                }
-
-                // Handle page navigation (for both arrow keys and mouse button clicks)
-                if (keyCode == KEY_ARROW_RIGHT || keyCode == KEY_ARROW_LEFT || isMouseClick) {
-                    // Next Page (right arrow OR right-side mouse click)
-                    if ((keyCode == KEY_ARROW_RIGHT || (isMouseClick && mouseX >= static_cast<int>(195 * scaleX) && mouseX <= static_cast<int>(280 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)))) {
-                        if (extraSaveSlots != 0 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
-                            soundPlayFile("ib1p1xx1");
-                            _currentSlotPage++;
-                            _slot_cursor = _currentSlotPage * 10;
-                            selectionChanged = true;
-                            doubleClickSlot = -1;
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();
-                            windowRefresh(gLoadSaveWindow);
-                        }
-                        break;
-                    }
-                    // Previous Page (left arrow OR left-side mouse click)
-                    else if ((keyCode == KEY_ARROW_LEFT || (isMouseClick && mouseX >= static_cast<int>(55 * scaleX) && mouseX <= static_cast<int>(180 * scaleX) && mouseY >= static_cast<int>(425 * scaleY) && mouseY <= static_cast<int>(435 * scaleY)))) {
-                        if (_currentSlotPage > 0) {
-                            soundPlayFile("ib1p1xx1");
-                            _currentSlotPage--;
-                            _slot_cursor = (_currentSlotPage * 10) + 9;
-                            selectionChanged = true;
-                            doubleClickSlot = -1;
-                            resetCompositeToBase();
-                            _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                            loadsaveBlitComposite();
-                            _DrawInfoBox(_slot_cursor);
-                            loadsaveBlitComposite();
-                            windowRefresh(gLoadSaveWindow);
-                        }
-                        break;
-                    }
-                }
-
-                // Handle slot selection (only for mouse clicks)
-                if (isMouseClick) {
-                    int relativeSlot = (mouseY - static_cast<int>(79 * scaleY)) / static_cast<int>((3 * fontGetLineHeight() + 4) * scaleY);
-                    relativeSlot = std::clamp(relativeSlot, 0, 9);
-
-                    int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-                    if (clickedSlot > (saveLoadTotalSlots - 1)) {
-                        clickedSlot = (saveLoadTotalSlots - 1);
-                    }
-
-                    _slot_cursor = clickedSlot;
-                    if (clickedSlot == doubleClickSlot) {
-                        keyCode = 500;
+                // Check if the click was in the "Next Page" button area
+                if ((mouseX >= 195 && mouseX <= 280 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_RIGHT) { // coordinates for Next Page button
+                    if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max 10 pages (0-9)
                         soundPlayFile("ib1p1xx1");
+                        _currentSlotPage++;
+                        _slot_cursor = _currentSlotPage * 10; // Move to first slot of new page
+                        selectionChanged = true;
+                        doubleClickSlot = -1;
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                        windowRefresh(gLoadSaveWindow);
                     }
-
-                    selectionChanged = true;
-                    doubleClickSlot = _slot_cursor;
-                    scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+                    break;
                 }
-                break;
-            }
+
+                // Check if the click was in the "Previous Page" button area
+                if ((mouseX >= 55 && mouseX <= 180 && mouseY >= 425 && mouseY <= 435) || keyCode == KEY_ARROW_LEFT) { // Coordinates for Previous Page button
+                    if (_currentSlotPage > 0) {
+                        soundPlayFile("ib1p1xx1");
+                        _currentSlotPage--;
+                        _slot_cursor = (_currentSlotPage * 10) + 9; // Move to last slot of previous page
+                        selectionChanged = true;
+                        doubleClickSlot = -1;
+
+                        _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+                        windowRefresh(gLoadSaveWindow);
+                    }
+                    break;
+                }
+
+                // Calculate the clicked slot, adjusting for pagination
+                int relativeSlot = (mouseY - 79) / (3 * fontGetLineHeight() + 4);
+                if (relativeSlot < 0) {
+                    relativeSlot = 0;
+                } else if (relativeSlot > 9) {
+                    relativeSlot = 9;
+                }
+
+                // Adjust for the current page
+                int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
+
+                if (clickedSlot > (saveLoadTotalSlots - 1)) { // Ensure we don't go beyond max slots
+                    clickedSlot = (saveLoadTotalSlots - 1);
+                }
+
+                _slot_cursor = clickedSlot;
+                if (clickedSlot == doubleClickSlot) {
+                    keyCode = 500;
+                    soundPlayFile("ib1p1xx1");
+                }
+
+                selectionChanged = true;
+                doubleClickSlot = _slot_cursor;
+                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
+            } break;
+
             case KEY_MINUS:
             case KEY_UNDERSCORE:
                 brightnessDecrease();
@@ -1438,39 +1325,26 @@ int lsgLoadGame(int mode)
                         if (_slot_cursor < _currentSlotPage * 10) {
                             if (_currentSlotPage > 0) {
                                 _currentSlotPage--;
-                                // updates and blits text to be stretched
-                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();                                     windowRefresh(gLoadSaveWindow);
+                                windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = (_currentSlotPage * 10) + 9; // Move to the last slot of the previous page
                             } else {
                                 _slot_cursor = 0; // Don't go under
                             }
                         }
                     } else { // LOAD_SAVE_SCROLL_DIRECTION_DOWN
-                        //soundPlayFile("ib1p1xx1");
+                        soundPlayFile("ib1p1xx1");
+                        _slot_cursor++;
 
-                        // Only increment cursor if below slot 10 OR extraSaveSlots is enabled
-                        if (_slot_cursor < 10 || extraSaveSlots == 1) {
-                            _slot_cursor++;
-                        }
-                        // Handle page transitions (only allowed if extraSaveSlots == 1)
+                        // If moving down past the last slot of the page, go to the next page
                         if (_slot_cursor > (_currentSlotPage * 10) + 9) {
-                            if (extraSaveSlots == 1 && _currentSlotPage < (saveLoadTotalSlots / 10) - 1) {
+                            if (_currentSlotPage < (saveLoadTotalSlots / 10) - 1) { // Max pages: 0-9
                                 _currentSlotPage++;
-                                // updates and blits text to be stretched
-                                resetCompositeToBase();
                                 _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                                loadsaveBlitComposite();
-                                _DrawInfoBox(_slot_cursor);
-                                loadsaveBlitComposite();
                                 windowRefresh(gLoadSaveWindow);
                                 _slot_cursor = _currentSlotPage * 10; // Move to the first slot of the next page
                             } else {
-                                // Clamp to the last allowed slot (either last in current page or last overall)
-                                _slot_cursor = (extraSaveSlots == 1) ? (saveLoadTotalSlots - 1) : (_currentSlotPage * 10) + 9;
+                                _slot_cursor = (saveLoadTotalSlots - 1); // Prevent overflow (last slot overall)
                             }
                         }
                     }
@@ -1483,7 +1357,7 @@ int lsgLoadGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         break;
                     default:
@@ -1492,23 +1366,19 @@ int lsgLoadGame(int mode)
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                             _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                             LS_WINDOW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                             LS_WINDOW_WIDTH);
                         blitBufferToBuffer(_thumbnail_image,
                             LS_PREVIEW_WIDTH - 1,
                             LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
-                            compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                            gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                             LS_WINDOW_WIDTH);
                         break;
                     }
-                    
-                    // updates and blits text to be stretched
-                    resetCompositeToBase();
+
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                    loadsaveBlitComposite();
                     _DrawInfoBox(_slot_cursor);
-                    loadsaveBlitComposite();                         _DrawInfoBox(_slot_cursor);
                     windowRefresh(gLoadSaveWindow);
                 }
 
@@ -1533,7 +1403,7 @@ int lsgLoadGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     break;
                 default:
@@ -1542,22 +1412,19 @@ int lsgLoadGame(int mode)
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getWidth(),
                         _loadsaveFrmImages[LOAD_SAVE_FRM_PREVIEW_COVER].getHeight(),
                         LS_WINDOW_WIDTH,
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 39 + 340,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 39 + 340,
                         LS_WINDOW_WIDTH);
                     blitBufferToBuffer(_thumbnail_image,
                         LS_PREVIEW_WIDTH - 1,
                         LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
-                        compositeBaseBuffer + LS_WINDOW_WIDTH * 58 + 366,
+                        gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 58 + 366,
                         LS_WINDOW_WIDTH);
                     break;
                 }
-                // updates and blits text to be stretched
-                resetCompositeToBase();
-                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-                loadsaveBlitComposite();
+
                 _DrawInfoBox(_slot_cursor);
-                loadsaveBlitComposite();
+                _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
             }
 
             windowRefresh(gLoadSaveWindow);
@@ -1604,19 +1471,11 @@ int lsgLoadGame(int mode)
         renderPresent();
         sharedFpsLimiter.throttle();
     }
-    
-    if (mode == LOAD_SAVE_MODE_FROM_MAIN_MENU) {
-        if (rc == 0){
-            // fade to black on return to Main Menu
-            paletteFadeTo(gPaletteBlack);
-            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
-        } else {
-            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
-        }
-    } else {
-        lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
-    }
-    
+
+    lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
+            ? LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU
+            : LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+
     pipboyMessageListFree();
 
     if (mode == LOAD_SAVE_MODE_QUICK) {
@@ -1628,53 +1487,11 @@ int lsgLoadGame(int mode)
     return rc;
 }
 
-static FrmImage _loadsaveBackgroundFrmImage;
-
 // 0x47D2E4
 static int lsgWindowInit(int windowType)
 {
     gLoadSaveWindowOldFont = fontGetCurrent();
     fontSetCurrent(103);
-    
-    // Get the screen/window size
-    int screenWidth = screenGetWidth();
-    int screenHeight = screenGetHeight();
-
-    // Load stretch mode from INI file
-    int loadsaveStretchMode = 0;
-    int stretchGameMode = 0;
-    Config config;
-    if (configInit(&config)) {
-        if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "LOAD_SAVE_SIZE", &loadsaveStretchMode);
-
-            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
-                loadsaveStretchMode = stretchGameMode; // always override if key exists
-            }
-        }
-        configFree(&config);
-    }
-    
-    // Get the original image dimensions
-    originalWidth = LS_WINDOW_WIDTH;
-    originalHeight = LS_WINDOW_HEIGHT;
-    
-    scaledWidth = originalWidth;
-    scaledHeight = originalHeight;
-    
-    // Figure out how to stretch the character Selector depending on resolution + settings
-    // Only stretch when loading from Main Menu
-    if ((loadsaveStretchMode != 0 && windowType == LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) || screenWidth < originalWidth || screenHeight < originalHeight) {
-        calculateScaledSize(
-            originalWidth,
-            originalHeight,
-            screenWidth,
-            screenHeight,
-            loadsaveStretchMode,
-            scaledWidth,
-            scaledHeight
-        );
-    }
 
     gLoadSaveWindowIsoWasEnabled = false;
     if (!messageListInit(&gLoadSaveMessageList)) {
@@ -1686,7 +1503,6 @@ static int lsgWindowInit(int windowType)
         return -1;
     }
 
-    // Allocate snapshot memory (preview image + buffer)
     _snapshot = (unsigned char*)internal_malloc(61632);
     if (_snapshot == nullptr) {
         messageListFree(&gLoadSaveMessageList);
@@ -1702,6 +1518,7 @@ static int lsgWindowInit(int windowType)
     }
 
     colorCycleDisable();
+
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     if (windowType == LOAD_SAVE_WINDOW_TYPE_SAVE_GAME || windowType == LOAD_SAVE_WINDOW_TYPE_PICK_QUICK_SAVE_SLOT) {
@@ -1734,45 +1551,33 @@ static int lsgWindowInit(int windowType)
     }
 
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
-         int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
-         if (!_loadsaveFrmImages[index].lock(fid)) {
-             while (--index >= 0) {
-                 _loadsaveFrmImages[index].unlock();
-             }
-             internal_free(_snapshot);
-             messageListFree(&gLoadSaveMessageList);
-             fontSetCurrent(gLoadSaveWindowOldFont);
+        int fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
+        if (!_loadsaveFrmImages[index].lock(fid)) {
+            while (--index >= 0) {
+                _loadsaveFrmImages[index].unlock();
+            }
+            internal_free(_snapshot);
+            messageListFree(&gLoadSaveMessageList);
+            fontSetCurrent(gLoadSaveWindowOldFont);
 
-             if (windowType != LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) {
-                 if (gLoadSaveWindowIsoWasEnabled) {
-                     isoEnable();
-                 }
-             }
+            if (windowType != LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU) {
+                if (gLoadSaveWindowIsoWasEnabled) {
+                    isoEnable();
+                }
+            }
 
-             colorCycleEnable();
-             gameMouseSetCursor(MOUSE_CURSOR_ARROW);
-             return -1;
-         }
-     }
+            colorCycleEnable();
+            gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+            return -1;
+        }
+    }
 
-    // Center the menu window on screen
-    int lsWindowX = (screenWidth - scaledWidth) / 2;
-    int lsWindowY = (screenHeight - scaledHeight) / 2;
-    
-    // Capture background BEFORE creating window
-    unsigned char* background = captureScreenArea(
-        lsWindowX,
-        lsWindowY,
-        LS_WINDOW_WIDTH,
-        LS_WINDOW_HEIGHT
-    );
-    if (!background) return -1;
-
-    // Create the save game window
+    int lsWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
+    int lsWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
     gLoadSaveWindow = windowCreate(lsWindowX,
         lsWindowY,
-        scaledWidth,
-        scaledHeight,
+        LS_WINDOW_WIDTH,
+        LS_WINDOW_HEIGHT,
         256,
         WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     if (gLoadSaveWindow == -1) {
@@ -1793,41 +1598,8 @@ static int lsgWindowInit(int windowType)
     }
 
     gLoadSaveWindowBuffer = windowGetBuffer(gLoadSaveWindow);
-    if (gLoadSaveWindowBuffer) {
-        memcpy(gLoadSaveWindowBuffer, background,
-               LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
-    }
-    internal_free(background);
-    
-    // Load the background image
-    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 237, 0, 0, 0);
-    if (!_loadsaveBackgroundFrmImage.lock(backgroundFid)) {
-        return -1;
-    }
-    
-    // Paint background to window to simulate transparency
-    blitBufferToBufferTrans(_loadsaveBackgroundFrmImage.getData(),
-                            _loadsaveBackgroundFrmImage.getWidth(),
-                            _loadsaveBackgroundFrmImage.getHeight(),
-                            _loadsaveBackgroundFrmImage.getWidth(),
-                            gLoadSaveWindowBuffer,
-                            LS_WINDOW_WIDTH);
+    memcpy(gLoadSaveWindowBuffer, _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData(), LS_WINDOW_WIDTH * LS_WINDOW_HEIGHT);
 
-    //unsigned char* backgroundData = _loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData();
-    unsigned char* backgroundData = _loadsaveBackgroundFrmImage.getData();
-    
-    // Clone the background so we can draw text on it (before scaling)
-    compositeBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
-    // Clone the background again so we have a pure 'original' for updating
-    compositeBaseBuffer = (uint8_t*)SDL_malloc(originalWidth * originalHeight);
-    if (!compositeBuffer || !compositeBaseBuffer) {
-        _ls_error_code = 0;
-        return -1;
-    }
-
-    // copy the background to the composite buffer
-    memcpy(compositeBuffer, backgroundData, originalWidth * originalHeight);
-    
     int messageId;
     switch (windowType) {
     case LOAD_SAVE_WINDOW_TYPE_SAVE_GAME:
@@ -1853,216 +1625,94 @@ static int lsgWindowInit(int windowType)
 
     char* msg;
 
-    // Draw main background text to the compositeBuffer (to be stretched)
-    // Message ID
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, messageId);
-    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 27 + 48, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 27 + 48, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
 
     // DONE
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 104);
-    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 348 + 410, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
+    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 348 + 410, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
 
     // CANCEL
     msg = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 105);
-    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 348 + 515, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
-    
-    // Stretch and blit the text+background into our menu window
-    if (scaledWidth != originalWidth || scaledHeight != originalHeight) {
-        //unsigned char* stretched = reinterpret_cast<unsigned char*>(SDL_malloc(scaledWidth * scaledHeight));
-        unsigned char* stretched = (unsigned char*)internal_malloc(scaledWidth * scaledHeight);
-        if (!stretched) {
-            SDL_free(compositeBuffer);
-            _ls_error_code = 0;
-            return -1;
-        }
+    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 348 + 515, msg, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, _colorTable[18979]);
 
-        blitBufferToBufferStretchAndFixEdges(
-            compositeBuffer, originalWidth, originalHeight, originalWidth,
-            stretched, scaledWidth, scaledHeight, scaledWidth);
-
-        blitBufferToBufferTrans(stretched, scaledWidth, scaledHeight, scaledWidth, gLoadSaveWindowBuffer, scaledWidth);
-        internal_free(stretched);
-    } else {
-        blitBufferToBufferTrans(compositeBuffer, originalWidth, originalHeight, originalWidth, gLoadSaveWindowBuffer, scaledWidth);
-    }
-
-    SDL_free(compositeBuffer);
-    _loadsaveBackgroundFrmImage.unlock();
-    
     int btn;
-    
-    // Determine scaling factors based on the original and current window dimensions
-    scaleX = static_cast<float>(scaledWidth) / originalWidth;
-    scaleY = static_cast<float>(scaledHeight) / originalHeight;
 
-    // Round buttons: use scaleY to preserve aspect ratio
-    int redButtonBaseWidth = _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth();
-    int redButtonBaseHeight = _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight();
-    float roundButtonScale = scaleY;
-    int redButtonWidth = static_cast<int>(redButtonBaseWidth * roundButtonScale);
-    int redButtonHeight = static_cast<int>(redButtonBaseHeight * roundButtonScale);
-
-    // Allocate and stretch the round button images
-    unsigned char* scaledRedNormal = reinterpret_cast<unsigned char*>(SDL_malloc(redButtonWidth * redButtonHeight));
-    unsigned char* scaledRedPressed = reinterpret_cast<unsigned char*>(SDL_malloc(redButtonWidth * redButtonHeight));
-    if (!scaledRedNormal || !scaledRedPressed) {
-        return -1;
-    }
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
-        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
-        scaledRedNormal, redButtonWidth, redButtonHeight, redButtonWidth);
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
-        redButtonBaseWidth, redButtonBaseHeight, redButtonBaseWidth,
-        scaledRedPressed, redButtonWidth, redButtonHeight, redButtonWidth);
-
-    // Create round buttons (button 0 and 1)
     btn = buttonCreate(gLoadSaveWindow,
-        static_cast<int>(391 * scaleX),
-        static_cast<int>(349 * scaleY),
-        redButtonWidth,
-        redButtonHeight,
-        -1, -1, -1,
+        391,
+        349,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
+        -1,
+        -1,
+        -1,
         500,
-        scaledRedNormal,
-        scaledRedPressed,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
-        buttonSetMask(btn, scaledRedNormal);
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
     btn = buttonCreate(gLoadSaveWindow,
-        static_cast<int>(495 * scaleX),
-        static_cast<int>(349 * scaleY),
-        redButtonWidth,
-        redButtonHeight,
-        -1, -1, -1,
+        495,
+        349,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getHeight(),
+        -1,
+        -1,
+        -1,
         501,
-        scaledRedNormal,
-        scaledRedPressed,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_RED_BUTTON_PRESSED].getData(),
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
-        buttonSetMask(btn, scaledRedNormal);
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    // Arrow buttons: scale images and position like background (scaleX and scaleY)
-    int arrowBaseWidth = _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getWidth();
-    int arrowBaseHeight = _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getHeight();
-    int arrowWidth = static_cast<int>(arrowBaseWidth * scaleX);
-    int arrowHeight = static_cast<int>(arrowBaseHeight * scaleY);
-
-    // Allocate and stretch arrow images
-    unsigned char* scaledArrowUpNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
-    unsigned char* scaledArrowUpPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
-    unsigned char* scaledArrowDownNormal = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
-    unsigned char* scaledArrowDownPressed = reinterpret_cast<unsigned char*>(SDL_malloc(arrowWidth * arrowHeight));
-    if (!scaledArrowUpNormal || !scaledArrowUpPressed || !scaledArrowDownNormal || !scaledArrowDownPressed) {
-        return -1;
-    }
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
-        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledArrowUpNormal, arrowWidth, arrowHeight, arrowWidth);
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
-        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledArrowUpPressed, arrowWidth, arrowHeight, arrowWidth);
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
-        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledArrowDownNormal, arrowWidth, arrowHeight, arrowWidth);
-
-    blitBufferToBufferStretchAndFixEdges(
-        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
-        arrowBaseWidth, arrowBaseHeight, arrowBaseWidth,
-        scaledArrowDownPressed, arrowWidth, arrowHeight, arrowWidth);
-
-    // Arrow Up button
     btn = buttonCreate(gLoadSaveWindow,
-        static_cast<int>(35 * scaleX),
-        static_cast<int>(58 * scaleY),
-        arrowWidth,
-        arrowHeight,
+        35,
+        58,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight(),
         -1,
         505,
         506,
         505,
-        scaledArrowUpNormal,
-        scaledArrowUpPressed,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getData(),
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    // Arrow Down button
     btn = buttonCreate(gLoadSaveWindow,
-        static_cast<int>(35 * scaleX),
-        static_cast<int>((58 + arrowBaseHeight) * scaleY),
-        arrowWidth,
-        arrowHeight,
+        35,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_UP_PRESSED].getHeight() + 58,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getWidth(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getHeight(),
         -1,
         503,
         504,
         503,
-        scaledArrowDownNormal,
-        scaledArrowDownPressed,
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_NORMAL].getData(),
+        _loadsaveFrmImages[LOAD_SAVE_FRM_ARROW_DOWN_PRESSED].getData(),
         nullptr,
         BUTTON_FLAG_TRANSPARENT);
     if (btn != -1) {
         buttonSetCallbacks(btn, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    // Invisible scroll click area
-    buttonCreate(gLoadSaveWindow,
-        static_cast<int>(55 * scaleX),
-        static_cast<int>(87 * scaleY),
-        static_cast<int>(230 * scaleX),
-        static_cast<int>(353 * scaleY),
-        -1, -1, -1, 502, nullptr, nullptr, nullptr, BUTTON_FLAG_TRANSPARENT);
+    // tweaked bounds to accomodate Next/Previous buttons
+    buttonCreate(gLoadSaveWindow, 55, 87, 230, 348, -1, -1, -1, 502, nullptr, nullptr, nullptr, BUTTON_FLAG_TRANSPARENT);
 
-    
     fontSetCurrent(101);
-    memcpy(compositeBaseBuffer, compositeBuffer, originalWidth * originalHeight);
 
     return 0;
 }
-
-// Resets compositeBuffer to the pure original (background + main text + snapshot)
-void resetCompositeToBase() {
-    if (compositeBuffer && compositeBaseBuffer) {
-        memcpy(compositeBuffer, compositeBaseBuffer, originalWidth * originalHeight);
-    }
-}
-
-// Blits/updates changed text to the gLoadSaveWindowBuffer for display
-void loadsaveBlitComposite() {
-    if (compositeBuffer == nullptr) return;
-
-    blitBufferToBufferStretchTrans(
-        compositeBuffer,
-        originalWidth,
-        originalHeight,
-        originalWidth,
-        gLoadSaveWindowBuffer,
-        scaledWidth,
-        scaledHeight,
-        scaledWidth
-    );
-    
-    windowRefresh(gLoadSaveWindow);
-}
-
 
 // 0x47D824
 static int lsgWindowFree(int windowType)
@@ -2085,9 +1735,18 @@ static int lsgWindowFree(int windowType)
 
     colorCycleEnable();
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
+    touch_set_touchscreen_mode(false);
 
     return 0;
 }
+
+#if defined(__EMSCRIPTEN__)
+// clang-format off
+EM_ASYNC_JS(void, do_save_idbfs_loadsave, (), {
+    await new Promise((resolve, reject) => FS.syncfs(err => err ? reject(err) : resolve()))
+});
+// clang-format on
+#endif
 
 // 0x47D88C
 static int lsgPerformSaveGame()
@@ -2238,6 +1897,10 @@ static int lsgPerformSaveGame()
 
     snprintf(_gmpath, sizeof(_gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", _slot_cursor + 1);
     MapDirErase(_gmpath, "BAK");
+
+#if defined(__EMSCRIPTEN__)
+    do_save_idbfs_loadsave();
+#endif
 
     gLoadSaveMessageListItem.num = 140;
     if (messageListGetItem(&gLoadSaveMessageList, &gLoadSaveMessageListItem)) {
@@ -2592,8 +2255,8 @@ static int _GetSlotList()
 
 static void _ShowSlotList(int windowType)
 {
-    const int slotsPerPage = 10;  // Show 10 slots per page
-    const int totalPages = (saveLoadTotalSlots + slotsPerPage - 1) / slotsPerPage; // Maximum 10 pages
+    // Clear display area
+    bufferFill(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 87 + 55, 230, 353, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer[LS_WINDOW_WIDTH * 86 + 55] & 0xFF);
 
     int y = 87;
     int startIndex = _currentSlotPage * slotsPerPage;
@@ -2604,7 +2267,7 @@ static void _ShowSlotList(int windowType)
         int color = index == _slot_cursor ? _colorTable[32747] : _colorTable[992];
         const char* text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, windowType != 0 ? 110 : 109);
         snprintf(_str, sizeof(_str), "[   %s %.2d:   ]", text, index + 1);
-        fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
         y += fontGetLineHeight();
         switch (_LSstatus[index]) {
@@ -2630,17 +2293,15 @@ static void _ShowSlotList(int windowType)
             break;
         }
 
-        // Draw text to compositeBuffer for later stretching
-        fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+        fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 55, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
         y += 2 * fontGetLineHeight() + 4;
     }
 
     // Pagination navigation
-    // Draw text to compositeBuffer for later stretching
-    if (saveLoadTotalSlots > 10 && extraSaveSlots != 0) {
+    if (saveLoadTotalSlots > 10) {
         int activeColor = _colorTable[992];
         int inactiveColor = _colorTable[8804];
-        
+
         {
             MessageListItem messageListItemBack = { 201, 0, nullptr, nullptr };
             if (!messageListGetItem(&gPipboyMessageList, &messageListItemBack)) {
@@ -2648,7 +2309,7 @@ static void _ShowSlotList(int windowType)
                 messageListItemBack.text = "BACK";
             }
             fontDrawText(
-                compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 95,
+                gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 95,
                 messageListItemBack.text,
                 LS_WINDOW_WIDTH,
                 LS_WINDOW_WIDTH,
@@ -2660,23 +2321,19 @@ static void _ShowSlotList(int windowType)
                 debugPrint("Error: Couldn't find LoadSave Message!");
                 messageListItemMore.text = "MORE";
             }
-            fontDrawText(
-                compositeBuffer + LS_WINDOW_WIDTH * (y + 0) + 210,
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (y + 0) + 210,
                 messageListItemMore.text,
                 LS_WINDOW_WIDTH,
                 LS_WINDOW_WIDTH,
                 _currentSlotPage < saveLoadPages - 1 ? activeColor : inactiveColor);
         }
-
     }
-    
 }
 
 // 0x47E8E0
 static void _DrawInfoBox(int slot)
 {
-    // raises this one pixel to fit the extra line below a little better
-    /*blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 253 + 396, 164, 60, LS_WINDOW_WIDTH, compositeBuffer + LS_WINDOW_WIDTH * 253 + 396, 640);*/
+    blitBufferToBuffer(_loadsaveFrmImages[LOAD_SAVE_FRM_BACKGROUND].getData() + LS_WINDOW_WIDTH * 253 + 396, 164, 60, LS_WINDOW_WIDTH, gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 253 + 396, 640);
 
     unsigned char* dest;
     const char* text;
@@ -2687,7 +2344,7 @@ static void _DrawInfoBox(int slot)
         if (1) {
             LoadSaveSlotData* ptr = &(_LSData[slot]);
             // raise this one pixel as well to match above
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * 253 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 253 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2698,8 +2355,7 @@ static void _DrawInfoBox(int slot)
                 100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
             int v2 = fontGetLineHeight();
-            // Draw text to compositeBuffer for later stretching
-            fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * (255 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
+            fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * (255 + v2) + 397, _str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(_str,
                 sizeof(_str),
@@ -2727,28 +2383,27 @@ static void _DrawInfoBox(int slot)
                     int xShift = (index > 0) ? 2 : 0;
 
                     // Draw the substring
-                    fontDrawText(compositeBuffer + LS_WINDOW_WIDTH * y + 399 + xShift, temp, 164, LS_WINDOW_WIDTH, color);
+                    fontDrawText(gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * y + 399 + xShift, temp, 164, LS_WINDOW_WIDTH, color);
                     y += v2 + 2;
                 }
             }
         }
         return;
-    // Draw text to compositeBuffer for later stretching
     case SLOT_STATE_EMPTY:
         // Empty.
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 114);
-        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 404;
+        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 404;
         break;
     case SLOT_STATE_ERROR:
         // Error!
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 115);
-        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 404;
+        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 404;
         color = _colorTable[32328];
         break;
     case SLOT_STATE_UNSUPPORTED_VERSION:
         // Old version.
         text = getmsg(&gLoadSaveMessageList, &gLoadSaveMessageListItem, 116);
-        dest = compositeBuffer + LS_WINDOW_WIDTH * 262 + 400;
+        dest = gLoadSaveWindowBuffer + LS_WINDOW_WIDTH * 262 + 400;
         color = _colorTable[32328];
         break;
     default:
@@ -2756,7 +2411,6 @@ static void _DrawInfoBox(int slot)
     }
 
     fontDrawText(dest, text, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
-
 }
 
 // 0x47EC48

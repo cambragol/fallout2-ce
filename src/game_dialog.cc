@@ -3490,26 +3490,8 @@ int partyMemberControlWindowInit()
 
     _win_group_radio_buttons(5, &(_gdialog_buttons[_control_buttons_start]));
 
-    // Get the current disposition
-    int currentDisposition = aiGetDisposition(gGameDialogSpeaker);
-    /*if (currentDisposition < 0 || currentDisposition > 4) {
-        currentDisposition = 2; // Default to Neutral if invalid
-    }*/
-
-    // Figure out which button corresponds to this disposition
-    int selectedButtonIndex = _control_buttons_start + (4 - currentDisposition);
-
-    // Set the correct button state
-    for (int i = 0; i < 5; i++) {
-        int buttonId = _gdialog_buttons[_control_buttons_start + i];
-        _win_set_button_rest_state(buttonId, (i == (4 - currentDisposition)) ? 1 : 0, 0);
-        
-        // Disable buttons for unsupported dispositions
-        if (!partyMemberSupportsDisposition(gGameDialogSpeaker,
-                                          gGameDialogDispositionButtonsData[i].value)) {
-            buttonDisable(buttonId);
-        }
-    }
+    int disposition = aiGetDisposition(gGameDialogSpeaker);
+    _win_set_button_rest_state(_gdialog_buttons[_control_buttons_start + 4 - disposition], 1, 0);
 
     partyMemberControlWindowUpdate();
 
@@ -3785,38 +3767,15 @@ void partyMemberControlWindowHandleEvents()
                     return;
                 }
             } else if (keyCode == -2) {
-                // Mouse event needs to register the click to the correct entry in gGameDialogDispositionButtonsData
+                // CE: Minor improvement - handle on mouse up (just like other
+                // buttons). Also fixed active button area (in original code
+                // it's slightly smaller than the button itself).
                 if ((mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
-                    // Check all 5 disposition buttons
-                    for (int i = 0; i < 5; i++) {
-                        GameDialogButtonData* btn = &gGameDialogDispositionButtonsData[i];
-                        
-                        // Check for a mouse click at each button
-                        if (mouseHitTestInWindow(gGameDialogWindow,
-                                               btn->x,
-                                               btn->y,
-                                               btn->x + 109,  // Width
-                                               btn->y + 28)) { // Height
-                            // Set disposition from the button's value field
-                            aiSetDisposition(gGameDialogSpeaker, btn->value);
-                            
-                            // Update 'radio' button states
-                            for (int j = 0; j < 5; j++) {
-                                _win_set_button_rest_state(_gdialog_buttons[_control_buttons_start + j],
-                                                         (j == i) ? 1 : 0, 0);
-                            }
-                            
-                            // Original behavior for Custom button (index 4)
-                            // Opens Custom Disposition window
-                            if (i == 4) {
-                                // Added to give reaction on already toggled button
-                                soundPlayFile("ib2lu1x1");
-                                _dialogue_state = 13;
-                                _dialogue_switch_mode = 11;
-                                done = true;
-                            }
-                            break;
-                        }
+                    if (mouseHitTestInWindow(gGameDialogWindow, 438, 156, 438 + 109, 156 + 28)) {
+                        aiSetDisposition(gGameDialogSpeaker, 0);
+                        _dialogue_state = 13;
+                        _dialogue_switch_mode = 11;
+                        done = true;
                     }
                 }
             }
@@ -3930,6 +3889,7 @@ int partyMemberCustomizationWindowInit()
             partyMemberCustomizationWindowFree();
             return -1;
         }
+
         buttonSetCallbacks(_gdialog_buttons[optionButton], _gsound_med_butt_press, _gsound_med_butt_release);
     }
 
@@ -4183,7 +4143,6 @@ int _gdCustomSelect(int a1)
         buttonSetCallbacks(btn2, _gsound_red_butt_press, _gsound_red_butt_release);
     }
 
-    
     fontSetCurrent(103);
 
     MessageListItem messageListItem;
@@ -4226,7 +4185,7 @@ int _gdCustomSelect(int a1)
                 STRUCT_5189E4* ptr = &(_custom_settings[a1][value]);
                 _custom_current_selected[a1] = value;
                 _gdCustomUpdateSetting(a1, ptr->value);
-                if (keyCode != 500){
+                if (keyCode != 500) {
                     soundPlayFile("ib1p1xx1");
                 }
                 done = true;
@@ -4401,8 +4360,8 @@ int _gdialog_window_create()
             unsigned char* bgWindowBuf = windowGetBuffer(gGameDialogBackgroundWindow);
             // TODO: Not sure about offsets.
             blitBufferToBuffer(bgWindowBuf + screenWidth * (GAME_DIALOG_WINDOW_HEIGHT - _dialogue_subwin_len), screenWidth, _dialogue_subwin_len, screenWidth, windowBuf, screenWidth);
-            
-            // BARTER/TRADE
+
+            // BARTER/TRADE - button moved here to set above background window
             _gdialog_buttons[0] = buttonCreate(gGameDialogWindow, 593, 41, 14, 14, -1, -1, -1, -1, _redButtonNormalFrmImage.getData(), _redButtonPressedFrmImage.getData(), nullptr, BUTTON_FLAG_TRANSPARENT);
 
             if (_dialogue_just_started) {

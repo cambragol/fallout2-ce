@@ -906,14 +906,13 @@ int aiSetDisposition(Object* obj, int disposition)
         return -1;
     }
 
-    if (disposition < 0 || disposition >= 5) {
+    if (disposition == -1 || disposition >= 5) {
         return -1;
     }
 
     AiPacket* ai = aiGetPacket(obj);
-    ai->disposition = disposition;  // ACTUALLY SET THE DISPOSITION
-    obj->data.critter.combat.aiPacket = ai->packet_num;  // Keep original packet num
-    
+    obj->data.critter.combat.aiPacket = ai->packet_num - (disposition - ai->disposition);
+
     return 0;
 }
 
@@ -2032,9 +2031,11 @@ Object* _ai_search_inven_weap(Object* critter, bool checkRequiredActionPoints, O
             continue;
         }
 
-        if (ammoGetQuantity(weapon) == 0) {
-            if (!aiHaveAmmo(critter, weapon, nullptr)) {
-                continue;
+        if (weaponGetAttackTypeForHitMode(weapon, HIT_MODE_RIGHT_WEAPON_PRIMARY) == ATTACK_TYPE_RANGED) {
+            if (ammoGetQuantity(weapon) == 0) {
+                if (!aiHaveAmmo(critter, weapon, nullptr)) {
+                    continue;
+                }
             }
         }
 
@@ -2731,16 +2732,16 @@ static int _ai_try_attack(Object* attacker, Object* defender)
         if (reason == COMBAT_BAD_SHOT_NO_AMMO) {
             // out of ammo
             int roundsLoaded = 0;
-                        if (aiHaveAmmo(attacker, weapon, &ammo)) {
-                            while (aiHaveAmmo(attacker, weapon, &ammo)) {
-                                int remainingAmmoQuantity = weaponReload(weapon, ammo);
-                                if (remainingAmmoQuantity == 0 && ammo != nullptr) {
-                                    _obj_destroy(ammo);
-                                    ++roundsLoaded;
-                                } else {
-                                    break;
-                                }
-                            }
+            if (aiHaveAmmo(attacker, weapon, &ammo)) {
+                while (aiHaveAmmo(attacker, weapon, &ammo)) {
+                    int remainingAmmoQuantity = weaponReload(weapon, ammo);
+                    if (remainingAmmoQuantity == 0 && ammo != nullptr) {
+                        _obj_destroy(ammo);
+                        ++roundsLoaded;
+                    } else {
+                        break;
+                    }
+                }
 
                 if (roundsLoaded > 0) {
                     int volume = _gsound_compute_relative_volume(attacker);
@@ -3387,7 +3388,7 @@ int _combatai_msg(Object* critter, Attack* attack, int type, int delay)
     snprintf(string, AI_MESSAGE_SIZE, "%s", messageListItem.text);
 
     // TODO: Get rid of casts.
-    return animationRegisterCallback(critter, (void*)type, (AnimationCallback*)_ai_print_msg, delay);
+    return animationRegisterCallback(critter, (void*)(uintptr_t)type, (AnimationCallback*)_ai_print_msg, delay);
 }
 
 // 0x42B80C

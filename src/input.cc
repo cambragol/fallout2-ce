@@ -266,6 +266,8 @@ void inputEventQueueReset()
 {
     gInputEventQueueReadIndex = -1;
     gInputEventQueueWriteIndex = 0;
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) { } // Clear all input events
 }
 
 // 0x4C8D1C
@@ -350,20 +352,20 @@ void takeScreenshot()
         return;
     }
 
-    WINDOWDRAWINGPROC v0 = _scr_blit;
+    WINDOWDRAWINGPROC old_src = _scr_blit;
     _scr_blit = screenshotBlitter;
 
-    WINDOWDRAWINGPROC v2 = _mouse_blit;
+    WINDOWDRAWINGPROC old_mouse = _mouse_blit;
     _mouse_blit = screenshotBlitter;
 
-    WindowDrawingProc2* v1 = _mouse_blit_trans;
+    WindowDrawingProc2* old_mouse_trans = _mouse_blit_trans;
     _mouse_blit_trans = nullptr;
 
     windowRefreshAll(&_scr_size);
 
-    _mouse_blit_trans = v1;
-    _mouse_blit = v2;
-    _scr_blit = v0;
+    _mouse_blit_trans = old_mouse_trans;
+    _mouse_blit = old_mouse;
+    _scr_blit = old_src;
 
     unsigned char* palette = _getSystemPalette();
     gScreenshotHandler(width, height, gScreenshotBuffer, palette);
@@ -371,7 +373,7 @@ void takeScreenshot()
 }
 
 // 0x4C8FF0
-static void screenshotBlitter(unsigned char* src, int srcPitch, int a3, int srcX, int srcY, int width, int height, int destX, int destY)
+static void screenshotBlitter(unsigned char* src, int srcPitch, int _, int srcX, int srcY, int width, int height, int destX, int destY)
 {
     int destWidth = _scr_size.right - _scr_size.left + 1;
     blitBufferToBuffer(src + srcPitch * srcY + srcX, width, height, srcPitch, gScreenshotBuffer + destWidth * destY + destX, destWidth);
@@ -1036,49 +1038,5 @@ void endTextInput()
 {
     SDL_StopTextInput();
 }
-
-// captures background for new windows, to allow 'transparency'
-unsigned char* captureScreenArea(int x, int y, int width, int height) {
-    unsigned char* buffer = (unsigned char*)internal_malloc(width * height);
-    if (!buffer) return nullptr;
-
-    static struct {
-        int x, y, width, height;
-        unsigned char* buffer;
-    } context;
-
-    context = {x, y, width, height, buffer};
-
-    static auto blitter = [](unsigned char* src, int srcPitch, int _,
-                           int srcX, int srcY, int blitWidth, int blitHeight,
-                           int destX, int destY) {
-        int bufferX = destX - context.x;
-        int bufferY = destY - context.y;
-        
-        if (bufferX >= 0 && bufferY >= 0 &&
-            bufferX < context.width &&
-            bufferY < context.height) {
-            unsigned char* dest = context.buffer + bufferY * context.width + bufferX;
-            blitBufferToBuffer(
-                src + srcY * srcPitch + srcX,
-                blitWidth,
-                blitHeight,
-                srcPitch,
-                dest,
-                context.width
-            );
-        }
-    };
-
-    WINDOWDRAWINGPROC oldBlitter = _scr_blit;
-    _scr_blit = blitter;
-
-    Rect rect = {x, y, x + width - 1, y + height - 1};
-    windowRefreshAll(&rect);
-
-    _scr_blit = oldBlitter;
-    return buffer;
-}
-
 
 } // namespace fallout
