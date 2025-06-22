@@ -36,6 +36,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_config.h"
 #include "svga.h"
 #include "text_object.h"
 #include "tile.h"
@@ -819,7 +820,12 @@ int mapLoadById(int map)
 static int mapLoad(File* stream)
 {
     _map_save_in_game(true);
-    backgroundSoundLoad("wind2", 12, 13, 16);
+    int gaplessMusic = 0;
+    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAPLESS_MUSIC, &gaplessMusic);
+    if (backgoundSoundIsPlaying() && !gaplessMusic) {
+        // playing the loading sound might interrupt continuous music playback
+        backgroundSoundLoad("wind2", 12, 13, 16);
+    }
     isoDisable();
     _partyMemberPrepLoad();
     _gmouse_disable_scrolling();
@@ -1248,15 +1254,15 @@ int mapHandleTransition()
     if (gMapTransition.map == -1) {
         if (!isInCombat()) {
             animationStop();
-            // Remove text floaters when moving to the world map
+            // SFALL: Remove text floaters when moving to the world map
             textObjectsReset();
-            wmTownMap();
+            wmTownMap(); // nb this is a world map transition
             memset(&gMapTransition, 0, sizeof(gMapTransition));
         }
     } else if (gMapTransition.map == -2) {
         if (!isInCombat()) {
             animationStop();
-            // Remove text floaters when moving to the world map
+            // SFALL: Remove text floaters when moving to the world map
             textObjectsReset();
             wmWorldMap();
             memset(&gMapTransition, 0, sizeof(gMapTransition));

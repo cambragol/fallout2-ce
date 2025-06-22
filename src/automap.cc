@@ -245,8 +245,6 @@ static const int gAutomapFrmIds[AUTOMAP_FRM_COUNT] = {
 // 0x5108C4
 static int gAutomapFlags = 0;
 
-static unsigned char* gAutomapWindowBuffer;
-
 // 0x56CB18
 static AutomapHeader gAutomapHeader;
 
@@ -322,37 +320,12 @@ void automapShow(bool isInGame, bool isUsingScanner)
 
     int oldFont = fontGetCurrent();
     fontSetCurrent(101);
+    touch_set_touchscreen_mode(true);
 
     int automapWindowX = (screenGetWidth() - AUTOMAP_WINDOW_WIDTH) / 2;
     int automapWindowY = (screenGetHeight() - AUTOMAP_WINDOW_HEIGHT) / 2;
-    
-    // Capture background BEFORE creating window
-    unsigned char* background = captureScreenArea(
-        automapWindowX,
-        automapWindowY,
-        AUTOMAP_WINDOW_WIDTH,
-        AUTOMAP_WINDOW_HEIGHT
-    );
-    if (!background) return;
-    
-    int window = windowCreate(automapWindowX, automapWindowY, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color, WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
-    
-    // Copy captured background to window
-    gAutomapWindowBuffer = windowGetBuffer(window);
-    if (gAutomapWindowBuffer) {
-        memcpy(gAutomapWindowBuffer, background,
-               AUTOMAP_WINDOW_WIDTH * AUTOMAP_WINDOW_HEIGHT);
-    }
-
-    internal_free(background);
-    
-    // Paint background to window to simulate transparency
-    blitBufferToBufferTrans(frmImages[AUTOMAP_FRM_BACKGROUND].getData(),
-    frmImages[AUTOMAP_FRM_BACKGROUND].getWidth(),
-    frmImages[AUTOMAP_FRM_BACKGROUND].getHeight(),
-    frmImages[AUTOMAP_FRM_BACKGROUND].getWidth(),
-    gAutomapWindowBuffer,
-    AUTOMAP_WINDOW_WIDTH);
+    // adding WINDOW_TRANSPARENT and WINDOW_DRAGGABLE_BY_BACKGROUND for testing temporarily
+    int window = windowCreate(automapWindowX, automapWindowY, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color, WINDOW_MODAL | WINDOW_MOVE_ON_TOP | WINDOW_TRANSPARENT | WINDOW_DRAGGABLE_BY_BACKGROUND);
 
     int scannerBtn = buttonCreate(window,
         111,
@@ -521,6 +494,7 @@ void automapShow(bool isInGame, bool isUsingScanner)
 
     windowDestroy(window);
     fontSetCurrent(oldFont);
+    touch_set_touchscreen_mode(false);
 }
 
 // Renders automap in Map window.
@@ -535,11 +509,11 @@ static void automapRenderInMapWindow(int window, int elevation, unsigned char* b
         color = _colorTable[22025];
     }
 
-    windowFill(window, 15, 15, AUTOMAP_WINDOW_WIDTH - 30, AUTOMAP_WINDOW_HEIGHT - 30, color); // changed to inset the map to not overlap with corners
-    //windowDrawBorder(window); // not needed? - also overlaps corners visually
+    windowFill(window, 0, 0, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, color);
+    windowDrawBorder(window);
 
     unsigned char* windowBuffer = windowGetBuffer(window);
-    blitBufferToBufferTrans(backgroundData, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, AUTOMAP_WINDOW_WIDTH, windowBuffer, AUTOMAP_WINDOW_WIDTH);
+    blitBufferToBuffer(backgroundData, AUTOMAP_WINDOW_WIDTH, AUTOMAP_WINDOW_HEIGHT, AUTOMAP_WINDOW_WIDTH, windowBuffer, AUTOMAP_WINDOW_WIDTH);
 
     for (Object* object = objectFindFirstAtElevation(elevation); object != nullptr; object = objectFindNextAtElevation()) {
         if (object->tile == -1) {

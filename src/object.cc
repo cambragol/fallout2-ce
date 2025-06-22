@@ -2064,7 +2064,7 @@ bool _obj_portal_is_walk_thru(Object* obj)
     if (protoGetProto(obj->pid, &proto) == -1) {
         return false;
     }
-    
+
     int autoOpenDoors = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_OPEN_DOORS, &autoOpenDoors);
 

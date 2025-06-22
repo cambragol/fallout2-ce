@@ -4,7 +4,6 @@
 #include "db.h"
 #include "message.h"
 
-
 namespace fallout {
 
 typedef enum PipboyOpenIntent {

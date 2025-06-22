@@ -1,4 +1,5 @@
 #include "game.h"
+#include "platform/git_version.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -52,6 +53,7 @@
 #include "settings.h"
 #include "sfall_arrays.h"
 #include "sfall_config.h"
+#include "sfall_ext.h"
 #include "sfall_global_scripts.h"
 #include "sfall_global_vars.h"
 #include "sfall_ini.h"
@@ -88,7 +90,8 @@ static void showSplash();
 static char _aGame_0[] = "game\\";
 
 // 0x5020B8
-static char _aDec11199816543[] = VERSION_BUILD_TIME;
+static char _aBuildDate[] = _BUILD_DATE;
+static char _aBuildHash[] = _BUILD_HASH;
 
 // 0x5186B4
 static bool gGameUiDisabled = false;
@@ -927,7 +930,8 @@ int gameHandleKey(int eventCode, bool isInCombatMode)
             char version[VERSION_MAX];
             versionGetVersion(version, sizeof(version));
             displayMonitorAddMessage(version);
-            displayMonitorAddMessage(_aDec11199816543);
+            displayMonitorAddMessage(_aBuildHash);
+            displayMonitorAddMessage(_aBuildDate);
         }
         break;
     case KEY_ARROW_LEFT:
@@ -1190,139 +1194,71 @@ static void gameFreeGlobalVars()
 // 0x443F74
 static void showHelp()
 {
-    ScopedGameMode gm(GameMode::kHelp); // Switch to Help game mode.
+    ScopedGameMode gm(GameMode::kHelp);
 
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
+
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
 
     bool colorCycleWasEnabled = colorCycleEnabled();
     colorCycleDisable();
 
-    // load the optional stretch setting from f2_res.ini
-    int helpScreenStretchMode = 0;
-    int stretchGameMode = 0;
-    Config config;
-    if (configInit(&config)) {
-        if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "HELP_SCRN_SIZE", &helpScreenStretchMode);
+    // CE: Help screen uses separate color palette which is incompatible with
+    // colors in other windows. Setup overlay to hide everything.
+    int overlay = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
 
-            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
-                helpScreenStretchMode = stretchGameMode; // always override if key exists
-            }
-        }
-        configFree(&config);
-    }
-
-    int screenWidth = screenGetWidth();
-    int screenHeight = screenGetHeight();
-
-    // Create an invisible fullscreen overlay window to cover everything.
-    int overlay = windowCreate(0, 0, screenWidth, screenHeight, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
-
-    FrmImage helpFrmImage;
-    int helpFid = buildFid(OBJ_TYPE_INTERFACE, 297, 0, 0, 0); // Load Help screen graphic (FID 297).
-    if (!helpFrmImage.lock(helpFid)) {
-        if (colorCycleWasEnabled)
-            colorCycleEnable();
-        gameMouseObjectsShow();
-        if (isoWasEnabled)
-            isoEnable();
-        return;
-    }
-
-    unsigned char* helpData = helpFrmImage.getData();
-    int helpWidth = HELP_SCREEN_WIDTH;
-    int helpHeight = HELP_SCREEN_HEIGHT;
-
-    unsigned char* bufferToBlit = helpData;
-    int blitWidth = helpWidth;
-    int blitHeight = helpHeight;
-
-    // Check if stretching is needed (based on config or screen too small).
-    if (helpScreenStretchMode != 0 || screenWidth < helpWidth || screenHeight < helpHeight) {
-        int scaledWidth, scaledHeight;
-
-        calculateScaledSize(
-            helpWidth,
-            helpHeight,
-            screenWidth,
-            screenHeight,
-            helpScreenStretchMode,
-            scaledWidth,
-            scaledHeight);
-
-        // Allocate memory for the scaled image.
-        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth) * (scaledHeight)));
-        if (scaled != nullptr) {
-            // Stretch and fix the original help image into the new buffer.
-            blitBufferToBufferStretchAndFixEdges(
-                helpData, helpWidth, helpHeight, helpWidth, // Source buffer and dimensions
-                scaled, scaledWidth, scaledHeight, scaledWidth, // Destination buffer and dimensions
-                1 // numStates = 1 for a single image
-            );
-
-            bufferToBlit = scaled;
-            blitWidth = scaledWidth;
-            blitHeight = scaledHeight;
-        }
-    }
-
-    // Center the window on the screen.
-    int x = (screenWidth - blitWidth) / 2;
-    int y = (screenHeight - blitHeight) / 2;
-
-    // Create window for the help screen.
-    int win = windowCreate(x, y, blitWidth, blitHeight, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
+    int helpWindowX = (screenGetWidth() - HELP_SCREEN_WIDTH) / 2;
+    int helpWindowY = (screenGetHeight() - HELP_SCREEN_HEIGHT) / 2;
+    int win = windowCreate(helpWindowX, helpWindowY, HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, 0, WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (win != -1) {
         unsigned char* windowBuffer = windowGetBuffer(win);
         if (windowBuffer != nullptr) {
-            // Clear palette to black before displaying.
-            paletteSetEntries(gPaletteBlack);
+            FrmImage backgroundFrmImage;
+            int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 297, 0, 0, 0);
+            if (backgroundFrmImage.lock(backgroundFid)) {
+                paletteSetEntries(gPaletteBlack);
+                blitBufferToBuffer(backgroundFrmImage.getData(), HELP_SCREEN_WIDTH, HELP_SCREEN_HEIGHT, HELP_SCREEN_WIDTH, windowBuffer, HELP_SCREEN_WIDTH);
 
-            // Copy the help image into the window.
-            blitBufferToBuffer(bufferToBlit, blitWidth, blitHeight, blitWidth, windowBuffer, blitWidth);
+                colorPaletteLoad("art\\intrface\\helpscrn.pal");
+                paletteSetEntries(_cmap);
 
-            // Load the help screen's specific palette.
-            colorPaletteLoad("art\\intrface\\helpscrn.pal");
-            paletteSetEntries(_cmap);
+                // CE: Fill overlay with darkest color in the palette. It might
+                // not be completely black, but at least it's uniform.
+                bufferFill(windowGetBuffer(overlay),
+                    screenGetWidth(),
+                    screenGetHeight(),
+                    screenGetWidth(),
+                    intensityColorTable[_colorTable[0]][0]);
 
-            // Fill the overlay with the darkest palette color to hide everything behind.
-            bufferFill(windowGetBuffer(overlay), screenWidth, screenHeight, screenWidth, intensityColorTable[_colorTable[0]][0]);
+                windowShow(overlay);
+                windowShow(win);
 
-            windowShow(overlay);
-            windowShow(win);
+                while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
+                    sharedFpsLimiter.mark();
+                    renderPresent();
+                    sharedFpsLimiter.throttle();
+                }
 
-            while (inputGetInput() == -1 && _game_user_wants_to_quit == 0) {
-                sharedFpsLimiter.mark();
-                renderPresent();
-                sharedFpsLimiter.throttle();
+                while (mouseGetEvent() != 0) {
+                    sharedFpsLimiter.mark();
+
+                    inputGetInput();
+
+                    renderPresent();
+                    sharedFpsLimiter.throttle();
+                }
+
+                paletteSetEntries(gPaletteBlack);
             }
-
-            while (mouseGetEvent() != 0) {
-                sharedFpsLimiter.mark();
-                inputGetInput();
-                renderPresent();
-                sharedFpsLimiter.throttle();
-            }
-
-            // Fade back to black.
-            paletteSetEntries(gPaletteBlack);
         }
 
-        // Cleanup
         windowDestroy(overlay);
         windowDestroy(win);
         colorPaletteLoad("color.pal");
         paletteSetEntries(_cmap);
     }
 
-    // Free temporary scaled buffer if it was allocated.
-    if (bufferToBlit != helpData) {
-        internal_free(bufferToBlit);
-    }
-
-    // Restore previous state.
     if (colorCycleWasEnabled) {
         colorCycleEnable();
     }
@@ -1431,12 +1367,12 @@ static int gameDbInit()
         showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
-    
+
     // SFALL: custom patch file name.
     char* path_file_name_template = nullptr;
     configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, &path_file_name_template);
     if (path_file_name_template == nullptr || *path_file_name_template == '\0') {
-        path_file_name_template = "patch%03d.dat";
+        path_file_name_template = (char*)"patch%03d.dat";
     }
 
     for (patch_index = 0; patch_index < 1000; patch_index++) {
@@ -1446,6 +1382,8 @@ static int gameDbInit()
             dbOpen(filename, 0, nullptr, 1);
         }
     }
+
+    sfallLoadMods();
 
     if (compat_access("f2_res.dat", 0) == 0) {
         dbOpen("f2_res.dat", 0, nullptr, 1);
@@ -1457,9 +1395,8 @@ static int gameDbInit()
 // 0x444384
 static void showSplash()
 {
-    int splashIndex = settings.system.splash;
+    int splash = settings.system.splash;
 
-    // path to local splash folder
     char path[64];
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, ENGLISH) != 0) {
@@ -1468,19 +1405,19 @@ static void showSplash()
         snprintf(path, sizeof(path), "art\\splash\\");
     }
 
-    // open a splash file, cycle through SPLASH_COUNT entries
-    File* stream = nullptr;
-    for (int attempt = 0; attempt < SPLASH_COUNT; attempt++) {
+    File* stream;
+    for (int index = 0; index < SPLASH_COUNT; index++) {
         char filePath[64];
-        snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splashIndex);
+        snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
         if (stream != nullptr) {
             break;
         }
 
-        splashIndex++;
-        if (splashIndex >= SPLASH_COUNT) {
-            splashIndex = 0;
+        splash++;
+
+        if (splash >= SPLASH_COUNT) {
+            splash = 0;
         }
     }
 
@@ -1488,122 +1425,105 @@ static void showSplash()
         return;
     }
 
-    // Allocate memory for the palette
     unsigned char* palette = reinterpret_cast<unsigned char*>(internal_malloc(768));
     if (palette == nullptr) {
         fileClose(stream);
         return;
     }
 
-    // Verify RIX image version (needed?)
     int version;
     fileReadInt32(stream, &version);
     if (version != 'RIX3') {
         fileClose(stream);
-        internal_free(palette);
         return;
     }
 
-    // Read image dimensions
-    short splashWidth, splashHeight;
-    fileRead(&splashWidth, sizeof(splashWidth), 1, stream);
-    fileRead(&splashHeight, sizeof(splashHeight), 1, stream);
+    short width;
+    fileRead(&width, sizeof(width), 1, stream);
 
-    // Allocate memory for the image pixel data
-    unsigned char* splashData = reinterpret_cast<unsigned char*>(internal_malloc(splashWidth * splashHeight));
-    if (splashData == nullptr) {
+    short height;
+    fileRead(&height, sizeof(height), 1, stream);
+
+    unsigned char* data = reinterpret_cast<unsigned char*>(internal_malloc(width * height));
+    if (data == nullptr) {
         internal_free(palette);
         fileClose(stream);
         return;
     }
 
-    // Load palette and image data
     paletteSetEntries(gPaletteBlack);
     fileSeek(stream, 10, SEEK_SET);
     fileRead(palette, 1, 768, stream);
-    fileRead(splashData, 1, splashWidth * splashHeight, stream);
+    fileRead(data, 1, width * height, stream);
     fileClose(stream);
-    
+
     // Fix of wrong Palette, without it this makes background bright
     // Basically just swapping first and last colors, this problem presented ONLY in F2, F1 has right palette in every splash
     memcpy(palette + (255 * 3), palette, 3);
     memset(palette, 0, 3);
 
-    for (int i = 0; i < splashWidth * splashHeight; i++) {
-        if (splashData[i] == 0) {
-            splashData[i] = 255;
-        } else if (splashData[i] == 255) {
-            splashData[i] = 0;
+    for (int i = 0; i < width * height; i++) {
+        if (data[i] == 0) {
+            data[i] = 255;
+        } else if (data[i] == 255) {
+            data[i] = 0;
         }
     }
-    
-    int splashScreenStretchMode = 0;
-    int stretchGameMode = 0;
+
+    int size = 0;
+
+    // TODO: Move to settings.
     Config config;
     if (configInit(&config)) {
         if (configRead(&config, "f2_res.ini", false)) {
-            configGetInt(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &splashScreenStretchMode);
-
-            if (configGetInt(&config, "STATIC_SCREENS", "STRETCH_GAME", &stretchGameMode)) {
-                splashScreenStretchMode = stretchGameMode; // always override if key exists
-            }
+            configGetInt(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &size);
         }
+
         configFree(&config);
     }
 
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
-    // Stretch image if required or if it doesn't fit the screen
-    if (splashScreenStretchMode != 0 || screenWidth < splashWidth || screenHeight < splashHeight) {
-        int scaledWidth, scaledHeight;
+    if (size != 0 || screenWidth < width || screenHeight < height) {
+        int scaledWidth;
+        int scaledHeight;
 
-        calculateScaledSize(
-            splashWidth,
-            splashHeight,
-            screenWidth,
-            screenHeight,
-            splashScreenStretchMode,
-            scaledWidth,
-            scaledHeight);
+        if (size == 2) {
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            if (screenHeight * width >= screenWidth * height) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * height / width;
+            } else {
+                scaledWidth = screenHeight * width / height;
+                scaledHeight = screenHeight;
+            }
+        }
 
-        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc((scaledWidth) * (scaledHeight)));
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
         if (scaled != nullptr) {
-            // Stretch the splash screen and fix edge artifacts
-            blitBufferToBufferStretchAndFixEdges(
-                splashData,
-                splashWidth,
-                splashHeight,
-                splashWidth,
-                scaled,
-                scaledWidth,
-                scaledHeight,
-                scaledWidth,
-                1 // numStates = 1 for a single splash image
-            );
+            blitBufferToBufferStretch(data, width, height, width, scaled, scaledWidth, scaledHeight, scaledWidth);
 
-            int x = (screenWidth > scaledWidth) ? (screenWidth - scaledWidth) / 2 : 0;
-            int y = (screenHeight > scaledHeight) ? (screenHeight - scaledHeight) / 2 : 0;
-
+            int x = screenWidth > scaledWidth ? (screenWidth - scaledWidth) / 2 : 0;
+            int y = screenHeight > scaledHeight ? (screenHeight - scaledHeight) / 2 : 0;
             _scr_blit(scaled, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, x, y);
             paletteFadeTo(palette);
 
             internal_free(scaled);
         }
     } else {
-        // Center image without scaling
-        int x = (screenWidth - splashWidth) / 2;
-        int y = (screenHeight - splashHeight) / 2;
-        _scr_blit(splashData, splashWidth, splashHeight, 0, 0, splashWidth, splashHeight, x, y);
+        int x = (screenWidth - width) / 2;
+        int y = (screenHeight - height) / 2;
+        _scr_blit(data, width, height, 0, 0, width, height, x, y);
         paletteFadeTo(palette);
     }
 
-    // Clean up
-    internal_free(splashData);
+    internal_free(data);
     internal_free(palette);
 
-    // Save index for next splash image
-    settings.system.splash = splashIndex + 1;
+    settings.system.splash = splash + 1;
 }
 
 int gameShowDeathDialog(const char* message)

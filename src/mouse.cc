@@ -408,11 +408,12 @@ void _mouse_info()
                     _mouse_simulate_input(gesture.x - prevx, gesture.y - prevy, MOUSE_STATE_RIGHT_BUTTON_DOWN);
                 }
             } else if (gesture.type == kPan) {
-                if (gesture.numberOfTouches == 1) {
+                if (!touch_get_pan_mode() && gesture.numberOfTouches == 1) {
                     _mouse_simulate_input(gesture.x - prevx, gesture.y - prevy, 0);
-                } else if (gesture.numberOfTouches == 2) {
-                    gMouseWheelX = (prevx - gesture.x) / 2;
-                    gMouseWheelY = (gesture.y - prevy) / 2;
+                } else if (touch_get_pan_mode() || gesture.numberOfTouches == 2) {
+                    int coefficient = touch_get_pan_mode() ? 8 : 2;
+                    gMouseWheelX = (prevx - gesture.x) / coefficient;
+                    gMouseWheelY = (gesture.y - prevy) / coefficient;
 
                     if (gMouseWheelX != 0 || gMouseWheelY != 0) {
                         gMouseEvent |= MOUSE_EVENT_WHEEL;
@@ -423,6 +424,8 @@ void _mouse_info()
 
             prevx = gesture.x;
             prevy = gesture.y;
+            break;
+        case kUnrecognized:
             break;
         }
 

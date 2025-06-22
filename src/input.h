@@ -36,8 +36,6 @@ void _GNW95_lost_focus();
 void beginTextInput();
 void endTextInput();
 
-unsigned char* captureScreenArea(int x, int y, int width, int height);
-
 } // namespace fallout
 
 #endif /* FALLOUT_INPUT_H_ */

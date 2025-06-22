@@ -1,5 +1,6 @@
 #include "interface.h"
 
+#include <algorithm>
 #include <stdio.h>
 #include <string.h>
 
@@ -2482,16 +2483,15 @@ bool indicatorBarHide()
 static void customInterfaceBarInit()
 {
     gInterfaceBarContentOffset = gInterfaceBarWidth - 640;
-
     if (gInterfaceBarContentOffset > 0) {
-            if (screenGetWidth() > 640 && gInterfaceBarWidth <= screenGetWidth()) {
-                char path[COMPAT_MAX_PATH];
-                snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
+        if (screenGetWidth() > 640 && gInterfaceBarWidth <= screenGetWidth()) {
+            char path[COMPAT_MAX_PATH];
+            snprintf(path, sizeof(path), "art\\intrface\\HR_IFACE_%d.FRM", gInterfaceBarWidth);
 
-                gCustomInterfaceBarBackground = artLoad(path);
-            } else {
-                debugPrint("\nINTRFACE: Custom interface bar width (%d) is greater than screen width (%d). Using default interface bar.\n", gInterfaceBarWidth, screenGetWidth());
-            }
+            gCustomInterfaceBarBackground = artLoad(path);
+        } else {
+            debugPrint("\nINTRFACE: Custom interface bar width (%d) is greater than screen width (%d). Using default interface bar.\n", gInterfaceBarWidth, screenGetWidth());
+        }
     }
 
     if (gCustomInterfaceBarBackground != nullptr) {
