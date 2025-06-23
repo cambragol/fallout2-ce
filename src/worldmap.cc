@@ -2999,6 +2999,9 @@ static int wmWorldMapFunc(int a1)
     ScopedGameMode gm(GameMode::kWorldmap);
 
     wmFadeOut();
+    
+    restoreUserAspectPreference();
+    resizeContent(800, 500);
 
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();
@@ -3137,6 +3140,9 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
+                        
+                        resizeContent(screenGetWidth(), screenGetHeight(), true);
+
                         mapLoadById(wmGenData.encounterMapId);
                     }
                     break;
@@ -3192,6 +3198,9 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
+                        
+                        resizeContent(screenGetWidth(), screenGetHeight(), true);
+                        
                         mapLoadById(map);
                         break;
                     }
@@ -3230,6 +3239,9 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
+                        
+                        resizeContent(screenGetWidth(), screenGetHeight(), true);
+                        
                         mapLoadById(map);
                     }
                 }
@@ -3378,6 +3390,9 @@ static int wmRndEncounterOccurred()
             }
 
             wmFadeOut();
+            
+            resizeContent(640, 480);
+            
             mapLoadById(MAP_IN_GAME_MOVIE1);
             return 1;
         }
@@ -3393,14 +3408,16 @@ static int wmRndEncounterOccurred()
                 wmMatchAreaContainingMapIdx(wmForceEncounterMapId, &(wmGenData.currentCarAreaId));
             }
         }
+        
+        resizeContent(screenGetWidth(), screenGetHeight(), true);
 
         // For unknown reason fadeout and blinking icon are mutually exclusive.
-        if ((wmForceEncounterFlags & ENCOUNTER_FLAG_FADEOUT) != 0) {
-            wmFadeOut();
-        } else if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_ICON) == 0) {
+        //if ((wmForceEncounterFlags & ENCOUNTER_FLAG_FADEOUT) != 0) {
+         //   wmFadeOut();
+        //} else if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_ICON) == 0) {
             bool special = (wmForceEncounterFlags & ENCOUNTER_FLAG_ICON_SP) != 0;
             wmBlinkRndEncounterIcon(special);
-        }
+        //}
 
         mapLoadById(wmForceEncounterMapId);
 
