@@ -122,23 +122,18 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     width = settings.graphics.game_width;
     height = settings.graphics.game_height;
     fullscreen = settings.graphics.fullscreen;
-    int scaleValue = settings.graphics.scale2x;
-
-    scale = scaleValue + 1; // 0 = 1x, 1 = 2x
-    // Only allow scaling if resulting game resolution is >= 640x480
-    if ((width / scale) < 640 || (height / scale) < 480) {
-        scale = 1;
-    } else {
-        width /= scale;
-        height /= scale;
-    }
 
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, &gInterfaceBarMode);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, &gInterfaceBarWidth);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, &gInterfaceSidePanelsImageId);
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDES_ORI, &gInterfaceSidePanelsExtendFromScreenEdge);
+    
+    // setting for stretching - later
+    gStretchEnabled = settings.graphics.stretch_enabled;
+    gPreserveAspect = settings.graphics.preserve_aspect;
+    gHighQuality = settings.graphics.high_quality;
 
-    if (_GNW95_init_window(width, height, fullscreen, scale) == -1) {
+    if (_GNW95_init_window(width, height, fullscreen) == -1) {
         return -1;
     }
 

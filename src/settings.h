@@ -95,7 +95,6 @@ struct MapperSettings {
 struct GraphicSettings {
     int game_width = 640;
     int game_height = 480;
-    int scale2x = 0;
     int splash_size = 0;
     bool fullscreen = true;
     bool stretch_enabled = true;

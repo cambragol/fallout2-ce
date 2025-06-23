@@ -119,7 +119,6 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
 
     configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_GAME_WIDTH, 640);
     configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_GAME_HEIGHT, 480);
-    configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SCALE_2X, 0);
     configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SPLASH_SIZE, 0);
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_FULLSCREEN, true);
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_STRETCH_ENABLED, true);
