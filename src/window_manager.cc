@@ -92,7 +92,7 @@ static int gWindowsLength;
 static int _window_flags;
 
 // 0x6ADF2C
-static bool _buffering;
+static bool _buffering = false;
 
 // 0x6ADF30
 static int _bk_color;
@@ -174,10 +174,9 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
 
             return WINDOW_MANAGER_ERR_NO_MEMORY;
         }
+        _buffering = true;
     }
-
-    // brute force to true for now
-    _buffering = true;
+    
     _doing_refresh_all = 0;
 
     if (!_initColors()) {
