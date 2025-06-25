@@ -1011,10 +1011,10 @@ static bool _setup_inventory(int inventoryWindowType)
     int fid;
     int btn;
 
-    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 96, 0, 0, 0);
     _inventoryFrmImages[0].lock(fid);
 
-    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    fid = buildFid(OBJ_TYPE_INTERFACE, 95, 0, 0, 0);
     _inventoryFrmImages[1].lock(fid);
 
     if (_inventoryFrmImages[0].isLocked() && _inventoryFrmImages[1].isLocked()) {
@@ -1023,10 +1023,10 @@ static bool _setup_inventory(int inventoryWindowType)
         case INVENTORY_WINDOW_TYPE_NORMAL:
             // Done button
             btn = buttonCreate(gInventoryWindow,
-                437,
+                438,
                 329,
-                15,
-                16,
+                14,
+                14,
                 -1,
                 -1,
                 -1,
@@ -1039,10 +1039,10 @@ static bool _setup_inventory(int inventoryWindowType)
         case INVENTORY_WINDOW_TYPE_USE_ITEM_ON:
             // Cancel button
             btn = buttonCreate(gInventoryWindow,
-                233,
-                328,
-                15,
-                16,
+                234,
+                329,
+                14,
+                14,
                 -1,
                 -1,
                 -1,
@@ -1057,8 +1057,8 @@ static bool _setup_inventory(int inventoryWindowType)
             btn = buttonCreate(gInventoryWindow,
                 476,
                 331,
-                15,
-                16,
+                14,
+                14,
                 -1,
                 -1,
                 -1,
