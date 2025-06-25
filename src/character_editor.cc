@@ -1373,7 +1373,7 @@ static int characterEditorWindowInit()
         EDITOR_WINDOW_WIDTH,
         EDITOR_WINDOW_HEIGHT,
         256,
-        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+        WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
     if (gCharacterEditorWindow == -1) {
         for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
             if (gCharacterEditorFrmShouldCopy[i]) {
@@ -5799,7 +5799,7 @@ static int perkDialogShow()
     int perkWindowY = screenGetHeight() != 480
         ? (screenGetHeight() - PERK_WINDOW_HEIGHT) / 2
         : PERK_WINDOW_Y;
-    gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+    gPerkDialogWindow = windowCreate(perkWindowX, perkWindowY, PERK_WINDOW_WIDTH, PERK_WINDOW_HEIGHT, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
     if (gPerkDialogWindow == -1) {
         _perkDialogBackgroundFrmImage.unlock();
         debugPrint("\n *** Error running perks dialog window ***\n");

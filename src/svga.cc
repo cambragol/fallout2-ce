@@ -131,6 +131,7 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     // setting for stretching - later
     gStretchEnabled = settings.graphics.stretch_enabled;
     gPreserveAspect = settings.graphics.preserve_aspect;
+    gUserAspectPreference = settings.graphics.preserve_aspect; // back up the user preference for restoring after using game screen
     gHighQuality = settings.graphics.high_quality;
 
     if (_GNW95_init_window(width, height, fullscreen) == -1) {

@@ -759,7 +759,7 @@ static bool _setup_inventory(int inventoryWindowType)
             windowDescription->width,
             windowDescription->height,
             257,
-            WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+            WINDOW_MODAL | WINDOW_MOVE_ON_TOP | WINDOW_TRANSPARENT);
         gInventoryWindowMaxX = windowDescription->width + inventoryWindowX;
         gInventoryWindowMaxY = windowDescription->height + inventoryWindowY;
 
@@ -1087,10 +1087,10 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[2].isLocked() && _inventoryFrmImages[3].isLocked()) {
             // Left inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                109,
-                56,
+                111,
+                57,
+                22,
                 23,
-                24,
                 -1,
                 -1,
                 KEY_ARROW_UP,
@@ -1106,9 +1106,9 @@ static bool _setup_inventory(int inventoryWindowType)
             // Right inventory up button.
             btn = buttonCreate(gInventoryWindow,
                 342,
-                56,
+                57,
+                22,
                 23,
-                24,
                 -1,
                 -1,
                 KEY_CTRL_ARROW_UP,
@@ -1193,10 +1193,10 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[5].isLocked() && _inventoryFrmImages[6].isLocked()) {
             // Left inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                109,
+                111,
                 82,
-                24,
-                25,
+                22,
+                23,
                 -1,
                 -1,
                 KEY_ARROW_DOWN,
@@ -1213,8 +1213,8 @@ static bool _setup_inventory(int inventoryWindowType)
             btn = buttonCreate(gInventoryWindow,
                 342,
                 82,
-                24,
-                25,
+                22,
+                23,
                 -1,
                 -1,
                 KEY_CTRL_ARROW_DOWN,
@@ -1402,7 +1402,7 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[8].isLocked() && _inventoryFrmImages[9].isLocked()) {
             // Left offered inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                128,
+                118,
                 113,
                 22,
                 23,
@@ -1420,7 +1420,7 @@ static bool _setup_inventory(int inventoryWindowType)
 
             // Right offered inventory up button.
             btn = buttonCreate(gInventoryWindow,
-                333,
+                336,
                 113,
                 22,
                 23,
@@ -1448,7 +1448,7 @@ static bool _setup_inventory(int inventoryWindowType)
         if (_inventoryFrmImages[10].isLocked() && _inventoryFrmImages[11].isLocked()) {
             // Left offered inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                128,
+                118,
                 136,
                 22,
                 23,
@@ -1466,7 +1466,7 @@ static bool _setup_inventory(int inventoryWindowType)
 
             // Right offered inventory down button.
             btn = buttonCreate(gInventoryWindow,
-                333,
+                336,
                 136,
                 22,
                 23,
@@ -5877,7 +5877,7 @@ static int inventoryQuantityWindowInit(int inventoryWindowType, Object* item)
     if (_moveFrmImages[2].isLocked() && _moveFrmImages[3].isLocked()) {
         btn = buttonCreate(_mt_wid,
             x,
-            y + 12,
+            y + 11,
             17,
             12,
             -1,
