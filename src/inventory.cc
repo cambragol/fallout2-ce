@@ -4657,44 +4657,45 @@ static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* 
     return result;
 }
 
-// 0x474B2C
+static int gBarterInsultIncrease = 0; // Tracks insult-based price increases
+
 static int _barter_compute_value(Object* dude, Object* npc)
 {
     if (gGameDialogSpeakerIsPartyMember) {
         return objectGetInventoryWeight(_btable);
     }
 
-    int cost = objectGetCost(_btable);
+    int baseTrueValue = objectGetCost(_btable);
     int caps = itemGetTotalCaps(_btable);
-    int costWithoutCaps = cost - caps;
+    int costWithoutCaps = baseTrueValue - caps;
 
-    double perkBonus = 0.0;
-    if (dude == gDude) {
-        if (perkHasRank(gDude, PERK_MASTER_TRADER)) {
-            perkBonus = 25.0;
-        }
-    }
+    // Reaction modifiers
+    // Ensure _barter_mod can't override skill dominance
+    double perkBonus = (dude == gDude && perkHasRank(gDude, PERK_MASTER_TRADER)) ? 25.0 : 0.0;
+    _barter_mod = std::clamp(_barter_mod, -35, 35); // Hard cap on reaction impact
 
-    int partyBarter = partyGetBestSkillValue(SKILL_BARTER);
-    int npcBarter = skillGetValue(npc, SKILL_BARTER);
+    // Apply reaction modifiers to NPC's and PC's effective skill
+    int npcBarter = skillGetValue(npc, SKILL_BARTER) + _barter_mod;
+    int playerBarter = partyGetBestSkillValue(SKILL_BARTER) + perkBonus;
 
-    // TODO: Check in debugger, complex math, probably uses floats, not doubles.
-    double barterModMult = (_barter_mod + 100.0 - perkBonus) * 0.01;
-    double balancedCost = (160.0 + npcBarter) / (160.0 + partyBarter) * (costWithoutCaps * 2.0);
-    if (barterModMult < 0) {
-        // TODO: Probably 0.01 as float.
-        barterModMult = 0.0099999998;
-    }
+    // Calculate price modification
+    double skillRatio = (double)(160 + npcBarter) / (160 + playerBarter);
+    double priceMod = 1.15 * skillRatio;
 
-    int rounded = (int)(barterModMult * balancedCost + caps);
-    return rounded;
+    // Price bounds for better skill progression
+    if (priceMod < 0.75)
+        priceMod = 0.75; // 25% max discount
+    if (priceMod > 1.6)
+        priceMod = 1.6; // 60% max markup
+
+    return (int)(costWithoutCaps * priceMod) + caps;
 }
 
-// 0x474C50
 static int _barter_attempt_transaction(Object* dude, Object* offerTable, Object* npc, Object* barterTable)
 {
     MessageListItem messageListItem;
 
+    // Weight checks for companion trades
     int weightAvailable = critterGetStat(dude, STAT_CARRY_WEIGHT) - objectGetInventoryWeight(dude);
     if (objectGetInventoryWeight(barterTable) > weightAvailable) {
         // Sorry, you cannot carry that much.
@@ -4719,24 +4720,88 @@ static int _barter_attempt_transaction(Object* dude, Object* offerTable, Object*
         bool badOffer = false;
         if (offerTable->data.inventory.length == 0) {
             badOffer = true;
-        } else {
-            if (itemIsQueued(offerTable)) {
-                if (offerTable->pid != PROTO_ID_GEIGER_COUNTER_I || miscItemTurnOff(offerTable) == -1) {
-                    badOffer = true;
+        } else if (itemIsQueued(offerTable)) {
+            if (offerTable->pid == PROTO_ID_GEIGER_COUNTER_I) {
+                if (miscItemTurnOff(offerTable) == -1) {
+                    // Could not turn off the Geiger Counter — reject with message
+                    messageListItem.num = 36; // "Turn that gadget off first. Then we’ll get down to business."
+                    if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                        gameDialogRenderSupplementaryMessage(messageListItem.text);
+                    }
+                    return -1;
                 }
+            } else {
+                // All other active/queued items are rejected
+                messageListItem.num = 37; // "I don't deal in gadgets like that. Take it off the table."
+                if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                    gameDialogRenderSupplementaryMessage(messageListItem.text);
+                }
+                return -1;
             }
         }
 
         if (!badOffer) {
-            int cost = objectGetCost(offerTable);
-            if (_barter_compute_value(dude, npc) > cost) {
+            int baseTrueValue = objectGetCost(barterTable);
+            int displayedPrice = _barter_compute_value(dude, npc);
+            int playerOffer = objectGetCost(offerTable);
+            double perkBonus = (dude == gDude && perkHasRank(gDude, PERK_MASTER_TRADER)) ? 25.0 : 0.0;
+
+            // Apply reaction modifiers
+            int npcBarter = skillGetValue(npc, SKILL_BARTER) + _barter_mod;
+            int playerBarter = partyGetBestSkillValue(SKILL_BARTER) + perkBonus;
+            int barterDifference = playerBarter - npcBarter; // Range: -200 to +200
+
+            // Dynamic threshold based on skill difference
+            int minAcceptablePercent = 90 - (barterDifference * 30) / 200; // 60% to 90%
+            minAcceptablePercent = std::clamp(minAcceptablePercent, 60, 90);
+            int minAcceptablePrice = ((displayedPrice + gBarterInsultIncrease) * minAcceptablePercent) / 100;
+
+            // Insult threshold scales similarly but with wider range (40-80% of base)
+            int insultPercent = 80 - (barterDifference * 40) / 200; // 40% to 80%
+            insultPercent = std::clamp(insultPercent, 40, 80);
+            int insultThreshold = (baseTrueValue * insultPercent) / 100;
+
+            // Calculate intermediate thresholds for additional feedback levels
+            int seriousThreshold = (minAcceptablePrice + insultThreshold) / 2; // Midpoint between insult and min acceptable
+            int almostDealThreshold = (minAcceptablePrice + seriousThreshold) / 2; // Midpiont between serious and min acceptable
+
+            if (playerOffer >= displayedPrice) {
+                gBarterInsultIncrease = 0;
+            } else if (playerOffer >= minAcceptablePrice) {
+                gBarterInsultIncrease = 0;
+            } else {
                 badOffer = true;
+
+                if (playerOffer < insultThreshold) {
+                    gBarterInsultIncrease += baseTrueValue * 10 / 100; // increases minAcceptablePrice by 10%
+                    messageListItem.num = 33; // "Your offer is insulting."
+                    if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                        gameDialogRenderSupplementaryMessage(messageListItem.text);
+                    }
+                    return -1;
+                } else if (playerOffer < seriousThreshold) {
+                    gBarterInsultIncrease += baseTrueValue * 2 / 100; // increases minAcceptablePrice by 2%
+                    messageListItem.num = 34; // "Let's be serious here."
+                    if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                        gameDialogRenderSupplementaryMessage(messageListItem.text);
+                    }
+                    return -1;
+                } else if (playerOffer < almostDealThreshold) {
+                    messageListItem.num = 35; // "We almost have a deal..."
+                    if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                        gameDialogRenderSupplementaryMessage(messageListItem.text);
+                    }
+                    return -1;
+                }
+
+                if (gBarterInsultIncrease > baseTrueValue * 25 / 100) {
+                    gBarterInsultIncrease = baseTrueValue * 25 / 100; // caps insult minAcceptablePrice increase at 25%
+                }
             }
         }
 
         if (badOffer) {
-            // No, your offer is not good enough.
-            messageListItem.num = 28;
+            messageListItem.num = 28; // "No, your offer is not good enough."
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
                 gameDialogRenderSupplementaryMessage(messageListItem.text);
             }
@@ -4744,8 +4809,10 @@ static int _barter_attempt_transaction(Object* dude, Object* offerTable, Object*
         }
     }
 
+    // Successful trade
     itemMoveAll(barterTable, dude);
     itemMoveAll(offerTable, npc);
+    gBarterInsultIncrease = 0; // Reset on successful trade
     return 0;
 }
 
