@@ -1018,7 +1018,7 @@ int lsgLoadGame(int mode)
             LS_WINDOW_WIDTH,
             LS_WINDOW_HEIGHT,
             256,
-            WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+            WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
         if (window != -1) {
             unsigned char* windowBuffer = windowGetBuffer(window);
             bufferFill(windowBuffer, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, LS_WINDOW_WIDTH, _colorTable[0]);
