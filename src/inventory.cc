@@ -39,6 +39,7 @@
 #include "random.h"
 #include "reaction.h"
 #include "scripts.h"
+#include "sfall_config.h"
 #include "skill.h"
 #include "stat.h"
 #include "svga.h"
@@ -521,6 +522,12 @@ static Inventory* _target_pud;
 // 0x59E97C
 static int _barter_back_win;
 
+// Tracks insult-based price increases
+static int gBarterInsultIncrease = 0;
+
+// used to switch enhancedBarter on/off from config
+static bool enhancedBarter = false;
+
 static FrmImage _inventoryFrmImages[INVENTORY_FRM_COUNT];
 static FrmImage _moveFrmImages[8];
 
@@ -743,6 +750,9 @@ static bool _setup_inventory(int inventoryWindowType)
     gInventorySlotsCount = 6;
     _pud = &(_inven_dude->data.inventory);
     _stack[0] = _inven_dude;
+
+    // turn enhanced barter on or off from conifg
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ENHANCED_BARTER, &enhancedBarter);
 
     if (inventoryWindowType <= INVENTORY_WINDOW_TYPE_LOOT) {
         const InventoryWindowDescription* windowDescription = &(gInventoryWindowDescriptions[inventoryWindowType]);
@@ -4657,9 +4667,39 @@ static InventoryMoveResult _move_inventory(Object* item, int slotIndex, Object* 
     return result;
 }
 
-static int gBarterInsultIncrease = 0; // Tracks insult-based price increases
+static int _barter_compute_value_original(Object* dude, Object* npc)
+{
+    if (gGameDialogSpeakerIsPartyMember) {
+        return objectGetInventoryWeight(_btable);
+    }
 
-static int _barter_compute_value(Object* dude, Object* npc)
+    int cost = objectGetCost(_btable);
+    int caps = itemGetTotalCaps(_btable);
+    int costWithoutCaps = cost - caps;
+
+    double perkBonus = 0.0;
+    if (dude == gDude) {
+        if (perkHasRank(gDude, PERK_MASTER_TRADER)) {
+            perkBonus = 25.0;
+        }
+    }
+
+    int partyBarter = partyGetBestSkillValue(SKILL_BARTER);
+    int npcBarter = skillGetValue(npc, SKILL_BARTER);
+
+    // TODO: Check in debugger, complex math, probably uses floats, not doubles.
+    double barterModMult = (_barter_mod + 100.0 - perkBonus) * 0.01;
+    double balancedCost = (160.0 + npcBarter) / (160.0 + partyBarter) * (costWithoutCaps * 2.0);
+    if (barterModMult < 0) {
+        // TODO: Probably 0.01 as float.
+        barterModMult = 0.0099999998;
+    }
+
+    int rounded = (int)(barterModMult * balancedCost + caps);
+    return rounded;
+}
+
+static int _barter_compute_value_enhanced(Object* dude, Object* npc)
 {
     if (gGameDialogSpeakerIsPartyMember) {
         return objectGetInventoryWeight(_btable);
@@ -4691,7 +4731,72 @@ static int _barter_compute_value(Object* dude, Object* npc)
     return (int)(costWithoutCaps * priceMod) + caps;
 }
 
-static int _barter_attempt_transaction(Object* dude, Object* offerTable, Object* npc, Object* barterTable)
+// Unified entry point
+int _barter_compute_value(Object* dude, Object* npc) {
+    return enhancedBarter 
+        ? _barter_compute_value_enhanced(dude, npc)
+        : _barter_compute_value_original(dude, npc);
+}
+
+static int _barter_attempt_transaction_original(Object* dude, Object* offerTable, Object* npc, Object* barterTable)
+{
+    MessageListItem messageListItem;
+
+    int weightAvailable = critterGetStat(dude, STAT_CARRY_WEIGHT) - objectGetInventoryWeight(dude);
+    if (objectGetInventoryWeight(barterTable) > weightAvailable) {
+        // Sorry, you cannot carry that much.
+        messageListItem.num = 31;
+        if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+            gameDialogRenderSupplementaryMessage(messageListItem.text);
+        }
+        return -1;
+    }
+
+    if (gGameDialogSpeakerIsPartyMember) {
+        int npcWeightAvailable = critterGetStat(npc, STAT_CARRY_WEIGHT) - objectGetInventoryWeight(npc);
+        if (objectGetInventoryWeight(offerTable) > npcWeightAvailable) {
+            // Sorry, that's too much to carry.
+            messageListItem.num = 32;
+            if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                gameDialogRenderSupplementaryMessage(messageListItem.text);
+            }
+            return -1;
+        }
+    } else {
+        bool badOffer = false;
+        if (offerTable->data.inventory.length == 0) {
+            badOffer = true;
+        } else {
+            if (itemIsQueued(offerTable)) {
+                if (offerTable->pid != PROTO_ID_GEIGER_COUNTER_I || miscItemTurnOff(offerTable) == -1) {
+                    badOffer = true;
+                }
+            }
+        }
+
+        if (!badOffer) {
+            int cost = objectGetCost(offerTable);
+            if (_barter_compute_value(dude, npc) > cost) {
+                badOffer = true;
+            }
+        }
+
+        if (badOffer) {
+            // No, your offer is not good enough.
+            messageListItem.num = 28;
+            if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
+                gameDialogRenderSupplementaryMessage(messageListItem.text);
+            }
+            return -1;
+        }
+    }
+
+    itemMoveAll(barterTable, dude);
+    itemMoveAll(offerTable, npc);
+    return 0;
+}
+
+static int _barter_attempt_transaction_enhanced(Object* dude, Object* offerTable, Object* npc, Object* barterTable)
 {
     MessageListItem messageListItem;
 
@@ -4814,6 +4919,12 @@ static int _barter_attempt_transaction(Object* dude, Object* offerTable, Object*
     itemMoveAll(offerTable, npc);
     gBarterInsultIncrease = 0; // Reset on successful trade
     return 0;
+}
+
+int _barter_attempt_transaction(Object* dude, Object* offerTable, Object* npc, Object* barterTable) {
+    return enhancedBarter
+        ? _barter_attempt_transaction_enhanced(dude, offerTable, npc, barterTable)
+        : _barter_attempt_transaction_original(dude, offerTable, npc, barterTable);
 }
 
 static int _barter_get_quantity_moved_items(Object* item, int maxQuantity, bool fromPlayer, bool fromInventory, bool immediate)
