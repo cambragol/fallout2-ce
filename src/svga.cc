@@ -114,6 +114,12 @@ void restoreUserAspectPreference()
     gPreserveAspect = gUserAspectPreference;
 }
 
+bool gameIsWidescreen() {
+    return (settings.graphics.game_width >= 800 && 
+            settings.graphics.game_height >= 500 && 
+            settings.graphics.widescreen);
+}
+
 // 0x4CAE1C
 int _GNW95_init_mode_ex(int width, int height, int bpp)
 {
