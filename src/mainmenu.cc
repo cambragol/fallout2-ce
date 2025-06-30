@@ -121,7 +121,7 @@ static Art* gMainMenuBackgroundArt = nullptr; // for widescreen background
 
 // move to seperate widescreen.cc file later?
 bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) {
-    const char* section = isWidescreen ? "offsets800" : "offsets640";
+    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
     const MainMenuOffsets* fallback = isWidescreen ? &gMainMenuOffsets800 : &gMainMenuOffsets640;
 
     // Initialize with fallback values
@@ -148,7 +148,7 @@ bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) 
 
 // move to seperate widescreen.cc file later?
 void mainMenuWriteDefaultOffsetsToConfig(bool isWidescreen, const MainMenuOffsets* defaults) {
-    const char* section = isWidescreen ? "offsets800" : "offsets640";
+    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
 
     // Write all default values to config
     configSetInt(&gGameConfig, section, "copyrightX", defaults->copyrightX);

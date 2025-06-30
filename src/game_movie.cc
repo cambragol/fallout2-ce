@@ -170,6 +170,7 @@ int gameMoviePlay(int movie, int flags)
         gGameMovieFaded = true;
     }
     
+    // Must restore preference in case coming from Game area
     restoreUserAspectPreference();
     resizeContent(640,480);
 
@@ -290,8 +291,13 @@ int gameMoviePlay(int movie, int flags)
         float b = (float)(Color2RGB(oldTextColor) & 0x1F) * flt_50352A;
         windowSetTextColor(r, g, b);
     }
-    resizeContent(screenGetWidth(), screenGetHeight(), true);
 
+    if (GameMode::isInGameMode(GameMode::kPipboy)){
+        // other movies play from outside game area - main, scripts(worldmap)
+        resizeContent(screenGetWidth(), screenGetHeight(), true);
+    } else {
+        resizeContent(800,500);
+    }
     windowDestroy(win);
 
     // CE: Destroying a window redraws only content it was covering (centered
