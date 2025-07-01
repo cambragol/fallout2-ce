@@ -3412,12 +3412,12 @@ static int wmRndEncounterOccurred()
         resizeContent(screenGetWidth(), screenGetHeight(), true);
 
         // For unknown reason fadeout and blinking icon are mutually exclusive.
-        //if ((wmForceEncounterFlags & ENCOUNTER_FLAG_FADEOUT) != 0) {
-         //   wmFadeOut();
-        //} else if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_ICON) == 0) {
+        if ((wmForceEncounterFlags & ENCOUNTER_FLAG_FADEOUT) != 0) {
+            wmFadeOut();
+        } else if ((wmForceEncounterFlags & ENCOUNTER_FLAG_NO_ICON) == 0) {
             bool special = (wmForceEncounterFlags & ENCOUNTER_FLAG_ICON_SP) != 0;
             wmBlinkRndEncounterIcon(special);
-        //}
+        }
 
         mapLoadById(wmForceEncounterMapId);
 
