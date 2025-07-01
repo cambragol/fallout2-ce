@@ -401,39 +401,39 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
 };
 
 const PreferencesOffsets gPreferencesOffsets640 = {
-    // Window
+    // Window dimensions
     640,  // width
     480,  // height
     
     // Primary preferences (left column)
     76,   // primaryColumnX
     76,   // primaryKnobX
-    { 48, 125, 203, 286, 363 },  // primaryKnobY
-    { 66, 143, 222, 304, 382 },  // primaryLabelY
+    {48, 125, 203, 286, 363},  // primaryKnobY[5]
+    {66, 143, 222, 304, 382},  // primaryLabelY[5]
     
     // Secondary preferences (middle column)
     299,  // secondaryColumnX
     299,  // secondaryKnobX
-    { 49, 116, 181, 247, 313, 380 },  // secondaryKnobY
-    { 66, 133, 200, 264, 331, 397 },  // secondaryLabelY
+    {49, 116, 181, 247, 313, 380},  // secondaryKnobY[6]
+    {66, 133, 200, 264, 331, 397},  // secondaryLabelY[6]
     
     // Range preferences (right column)
     374,  // rangeColumnX
     374,  // rangeKnobX
-    { 19, 94, 165, 216, 268, 319, 369, 420 },  // rangeKnobY
+    {19, 94, 165, 216, 268, 319, 369, 420},  // rangeKnobY[8]
 
     // Label positions
     99,   // primLabelColX
     206,  // secLabelColX
     384,  // rangLabelColX
-    { 23, 23, 23, 23, 23 },  // labelX
-    { 251, 251, 251, 251, 251, 251 },  // secondaryLabelX
+    {23, 23, 23, 23, 23},  // labelX[5]
+    {251, 251, 251, 251, 251, 251},  // secondaryLabelX[6]
     
     // Range control parameters
     384,  // rangeStartX
     219,  // rangeWidth
     21,   // knobWidth
-    { 384, 504, 564, 624, 444 },  // rangeLabelX
+    {384, 504, 564, 624, 444},  // rangeLabelX[5]
     
     // Blit dimensions
     160,  // primaryBlitWidth
@@ -455,44 +455,71 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     72,   // speedLabelX
     405,  // speedLabelY
     
+    // Button positions
     23,   // defaultButtonX
     450,  // defaultButtonY
     148,  // doneButtonX
     450,  // doneButtonY
     263,  // cancelButtonX
     450,  // cancelButtonY
+    
+    // Checkbox position
     383,  // playerSpeedCheckboxX
     68,   // playerSpeedCheckboxY
     
-    // Knob hit detection
+    // Knob hit detection offsets
     23,   // primaryKnobHitX
     21,   // primaryKnobHitY
     11,   // secondaryKnobHitX
     12,   // secondaryKnobHitY
     
-    // Range slider
+    // Range slider parameters
     384,  // rangeSliderMinX
     603,  // rangeSliderMaxX
     219,  // rangeSliderWidth
     
-    // Button hitboxes
+    // Button hitbox offsets
     -4,   // primaryButtonOffsetY
     -5,   // secondaryButtonOffsetY
     -12,  // rangeButtonOffsetY
-    
-    43.8, // textBaseDelayScale
+
+    // Text delay and range label positions
+    43.8, // textBaseDelayScale (double)
     444,  // rangeLabel4Option1X
     564,  // rangeLabel4Option2X
     
     // Position arrays
-    { 48, 125, 203, 286, 363 },  // row1Ytab
-    { 49, 116, 181, 247, 313, 380 },  // row2Ytab
-    { 19, 94, 165, 216, 268, 319, 369, 420 },  // row3Ytab
-    { 2, 25, 46, 46 },  // optionXOffsets
-    { 10, -4, 10, 31 },  // optionYOffsets
-    { 4, 21 },  // secondaryOptionXOffsets
-    { 66, 143, 222, 304, 382 },  // primaryLabelYValues
-    { 66, 133, 200, 264, 331, 397 },  // secondaryLabelYValues
+    {48, 125, 203, 286, 363},  // row1Ytab[5]
+    {49, 116, 181, 247, 313, 380},  // row2Ytab[6]
+    {19, 94, 165, 216, 268, 319, 369, 420},  // row3Ytab[8]
+    {2, 25, 46, 46},  // optionXOffsets[4]
+    {10, -4, 10, 31},  // optionYOffsets[4]
+    {4, 21},  // secondaryOptionXOffsets[2]
+    {66, 143, 222, 304, 382},  // primaryLabelYValues[5]
+    {66, 133, 200, 264, 331, 397},  // secondaryLabelYValues[6]
+    
+    // Preference positions
+    {
+        Point{76, 71},    // PREF_GAME_DIFFICULTY
+        Point{76, 149},   // PREF_COMBAT_DIFFICULTY
+        Point{76, 226},   // PREF_VIOLENCE_LEVEL
+        Point{76, 309},   // PREF_TARGET_HIGHLIGHT
+        Point{76, 387},   // PREF_COMBAT_LOOKS
+        Point{299, 74},   // PREF_COMBAT_MESSAGES
+        Point{299, 141},  // PREF_COMBAT_TAUNTS
+        Point{299, 216},  // PREF_LANGUAGE_FILTER
+        Point{299, 271},  // PREF_RUNNING
+        Point{299, 338},  // PREF_SUBTITLES
+        Point{299, 404},  // PREF_ITEM_HIGHLIGHT
+        Point{374, 50},   // PREF_COMBAT_SPEED
+        Point{374, 125},  // PREF_TEXT_BASE_DELAY
+        Point{374, 196},  // PREF_MASTER_VOLUME
+        Point{374, 247},  // PREF_MUSIC_VOLUME
+        Point{374, 298},  // PREF_SFX_VOLUME
+        Point{374, 349},  // PREF_SPEECH_VOLUME
+        Point{374, 400},  // PREF_BRIGHTNESS
+        Point{374, 451}   // PREF_MOUSE_SENSITIVIY
+    },
     
     // New offsets
     9,    // primaryButtonMinXOffset
@@ -500,66 +527,43 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     22,   // secondaryButtonXOffset
     6,    // rangeThumbLeftOffset
     14,   // rangeThumbRightOffset
-    219.0, // rangeSliderScale
-    
-    // Preference positions (must match enum order exactly)
-    {
-        { 76, 71 },    // PREF_GAME_DIFFICULTY
-        { 76, 149 },   // PREF_COMBAT_DIFFICULTY
-        { 76, 226 },   // PREF_VIOLENCE_LEVEL
-        { 76, 309 },   // PREF_TARGET_HIGHLIGHT
-        { 76, 387 },   // PREF_COMBAT_LOOKS
-        { 299, 74 },   // PREF_COMBAT_MESSAGES
-        { 299, 141 },  // PREF_COMBAT_TAUNTS
-        { 299, 216 },  // PREF_LANGUAGE_FILTER
-        { 299, 271 },  // PREF_RUNNING
-        { 299, 338 },  // PREF_SUBTITLES
-        { 299, 404 },  // PREF_ITEM_HIGHLIGHT
-        { 374, 50 },   // PREF_COMBAT_SPEED
-        { 374, 125 },  // PREF_TEXT_BASE_DELAY
-        { 374, 196 },  // PREF_MASTER_VOLUME
-        { 374, 247 },  // PREF_MUSIC_VOLUME
-        { 374, 298 },  // PREF_SFX_VOLUME
-        { 374, 349 },  // PREF_SPEECH_VOLUME
-        { 374, 400 },  // PREF_BRIGHTNESS
-        { 374, 451 }   // PREF_MOUSE_SENSITIVIY
-    }
+    219.0 // rangeSliderScale (double)
 };
 
 const PreferencesOffsets gPreferencesOffsets800 = {
-    // Window
+    // Window dimensions
     800,  // width
     500,  // height
     
     // Primary preferences (left column)
     100,  // primaryColumnX
     100,  // primaryKnobX
-    { 50, 131, 211, 299, 380 },  // primaryKnobY
-    { 70, 151, 234, 320, 402 },  // primaryLabelY
+    {50, 131, 211, 299, 380},  // primaryKnobY[5]
+    {70, 151, 234, 320, 402},  // primaryLabelY[5]
     
     // Secondary preferences (middle column)
     380,  // secondaryColumnX
     380,  // secondaryKnobX
-    { 50, 119, 187, 256, 325, 395 },  // secondaryKnobY
-    { 71, 139, 209, 277, 347, 415 },  // secondaryLabelY
+    {50, 119, 187, 256, 325, 395},  // secondaryKnobY[6]
+    {71, 139, 209, 277, 347, 415},  // secondaryLabelY[6]
     
     // Range preferences (right column)
     468,  // rangeColumnX
     468,  // rangeKnobX
-    { 20, 99, 172, 225, 279, 332, 384, 437 },  // rangeKnobY
+    {20, 99, 172, 225, 279, 332, 384, 437},  // rangeKnobY[8]
 
     // Label positions
     124,  // primLabelColX
     255,  // secLabelColX
     479,  // rangLabelColX
-    { 23, 23, 23, 23, 23 },  // labelX
-    { 251, 251, 251, 251, 251, 251 },  // secondaryLabelX
+    {23, 23, 23, 23, 23},  // labelX[5]
+    {251, 251, 251, 251, 251, 251},  // secondaryLabelX[6]
     
     // Range control parameters
     480,  // rangeStartX
     274,  // rangeWidth
     21,   // knobWidth
-    { 480, 630, 705, 780, 555 },  // rangeLabelX
+    {480, 630, 705, 780, 555},  // rangeLabelX[5]
     
     // Blit dimensions
     160,  // primaryBlitWidth
@@ -581,75 +585,79 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     72,   // speedLabelX
     506,  // speedLabelY
     
+    // Button positions
     29,   // defaultButtonX
     469,  // defaultButtonY
     185,  // doneButtonX
     469,  // doneButtonY
     329,  // cancelButtonX
     469,  // cancelButtonY
+    
+    // Checkbox position
     479,  // playerSpeedCheckboxX
     68,   // playerSpeedCheckboxY
     
-    // Knob hit detection
+    // Knob hit detection offsets
     23,   // primaryKnobHitX
     21,   // primaryKnobHitY
     11,   // secondaryKnobHitX
     12,   // secondaryKnobHitY
     
-    // Range slider
+    // Range slider parameters
     480,  // rangeSliderMinX
     754,  // rangeSliderMaxX
     274,  // rangeSliderWidth
     
-    // Button hitboxes
+    // Button hitbox offsets
     -4,   // primaryButtonOffsetY
     -5,   // secondaryButtonOffsetY
     -12,  // rangeButtonOffsetY
-    
-    54.8, // textBaseDelayScale
+
+    // Text delay and range label positions
+    54.8, // textBaseDelayScale (double)
     555,  // rangeLabel4Option1X
     705,  // rangeLabel4Option2X
     
     // Position arrays
-    { 50, 131, 211, 299, 380 },  // row1Ytab
-    { 50, 119, 187, 256, 325, 395 },  // row2Ytab
-    { 20, 99, 172, 225, 279, 332, 384, 437 },  // row3Ytab
-    { 2, 25, 46, 46 },  // optionXOffsets
-    { 10, -4, 10, 31 },  // optionYOffsets
-    { 4, 21 },  // secondaryOptionXOffsets
-    { 70, 151, 234, 320, 402 },  // primaryLabelYValues
-    { 71, 139, 209, 277, 347, 415 },  // secondaryLabelYValues
+    {50, 131, 211, 299, 380},  // row1Ytab[5]
+    {50, 119, 187, 256, 325, 395},  // row2Ytab[6]
+    {20, 99, 172, 225, 279, 332, 384, 437},  // row3Ytab[8]
+    {2, 25, 46, 46},  // optionXOffsets[4]
+    {10, -4, 10, 31},  // optionYOffsets[4]
+    {4, 21},  // secondaryOptionXOffsets[2]
+    {70, 151, 234, 320, 402},  // primaryLabelYValues[5]
+    {71, 139, 209, 277, 347, 415},  // secondaryLabelYValues[6]
     
-    // New offsets
+    // Preference positions
+    {
+        Point{100, 74},   // PREF_GAME_DIFFICULTY
+        Point{100, 157},  // PREF_COMBAT_DIFFICULTY
+        Point{100, 237},  // PREF_VIOLENCE_LEVEL
+        Point{100, 324},  // PREF_TARGET_HIGHLIGHT
+        Point{100, 406},  // PREF_COMBAT_LOOKS
+        Point{380, 76},   // PREF_COMBAT_MESSAGES
+        Point{380, 147},  // PREF_COMBAT_TAUNTS
+        Point{380, 216},  // PREF_LANGUAGE_FILTER
+        Point{380, 284},  // PREF_RUNNING
+        Point{380, 354},  // PREF_SUBTITLES
+        Point{380, 423},  // PREF_ITEM_HIGHLIGHT
+        Point{468, 53},   // PREF_COMBAT_SPEED
+        Point{468, 131},  // PREF_TEXT_BASE_DELAY
+        Point{468, 205},  // PREF_MASTER_VOLUME
+        Point{468, 258},  // PREF_MUSIC_VOLUME
+        Point{468, 311},  // PREF_SFX_VOLUME
+        Point{468, 364},  // PREF_SPEECH_VOLUME
+        Point{468, 417},  // PREF_BRIGHTNESS
+        Point{468, 470}   // PREF_MOUSE_SENSITIVIY
+    },
+    
+    // New offsets (AFTER preferencePositions)
     9,    // primaryButtonMinXOffset
     37,   // primaryButtonMaxXOffset
     22,   // secondaryButtonXOffset
     6,    // rangeThumbLeftOffset
     14,   // rangeThumbRightOffset
-    274.0, // rangeSliderScale
-    
-    // Preference positions (must match enum order exactly)
-    {
-        { 100, 74 },   // PREF_GAME_DIFFICULTY
-        { 100, 157 },  // PREF_COMBAT_DIFFICULTY
-        { 100, 237 },  // PREF_VIOLENCE_LEVEL
-        { 100, 324 },  // PREF_TARGET_HIGHLIGHT
-        { 100, 406 },  // PREF_COMBAT_LOOKS
-        { 380, 76 },   // PREF_COMBAT_MESSAGES
-        { 380, 147 },  // PREF_COMBAT_TAUNTS
-        { 380, 216 },  // PREF_LANGUAGE_FILTER
-        { 380, 284 },  // PREF_RUNNING
-        { 380, 354 },  // PREF_SUBTITLES
-        { 380, 423 },  // PREF_ITEM_HIGHLIGHT
-        { 468, 53 },   // PREF_COMBAT_SPEED
-        { 468, 131 },  // PREF_TEXT_BASE_DELAY
-        { 468, 205 },  // PREF_MASTER_VOLUME
-        { 468, 258 },  // PREF_MUSIC_VOLUME
-        { 468, 311 },  // PREF_SFX_VOLUME
-        { 468, 364 },  // PREF_SPEECH_VOLUME
-        { 468, 417 },  // PREF_BRIGHTNESS
-        { 468, 470 }   // PREF_MOUSE_SENSITIVIY
-    }
+    274.0 // rangeSliderScale (double)
 };
 
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
