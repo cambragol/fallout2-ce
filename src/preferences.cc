@@ -503,32 +503,32 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     .rangeSliderScale = 219.0,
 
     // Preference positions (knobX, knobY):
-    .preferencePositions = {
-        // Primary prefs (left column)
-        [PREF_GAME_DIFFICULTY] = { 76, 71 },
-        [PREF_COMBAT_DIFFICULTY] = { 76, 149 },
-        [PREF_VIOLENCE_LEVEL] = { 76, 226 },
-        [PREF_TARGET_HIGHLIGHT] = { 76, 309 },
-        [PREF_COMBAT_LOOKS] = { 76, 387 },
-
-        // Secondary prefs (middle column)
-        [PREF_COMBAT_MESSAGES] = { 299, 74 },
-        [PREF_COMBAT_TAUNTS] = { 299, 141 },
-        [PREF_LANGUAGE_FILTER] = { 299, 216 },
-        [PREF_RUNNING] = { 299, 271 },
-        [PREF_SUBTITLES] = { 299, 338 },
-        [PREF_ITEM_HIGHLIGHT] = { 299, 404 },
-
-        // Range prefs (right column)
-        [PREF_COMBAT_SPEED] = { 374, 50 },
-        [PREF_TEXT_BASE_DELAY] = { 374, 125 },
-        [PREF_MASTER_VOLUME] = { 374, 196 },
-        [PREF_MUSIC_VOLUME] = { 374, 247 },
-        [PREF_SFX_VOLUME] = { 374, 298 },
-        [PREF_SPEECH_VOLUME] = { 374, 349 },
-        [PREF_BRIGHTNESS] = { 374, 400 },
-        [PREF_MOUSE_SENSITIVIY] = { 374, 451 }
-    }
+.preferencePositions = {
+    // Primary preferences (left column)
+    { 76, 71 },    // PREF_GAME_DIFFICULTY
+    { 76, 149 },   // PREF_COMBAT_DIFFICULTY
+    { 76, 226 },   // PREF_VIOLENCE_LEVEL
+    { 76, 309 },   // PREF_TARGET_HIGHLIGHT
+    { 76, 387 },   // PREF_COMBAT_LOOKS
+    
+    // Secondary preferences (middle column)
+    { 299, 74 },   // PREF_COMBAT_MESSAGES
+    { 299, 141 },  // PREF_COMBAT_TAUNTS
+    { 299, 216 },  // PREF_LANGUAGE_FILTER
+    { 299, 271 },  // PREF_RUNNING
+    { 299, 338 },  // PREF_SUBTITLES
+    { 299, 404 },  // PREF_ITEM_HIGHLIGHT
+    
+    // Range preferences (right column)
+    { 374, 50 },   // PREF_COMBAT_SPEED
+    { 374, 125 },  // PREF_TEXT_BASE_DELAY
+    { 374, 196 },  // PREF_MASTER_VOLUME
+    { 374, 247 },  // PREF_MUSIC_VOLUME
+    { 374, 298 },  // PREF_SFX_VOLUME
+    { 374, 349 },  // PREF_SPEECH_VOLUME
+    { 374, 400 },  // PREF_BRIGHTNESS
+    { 374, 451 }   // PREF_MOUSE_SENSITIVIY
+}
 };
 
 const PreferencesOffsets gPreferencesOffsets800 = {
@@ -634,32 +634,32 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     .rangeSliderScale = 274.0,
 
     // Preference positions (knobX, knobY):
-    .preferencePositions = {
-        // Primary prefs (left column)
-        [PREF_GAME_DIFFICULTY] = { 100, 74 },
-        [PREF_COMBAT_DIFFICULTY] = { 100, 157 },
-        [PREF_VIOLENCE_LEVEL] = { 100, 237 },
-        [PREF_TARGET_HIGHLIGHT] = { 100, 324 },
-        [PREF_COMBAT_LOOKS] = { 100, 406 },
-
-        // Secondary prefs (middle column)
-        [PREF_COMBAT_MESSAGES] = { 380, 76 },
-        [PREF_COMBAT_TAUNTS] = { 380, 147 },
-        [PREF_LANGUAGE_FILTER] = { 380, 216 },
-        [PREF_RUNNING] = { 380, 284 },
-        [PREF_SUBTITLES] = { 380, 354 },
-        [PREF_ITEM_HIGHLIGHT] = { 380, 423 },
-
-        // Range prefs (right column)
-        [PREF_COMBAT_SPEED] = { 468, 53 },
-        [PREF_TEXT_BASE_DELAY] = { 468, 131 },
-        [PREF_MASTER_VOLUME] = { 468, 205 },
-        [PREF_MUSIC_VOLUME] = { 468, 258 },
-        [PREF_SFX_VOLUME] = { 468, 311 },
-        [PREF_SPEECH_VOLUME] = { 468, 364 },
-        [PREF_BRIGHTNESS] = { 468, 417 },
-        [PREF_MOUSE_SENSITIVIY] = { 468, 470 }
-    }
+.preferencePositions = {
+    // Primary preferences (left column)
+    { 100, 74 },   // PREF_GAME_DIFFICULTY
+    { 100, 157 },  // PREF_COMBAT_DIFFICULTY
+    { 100, 237 },  // PREF_VIOLENCE_LEVEL
+    { 100, 324 },  // PREF_TARGET_HIGHLIGHT
+    { 100, 406 },  // PREF_COMBAT_LOOKS
+    
+    // Secondary preferences (middle column)
+    { 380, 76 },   // PREF_COMBAT_MESSAGES
+    { 380, 147 },  // PREF_COMBAT_TAUNTS
+    { 380, 216 },  // PREF_LANGUAGE_FILTER
+    { 380, 284 },  // PREF_RUNNING
+    { 380, 354 },  // PREF_SUBTITLES
+    { 380, 423 },  // PREF_ITEM_HIGHLIGHT
+    
+    // Range preferences (right column)
+    { 468, 53 },   // PREF_COMBAT_SPEED
+    { 468, 131 },  // PREF_TEXT_BASE_DELAY
+    { 468, 205 },  // PREF_MASTER_VOLUME
+    { 468, 258 },  // PREF_MUSIC_VOLUME
+    { 468, 311 },  // PREF_SFX_VOLUME
+    { 468, 364 },  // PREF_SPEECH_VOLUME
+    { 468, 417 },  // PREF_BRIGHTNESS
+    { 468, 470 }   // PREF_MOUSE_SENSITIVIY
+}
 };
 
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
