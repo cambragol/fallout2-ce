@@ -30,11 +30,11 @@
 
 namespace fallout {
 
-#define PREFERENCES_WINDOW_WIDTH 640
+/*#define PREFERENCES_WINDOW_WIDTH 640
 #define PREFERENCES_WINDOW_HEIGHT 480
 
 #define PRIMARY_OPTION_VALUE_COUNT 4
-#define SECONDARY_OPTION_VALUE_COUNT 2
+#define SECONDARY_OPTION_VALUE_COUNT 2*/
 
 /*typedef enum Preference {
     PREF_GAME_DIFFICULTY,
@@ -120,7 +120,7 @@ static int preferencesWindowFree();
 static void _DoThing(int eventCode);
 
 // 0x48FBD0
-const int _row1Ytab[PRIMARY_PREF_COUNT] = {
+/*const int _row1Ytab[PRIMARY_PREF_COUNT] = {
     48,
     125,
     203,
@@ -194,7 +194,7 @@ const int dword_48FC1C[PRIMARY_PREF_COUNT] = {
     222, // violence level
     304, // target highlight
     382, // combat looks
-};
+};*/
 
 // 0x50C168
 static const double dbl_50C168 = 1.17999267578125;
