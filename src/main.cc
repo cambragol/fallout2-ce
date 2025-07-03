@@ -268,6 +268,8 @@ static int _main_load_new(char* mapFileName)
     objectShow(gDude, nullptr);
     mouseHideCursor();
 
+    resizeContent(screenGetWidth(), screenGetHeight(), true);
+
     int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
     windowRefresh(win);
 
