@@ -3001,7 +3001,9 @@ static int wmWorldMapFunc(int a1)
     wmFadeOut();
     
     restoreUserAspectPreference();
-    resizeContent(800, 500);
+    if(gameIsWidescreen()){
+        resizeContent(800,500);
+    }
 
     if (wmInterfaceInit() == -1) {
         wmInterfaceExit();

@@ -296,7 +296,9 @@ int gameMoviePlay(int movie, int flags)
         // other movies play from outside game area - main, scripts(worldmap)
         resizeContent(screenGetWidth(), screenGetHeight(), true);
     } else {
-        resizeContent(800,500);
+        if(gameIsWidescreen()){
+            resizeContent(800,500);
+        }
     }
     windowDestroy(win);
 

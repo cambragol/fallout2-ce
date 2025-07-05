@@ -498,8 +498,9 @@ static void showDeath()
 
     colorCycleEnable();
     
-    resizeContent(800, 500);
-
+    if(gameIsWidescreen()){
+        resizeContent(800,500);
+    }
 }
 
 // 0x4814A8
