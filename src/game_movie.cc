@@ -298,6 +298,8 @@ int gameMoviePlay(int movie, int flags)
     } else {
         if(gameIsWidescreen()){
             resizeContent(800,500);
+        } else {
+            resizeContent(640,480);
         }
     }
     windowDestroy(win);

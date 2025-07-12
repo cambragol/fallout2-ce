@@ -500,6 +500,8 @@ static void showDeath()
     
     if(gameIsWidescreen()){
         resizeContent(800,500);
+    } else {
+        resizeContent(640,480);
     }
 }
 
