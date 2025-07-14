@@ -783,7 +783,7 @@ static FrmImage _editorFrmImages[EDITOR_GRAPHIC_COUNT];
 static FrmImage _perkDialogBackgroundFrmImage;
 
 // Added for offsets handling
-static CharacterEditorOffsets offsets;
+static CharacterEditorOffsets gOffsets;
 
 const CharacterEditorOffsets gCharEditorOffsets640 = {
     // Window
@@ -1891,7 +1891,7 @@ static int characterEditorWindowInit()
 
     // Determine screen mode and load offsets
     const bool isWidescreen = gameIsWidescreen();
-    characterEditorLoadOffsetsFromConfig(&offsets, isWidescreen);
+    characterEditorLoadOffsetsFromConfig(&gOffsets, isWidescreen);
 
     gCharacterEditorSkillValueAdjustmentSliderY = gCharacterEditorCurrentSkill * (fontGetLineHeight() + 1) + 27;
 
@@ -2039,12 +2039,12 @@ static int characterEditorWindowInit()
         gameMouseSetCursor(MOUSE_CURSOR_ARROW);
         return -1;
     }
-    int editorWindowX = (screenGetWidth() - offsets.windowWidth) / 2;
-    int editorWindowY = (screenGetHeight() - offsets.windowHeight) / 2;
+    int editorWindowX = (screenGetWidth() - gOffsets.windowWidth) / 2;
+    int editorWindowY = (screenGetHeight() - gOffsets.windowHeight) / 2;
     gCharacterEditorWindow = windowCreate(editorWindowX,
         editorWindowY,
-        offsets.windowWidth,
-        offsets.windowHeight,
+        gOffsets.windowWidth,
+        gOffsets.windowHeight,
         256,
         WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
     if (gCharacterEditorWindow == -1) {
@@ -2085,21 +2085,21 @@ static int characterEditorWindowInit()
         }
     }
 
-    memcpy(gCharacterEditorWindowBuffer, _editorBackgroundFrmImage.getData(), offsets.windowWidth * offsets.windowHeight);
+    memcpy(gCharacterEditorWindowBuffer, _editorBackgroundFrmImage.getData(), gOffsets.windowWidth * gOffsets.windowHeight);
 
     if (gCharacterEditorIsCreationMode) {
         fontSetCurrent(103);
 
         // CHAR POINTS
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 116);
-        fontDrawText(gCharacterEditorWindowBuffer + (offsets.charPointsTextY * offsets.windowWidth) + offsets.charPointsTextX,
+        fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.charPointsTextY * gOffsets.windowWidth) + gOffsets.charPointsTextX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
         characterEditorDrawBigNumber(
-            offsets.charPointsValueX,
-            offsets.charPointsValueY,
+            gOffsets.charPointsValueX,
+            gOffsets.charPointsValueY,
             0,
             gCharacterEditorRemainingCharacterPoints,
             0,
@@ -2107,22 +2107,22 @@ static int characterEditorWindowInit()
 
         // OPTIONS
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 101);
-        fontDrawText(gCharacterEditorWindowBuffer + (offsets.printButtonY * offsets.windowWidth) + offsets.printButtonX,
+        fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.printButtonY * gOffsets.windowWidth) + gOffsets.printButtonX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
 
         // OPTIONAL TRAITS
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 139);
-        fontDrawText(gCharacterEditorWindowBuffer + (offsets.optionalTraitsTextY * offsets.windowWidth) + offsets.optionalTraitsTextX,
+        fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.optionalTraitsTextY * gOffsets.windowWidth) + gOffsets.optionalTraitsTextX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
         characterEditorDrawBigNumber(
-            offsets.skillsPointsValueX,
-            offsets.skillsPointsValueY,
+            gOffsets.skillsPointsValueX,
+            gOffsets.skillsPointsValueY,
             0,
             gPerkDialogOptionCount,
             0,
@@ -2130,14 +2130,14 @@ static int characterEditorWindowInit()
 
         // TAG SKILLS
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 138);
-        fontDrawText(gCharacterEditorWindowBuffer + (offsets.tagSkillsTextY * offsets.windowWidth) + offsets.tagSkillsTextX,
+        fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.tagSkillsTextY * gOffsets.windowWidth) + gOffsets.tagSkillsTextX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
         characterEditorDrawBigNumber(
-            offsets.skillsPointsValueX,
-            offsets.skillsPointsValueY,
+            gOffsets.skillsPointsValueX,
+            gOffsets.skillsPointsValueY,
             0,
             gCharacterEditorTaggedSkillCount,
             0,
@@ -2157,21 +2157,21 @@ static int characterEditorWindowInit()
         // perks selected
         len = fontGetStringWidth(perks);
         fontDrawText(
-            gCharacterEditorFrmCopy[46] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.perksTitleX - len / 2),
+            gCharacterEditorFrmCopy[46] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.perksTitleX - len / 2),
             perks,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _colorTable[18979]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.karmaTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.karmaTitleX - len / 2),
             karma,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _colorTable[14723]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.killsTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.killsTitleX - len / 2),
             kills,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
@@ -2179,21 +2179,21 @@ static int characterEditorWindowInit()
 
         // karma selected
         len = fontGetStringWidth(perks);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.perksTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.perksTitleX - len / 2),
             perks,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _colorTable[14723]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.karmaTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.karmaTitleX - len / 2),
             karma,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _colorTable[18979]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.killsTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KARMA_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.killsTitleX - len / 2),
             kills,
             _editorFrmImages[46].getWidth(),
             _editorFrmImages[46].getWidth(),
@@ -2201,21 +2201,21 @@ static int characterEditorWindowInit()
 
         // kills selected
         len = fontGetStringWidth(perks);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.perksTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.perksTitleX - len / 2),
             perks,
             _editorFrmImages[46].getWidth(),
             _editorFrmImages[46].getWidth(),
             _colorTable[14723]);
 
         len = fontGetStringWidth(karma);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.karmaTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.karmaTitleX - len / 2),
             karma,
             _editorFrmImages[46].getWidth(),
             _editorFrmImages[46].getWidth(),
             _colorTable[14723]);
 
         len = fontGetStringWidth(kills);
-        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (offsets.killsTitleX - len / 2),
+        fontDrawText(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_KILLS_FOLDER_SELECTED] + 5 * _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth() + (gOffsets.killsTitleX - len / 2),
             kills,
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
@@ -2227,10 +2227,10 @@ static int characterEditorWindowInit()
 
         // PRINT
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 103);
-        fontDrawText(gCharacterEditorWindowBuffer + (offsets.printButtonY * offsets.windowWidth) + offsets.printButtonX,
+        fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.printButtonY * gOffsets.windowWidth) + gOffsets.printButtonX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
 
         characterEditorDrawPcStats();
@@ -2241,18 +2241,18 @@ static int characterEditorWindowInit()
 
     // CANCEL
     str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 102);
-    fontDrawText(gCharacterEditorWindowBuffer + (offsets.cancelButtonY * offsets.windowWidth) + offsets.cancelButtonX,
+    fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.cancelButtonY * gOffsets.windowWidth) + gOffsets.cancelButtonX,
         str,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         _colorTable[18979]);
 
     // DONE
     str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 100);
-    fontDrawText(gCharacterEditorWindowBuffer + (offsets.doneButtonY * offsets.windowWidth) + offsets.doneButtonX,
+    fontDrawText(gCharacterEditorWindowBuffer + (gOffsets.doneButtonY * gOffsets.windowWidth) + gOffsets.doneButtonX,
         str,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         _colorTable[18979]);
 
     characterEditorDrawPrimaryStat(RENDER_ALL_STATS, 0, 0);
@@ -2261,8 +2261,8 @@ static int characterEditorWindowInit()
     if (!gCharacterEditorIsCreationMode) {
         gCharacterEditorSliderPlusBtn = buttonCreate(
             gCharacterEditorWindow,
-            offsets.sliderPlusX,
-            offsets.sliderPlusY,
+            gOffsets.sliderPlusX,
+            gOffsets.sliderPlusY,
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
             -1,
@@ -2275,8 +2275,8 @@ static int characterEditorWindowInit()
             96);
         gCharacterEditorSliderMinusBtn = buttonCreate(
             gCharacterEditorWindow,
-            offsets.sliderPlusX,
-            offsets.sliderPlusY + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getHeight() - 1,
+            gOffsets.sliderPlusX,
+            gOffsets.sliderPlusY + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getHeight() - 1,
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].getHeight(),
             -1,
@@ -2299,11 +2299,11 @@ static int characterEditorWindowInit()
     characterEditorDrawGender();
 
     if (gCharacterEditorIsCreationMode) {
-        x = offsets.nameButtonX;
+        x = gOffsets.nameButtonX;
         btn = buttonCreate(
             gCharacterEditorWindow,
             x,
-            offsets.nameButtonY,
+            gOffsets.nameButtonY,
             _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getHeight(),
             -1,
@@ -2323,7 +2323,7 @@ static int characterEditorWindowInit()
         btn = buttonCreate(
             gCharacterEditorWindow,
             x,
-            offsets.nameButtonY,
+            gOffsets.nameButtonY,
             _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getHeight(),
             -1,
@@ -2343,7 +2343,7 @@ static int characterEditorWindowInit()
         btn = buttonCreate(
             gCharacterEditorWindow,
             x,
-            offsets.nameButtonY,
+            gOffsets.nameButtonY,
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getHeight(),
             -1,
@@ -2359,11 +2359,11 @@ static int characterEditorWindowInit()
             buttonSetCallbacks(btn, _gsound_lrg_butt_press, nullptr);
         }
 
-        y = offsets.tagSkillsButtonY;
+        y = gOffsets.tagSkillsButtonY;
         for (i = 0; i < SKILL_COUNT; i++) {
             gCharacterEditorTagSkillBtns[i] = buttonCreate(
                 gCharacterEditorWindow,
-                offsets.tagSkillsButtonX,
+                gOffsets.tagSkillsButtonX,
                 y,
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getHeight(),
@@ -2378,11 +2378,11 @@ static int characterEditorWindowInit()
             y += _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getHeight();
         }
 
-        y = offsets.optionalTraitsButtonY;
+        y = gOffsets.optionalTraitsButtonY;
         for (i = 0; i < TRAIT_COUNT / 2; i++) {
             gCharacterEditorOptionalTraitBtns[i] = buttonCreate(
                 gCharacterEditorWindow,
-                offsets.optionalTraitsLeftButtonX,
+                gOffsets.optionalTraitsLeftButtonX,
                 y,
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getHeight(),
@@ -2397,11 +2397,11 @@ static int characterEditorWindowInit()
             y += _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getHeight() + OPTIONAL_TRAITS_BTN_SPACE;
         }
 
-        y = offsets.optionalTraitsButtonY;
+        y = gOffsets.optionalTraitsButtonY;
         for (i = TRAIT_COUNT / 2; i < TRAIT_COUNT; i++) {
             gCharacterEditorOptionalTraitBtns[i] = buttonCreate(
                 gCharacterEditorWindow,
-                offsets.optionalTraitsRightButtonX,
+                gOffsets.optionalTraitsRightButtonX,
                 y,
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_TAG_SKILL_BUTTON_ON].getHeight(),
@@ -2418,33 +2418,33 @@ static int characterEditorWindowInit()
 
         characterEditorDrawOptionalTraits();
     } else {
-        x = offsets.nameButtonX;
+        x = gOffsets.nameButtonX;
         blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_NAME_OFF],
             _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.windowWidth * offsets.nameButtonY) + x,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.windowWidth * gOffsets.nameButtonY) + x,
+            gOffsets.windowWidth);
 
         x += _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth();
         blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_AGE_OFF],
             _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.windowWidth * offsets.nameButtonY) + x,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.windowWidth * gOffsets.nameButtonY) + x,
+            gOffsets.windowWidth);
 
         x += _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth();
         blitBufferToBufferTrans(gCharacterEditorFrmCopy[EDITOR_GRAPHIC_SEX_OFF],
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_SEX_ON].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.windowWidth * offsets.nameButtonY) + x,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.windowWidth * gOffsets.nameButtonY) + x,
+            gOffsets.windowWidth);
 
         btn = buttonCreate(gCharacterEditorWindow,
-            offsets.folderButtonX,
-            offsets.folderButtonY,
+            gOffsets.folderButtonX,
+            gOffsets.folderButtonY,
             _editorFrmImages[EDITOR_GRAPHIC_FOLDER_MASK].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_FOLDER_MASK].getHeight(),
             -1,
@@ -2464,8 +2464,8 @@ static int characterEditorWindowInit()
         // +/- buttons for stats
         for (i = 0; i < 7; i++) {
             gCharacterEditorPrimaryStatPlusBtns[i] = buttonCreate(gCharacterEditorWindow,
-                offsets.specialStatsButtonX,
-                offsets.primaryStatY[i] + 1,
+                gOffsets.specialStatsButtonX,
+                gOffsets.primaryStatY[i] + 1,
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
                 -1,
@@ -2481,8 +2481,8 @@ static int characterEditorWindowInit()
             }
 
             gCharacterEditorPrimaryStatMinusBtns[i] = buttonCreate(gCharacterEditorWindow,
-                offsets.specialStatsButtonX,
-                offsets.primaryStatY[i] + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
+                gOffsets.specialStatsButtonX,
+                gOffsets.primaryStatY[i] + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getWidth(),
                 _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getHeight(),
                 -1,
@@ -2504,8 +2504,8 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        offsets.optionsButtonX,
-        offsets.optionsButtonY,
+        gOffsets.optionsButtonX,
+        gOffsets.optionsButtonY,
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getWidth(),
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getHeight(),
         -1,
@@ -2522,8 +2522,8 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        offsets.cancelButtonGraphicX,
-        offsets.cancelButtonGraphicY,
+        gOffsets.cancelButtonGraphicX,
+        gOffsets.cancelButtonGraphicY,
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getWidth(),
         _editorFrmImages[EDITOR_GRAPHIC_LITTLE_RED_BUTTON_UP].getHeight(),
         -1,
@@ -2540,8 +2540,8 @@ static int characterEditorWindowInit()
 
     btn = buttonCreate(
         gCharacterEditorWindow,
-        offsets.doneButtonGraphicX,
-        offsets.doneButtonGraphicY,
+        gOffsets.doneButtonGraphicX,
+        gOffsets.doneButtonGraphicY,
         _editorFrmImages[23].getWidth(),
         _editorFrmImages[23].getHeight(),
         -1,
@@ -2790,12 +2790,12 @@ static void characterEditorDrawFolders()
 
     // Use offsets for folder background position and dimensions
     blitBufferToBuffer(
-        _editorBackgroundFrmImage.getData() + (offsets.folderBackgroundY * offsets.windowWidth) + offsets.folderBackgroundX,
-        offsets.folderBackgroundWidth + 2,
-        offsets.folderBackgroundHeight,
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + (offsets.folderBackgroundY * offsets.windowWidth) + offsets.folderBackgroundX,
-        offsets.windowWidth);
+        _editorBackgroundFrmImage.getData() + (gOffsets.folderBackgroundY * gOffsets.windowWidth) + gOffsets.folderBackgroundX,
+        gOffsets.folderBackgroundWidth + 2,
+        gOffsets.folderBackgroundHeight,
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + (gOffsets.folderBackgroundY * gOffsets.windowWidth) + gOffsets.folderBackgroundX,
+        gOffsets.windowWidth);
 
     fontSetCurrent(101);
 
@@ -2806,8 +2806,8 @@ static void characterEditorDrawFolders()
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.folderSelectedY * offsets.windowWidth) + offsets.folderSelectedX,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.folderSelectedY * gOffsets.windowWidth) + gOffsets.folderSelectedX,
+            gOffsets.windowWidth);
         characterEditorDrawPerksFolder();
         break;
     case EDITOR_FOLDER_KARMA:
@@ -2816,8 +2816,8 @@ static void characterEditorDrawFolders()
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.folderSelectedY * offsets.windowWidth) + offsets.folderSelectedX,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.folderSelectedY * gOffsets.windowWidth) + gOffsets.folderSelectedX,
+            gOffsets.windowWidth);
         characterEditorDrawKarmaFolder();
         break;
     case EDITOR_FOLDER_KILLS:
@@ -2826,8 +2826,8 @@ static void characterEditorDrawFolders()
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_PERKS_FOLDER_SELECTED].getWidth(),
-            gCharacterEditorWindowBuffer + (offsets.folderSelectedY * offsets.windowWidth) + offsets.folderSelectedX,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + (gOffsets.folderSelectedY * gOffsets.windowWidth) + gOffsets.folderSelectedX,
+            gOffsets.windowWidth);
         gCharacterEditorKillsCount = characterEditorDrawKillsFolder();
         break;
     default:
@@ -3109,15 +3109,15 @@ static void characterEditorDrawPcStats()
 
     // Use offsets for PC stats background position
     blitBufferToBuffer(
-        _editorBackgroundFrmImage.getData() + offsets.windowWidth * offsets.pcStatsY + offsets.pcStatsX,
-        offsets.pcStatsWidth,
-        offsets.pcStatsHeight,
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.pcStatsY + offsets.pcStatsX,
-        offsets.windowWidth);
+        _editorBackgroundFrmImage.getData() + gOffsets.windowWidth * gOffsets.pcStatsY + gOffsets.pcStatsX,
+        gOffsets.pcStatsWidth,
+        gOffsets.pcStatsHeight,
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.pcStatsY + gOffsets.pcStatsX,
+        gOffsets.windowWidth);
 
     // LEVEL
-    y = offsets.pcStatsY;
+    y = gOffsets.pcStatsY;
     if (characterEditorSelectedItem != 7) {
         color = _colorTable[992];
     } else {
@@ -3129,10 +3129,10 @@ static void characterEditorDrawPcStats()
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 113),
         level);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.pcStatsX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.pcStatsX,
         stringBuffer,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     // EXPERIENCE
@@ -3148,10 +3148,10 @@ static void characterEditorDrawPcStats()
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 114),
         _itostndn(exp, formattedValueBuffer));
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.pcStatsX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.pcStatsX,
         stringBuffer,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     // EXP NEEDED TO NEXT LEVEL
@@ -3179,10 +3179,10 @@ static void characterEditorDrawPcStats()
         getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, expMsgId),
         formattedValue);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.pcStatsX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.pcStatsX,
         stringBuffer,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 }
 
@@ -3212,7 +3212,7 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
     }
 
     // Use offset for description position
-    off = offsets.windowWidth * (offsets.primaryStatY[stat] + 8) + offsets.primaryStatDescriptionX;
+    off = gOffsets.windowWidth * (gOffsets.primaryStatY[stat] + 8) + gOffsets.primaryStatDescriptionX;
 
     if (gCharacterEditorIsCreationMode) {
         value = critterGetBaseStatWithTraitModifier(gDude, stat) + critterGetBonusStat(gDude, stat);
@@ -3228,8 +3228,8 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
 
         // Use offsets for big number position
         characterEditorDrawBigNumber(
-            offsets.primaryStatBigNumberX,
-            offsets.primaryStatY[stat],
+            gOffsets.primaryStatBigNumberX,
+            gOffsets.primaryStatY[stat],
             flags,
             value,
             previousValue,
@@ -3239,9 +3239,9 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
             _editorBackgroundFrmImage.getData() + off,
             40,
             fontGetLineHeight(),
-            offsets.windowWidth,
+            gOffsets.windowWidth,
             gCharacterEditorWindowBuffer + off,
-            offsets.windowWidth);
+            gOffsets.windowWidth);
 
         messageListItemId = critterGetStat(gDude, stat) + 199;
         if (messageListItemId > 210) {
@@ -3250,16 +3250,16 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
 
         description = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, messageListItemId);
         fontDrawText(
-            gCharacterEditorWindowBuffer + offsets.windowWidth * (offsets.primaryStatY[stat] + 8) + offsets.primaryStatDescriptionX,
+            gCharacterEditorWindowBuffer + gOffsets.windowWidth * (gOffsets.primaryStatY[stat] + 8) + gOffsets.primaryStatDescriptionX,
             description,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
     } else {
         value = critterGetStat(gDude, stat);
         characterEditorDrawBigNumber(
-            offsets.primaryStatBigNumberX,
-            offsets.primaryStatY[stat],
+            gOffsets.primaryStatBigNumberX,
+            gOffsets.primaryStatY[stat],
             0,
             value,
             0,
@@ -3268,9 +3268,9 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
             _editorBackgroundFrmImage.getData() + off,
             40,
             fontGetLineHeight(),
-            offsets.windowWidth,
+            gOffsets.windowWidth,
             gCharacterEditorWindowBuffer + off,
-            offsets.windowWidth);
+            gOffsets.windowWidth);
 
         value = critterGetStat(gDude, stat);
         if (value > 10) {
@@ -3281,8 +3281,8 @@ static void characterEditorDrawPrimaryStat(int stat, bool animate, int previousV
         fontDrawText(
             gCharacterEditorWindowBuffer + off,
             description,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
     }
 }
@@ -3416,14 +3416,14 @@ static void characterEditorDrawDerivedStats()
     fontSetCurrent(101);
 
     // Top derived stats section
-    y = offsets.derivedStatsTopY;
+    y = gOffsets.derivedStatsTopY;
     blitBufferToBuffer(
-        _editorBackgroundFrmImage.getData() + offsets.windowWidth * y + offsets.derivedStatsTopX,
-        offsets.derivedStatsTopWidth,
-        offsets.derivedStatsTopHeight,
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX,
-        offsets.windowWidth);
+        _editorBackgroundFrmImage.getData() + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX,
+        gOffsets.derivedStatsTopWidth,
+        gOffsets.derivedStatsTopHeight,
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX,
+        gOffsets.windowWidth);
 
     // Hit Points
     if (characterEditorSelectedItem == EDITOR_HIT_POINTS) {
@@ -3445,18 +3445,18 @@ static void characterEditorDrawDerivedStats()
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 300);
     snprintf(t, sizeof(t), "%s", messageListItemText);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX,
         t,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     snprintf(t, sizeof(t), "%d/%d", currHp, maxHp);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX - 25,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX - 25,
         t,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     // Poisoned
@@ -3470,7 +3470,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 312);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Radiated
     y += fontGetLineHeight() + 3;
@@ -3483,7 +3483,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 313);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Eye Damage
     y += fontGetLineHeight() + 3;
@@ -3496,7 +3496,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 314);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Crippled Right Arm
     y += fontGetLineHeight() + 3;
@@ -3509,7 +3509,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 315);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Crippled Left Arm
     y += fontGetLineHeight() + 3;
@@ -3522,7 +3522,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 316);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Crippled Right Leg
     y += fontGetLineHeight() + 3;
@@ -3535,7 +3535,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 317);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Crippled Left Leg
     y += fontGetLineHeight() + 3;
@@ -3548,17 +3548,17 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 318);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsTopX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsTopX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Bottom derived stats section
-    y = offsets.derivedStatsBottomY;
+    y = gOffsets.derivedStatsBottomY;
     blitBufferToBuffer(
-        _editorBackgroundFrmImage.getData() + offsets.windowWidth * y + offsets.derivedStatsBottomX,
-        offsets.derivedStatsBottomWidth,
-        offsets.derivedStatsBottomHeight,
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX,
-        offsets.windowWidth);
+        _editorBackgroundFrmImage.getData() + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX,
+        gOffsets.derivedStatsBottomWidth,
+        gOffsets.derivedStatsBottomHeight,
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX,
+        gOffsets.windowWidth);
 
     // Armor Class
     if (characterEditorSelectedItem == EDITOR_FIRST_DERIVED_STAT + EDITOR_DERIVED_STAT_ARMOR_CLASS) {
@@ -3570,18 +3570,18 @@ static void characterEditorDrawDerivedStats()
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 302);
     snprintf(t, sizeof(t), "%s", messageListItemText);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX,
         t,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     compat_itoa(critterGetStat(gDude, STAT_ARMOR_CLASS), t, 10);
     fontDrawText(
-        gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX,
         t,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         color);
 
     // Action Points
@@ -3595,10 +3595,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 301);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     compat_itoa(critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS), t, 10);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Carry Weight
     y += fontGetLineHeight() + 3;
@@ -3611,10 +3611,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 311);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     compat_itoa(critterGetStat(gDude, STAT_CARRY_WEIGHT), t, 10);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, critterIsEncumbered(gDude) ? _colorTable[31744] : color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, critterIsEncumbered(gDude) ? _colorTable[31744] : color);
 
     // Melee Damage
     y += fontGetLineHeight() + 3;
@@ -3627,7 +3627,7 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 304);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // SFALL: Display melee damage without "Bonus HtH Damage" bonus.
     int meleeDamage = critterGetStat(gDude, STAT_MELEE_DAMAGE);
@@ -3636,7 +3636,7 @@ static void characterEditorDrawDerivedStats()
     }
 
     compat_itoa(meleeDamage, t, 10);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Damage Resistance
     y += fontGetLineHeight() + 3;
@@ -3649,10 +3649,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 305);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     snprintf(t, sizeof(t), "%d%%", critterGetStat(gDude, STAT_DAMAGE_RESISTANCE));
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Poison Resistance
     y += fontGetLineHeight() + 3;
@@ -3665,10 +3665,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 306);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     snprintf(t, sizeof(t), "%d%%", critterGetStat(gDude, STAT_POISON_RESISTANCE));
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Radiation Resistance
     y += fontGetLineHeight() + 3;
@@ -3681,10 +3681,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 307);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     snprintf(t, sizeof(t), "%d%%", critterGetStat(gDude, STAT_RADIATION_RESISTANCE));
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Sequence
     y += fontGetLineHeight() + 3;
@@ -3697,10 +3697,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 308);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     compat_itoa(critterGetStat(gDude, STAT_SEQUENCE), t, 10);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Healing Rate
     y += fontGetLineHeight() + 3;
@@ -3713,10 +3713,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 309);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     compat_itoa(critterGetStat(gDude, STAT_HEALING_RATE), t, 10);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     // Critical Chance
     y += fontGetLineHeight() + 3;
@@ -3729,10 +3729,10 @@ static void characterEditorDrawDerivedStats()
 
     messageListItemText = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 310);
     snprintf(t, sizeof(t), "%s", messageListItemText);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsBottomX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsBottomX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 
     snprintf(t, sizeof(t), "%d%%", critterGetStat(gDude, STAT_CRITICAL_CHANCE));
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.derivedStatsValueX, t, offsets.windowWidth, offsets.windowWidth, color);
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.derivedStatsValueX, t, gOffsets.windowWidth, gOffsets.windowWidth, color);
 }
 
 // 0x436154
@@ -3758,35 +3758,35 @@ static void characterEditorDrawSkills(int a1)
     }
 
     // Use offsets for skills background
-    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + offsets.skillsBackgroundX,
-        offsets.skillsBackgroundWidth,
+    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + gOffsets.skillsBackgroundX,
+        gOffsets.skillsBackgroundWidth,
         252, // Height remains fixed
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + offsets.skillsBackgroundX,
-        offsets.windowWidth);
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + gOffsets.skillsBackgroundX,
+        gOffsets.windowWidth);
 
     fontSetCurrent(103);
 
     // SKILLS title using offsets
     str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 117);
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.skillsLabelY + offsets.skillsLabelX,
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.skillsLabelY + gOffsets.skillsLabelX,
         str,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         _colorTable[18979]);
 
     if (!gCharacterEditorIsCreationMode) {
         // SKILL POINTS using offsets
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 112);
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.skillsPointsLabelY + offsets.skillsPointsLabelX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.skillsPointsLabelY + gOffsets.skillsPointsLabelX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
 
         value = pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS);
-        characterEditorDrawBigNumber(offsets.skillsPointsValueX,
-            offsets.skillsPointsValueY,
+        characterEditorDrawBigNumber(gOffsets.skillsPointsValueX,
+            gOffsets.skillsPointsValueY,
             0,
             value,
             0,
@@ -3794,22 +3794,22 @@ static void characterEditorDrawSkills(int a1)
     } else {
         // TAG SKILLS using offsets
         str = getmsg(&gCharacterEditorMessageList, &gCharacterEditorMessageListItem, 138);
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.tagSkillsTextY + offsets.tagSkillsTextX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.tagSkillsTextY + gOffsets.tagSkillsTextX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[18979]);
 
         if (a1 == 2 && !gCharacterEditorIsSkillsFirstDraw) {
-            characterEditorDrawBigNumber(offsets.skillsPointsValueX,
-                offsets.skillsPointsValueY,
+            characterEditorDrawBigNumber(gOffsets.skillsPointsValueX,
+                gOffsets.skillsPointsValueY,
                 ANIMATE,
                 gCharacterEditorTaggedSkillCount,
                 gCharacterEditorOldTaggedSkillCount,
                 gCharacterEditorWindow);
         } else {
-            characterEditorDrawBigNumber(offsets.skillsPointsValueX,
-                offsets.skillsPointsValueY,
+            characterEditorDrawBigNumber(gOffsets.skillsPointsValueX,
+                gOffsets.skillsPointsValueY,
                 0,
                 gCharacterEditorTaggedSkillCount,
                 0,
@@ -3822,7 +3822,7 @@ static void characterEditorDrawSkills(int a1)
 
     fontSetCurrent(101);
 
-    y = offsets.skillsListStartY;
+    y = gOffsets.skillsListStartY;
     for (i = 0; i < SKILL_COUNT; i++) {
         if (i == selectedSkill) {
             if (i != gCharacterEditorTempTaggedSkills[0] && i != gCharacterEditorTempTaggedSkills[1] && i != gCharacterEditorTempTaggedSkills[2] && i != gCharacterEditorTempTaggedSkills[3]) {
@@ -3839,19 +3839,19 @@ static void characterEditorDrawSkills(int a1)
         }
 
         str = skillGetName(i);
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.skillsListNameX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.skillsListNameX,
             str,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
 
         value = skillGetValue(gDude, i);
         snprintf(valueString, sizeof(valueString), "%d%%", value);
 
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.skillsListValueX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.skillsListValueX,
             valueString,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
 
         y += fontGetLineHeight() + 1;
@@ -3859,21 +3859,21 @@ static void characterEditorDrawSkills(int a1)
 
     if (!gCharacterEditorIsCreationMode) {
         y = gCharacterEditorCurrentSkill * (fontGetLineHeight() + 1);
-        gCharacterEditorSkillValueAdjustmentSliderY = y + offsets.skillsListStartY;
+        gCharacterEditorSkillValueAdjustmentSliderY = y + gOffsets.skillsListStartY;
 
         blitBufferToBufferTrans(
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER].getData(),
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER].getWidth(),
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER].getHeight(),
             _editorFrmImages[EDITOR_GRAPHIC_SLIDER].getWidth(),
-            gCharacterEditorWindowBuffer + offsets.windowWidth * (y + offsets.sliderOffsetY) + offsets.skillsListSliderX,
-            offsets.windowWidth);
+            gCharacterEditorWindowBuffer + gOffsets.windowWidth * (y + gOffsets.sliderOffsetY) + gOffsets.skillsListSliderX,
+            gOffsets.windowWidth);
 
         if (a1 == 0) {
             if (gCharacterEditorSliderPlusBtn == -1) {
                 gCharacterEditorSliderPlusBtn = buttonCreate(
                     gCharacterEditorWindow,
-                    offsets.sliderPlusX,
+                    gOffsets.sliderPlusX,
                     gCharacterEditorSkillValueAdjustmentSliderY - 7,
                     _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getWidth(),
                     _editorFrmImages[EDITOR_GRAPHIC_SLIDER_PLUS_ON].getHeight(),
@@ -3891,7 +3891,7 @@ static void characterEditorDrawSkills(int a1)
             if (gCharacterEditorSliderMinusBtn == -1) {
                 gCharacterEditorSliderMinusBtn = buttonCreate(
                     gCharacterEditorWindow,
-                    offsets.sliderPlusX, // Same X as plus button
+                    gOffsets.sliderPlusX, // Same X as plus button
                     gCharacterEditorSkillValueAdjustmentSliderY + 4 - 12 + _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getHeight(),
                     _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_ON].getWidth(),
                     _editorFrmImages[EDITOR_GRAPHIC_SLIDER_MINUS_OFF].getHeight(),
@@ -3921,12 +3921,12 @@ static void characterEditorDrawCard()
     }
 
     // Use offsets for card background
-    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + (offsets.windowWidth * offsets.cardBackgroundY) + offsets.cardBackgroundX,
-        offsets.cardBackgroundWidth,
+    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + (gOffsets.windowWidth * gOffsets.cardBackgroundY) + gOffsets.cardBackgroundX,
+        gOffsets.cardBackgroundWidth,
         170, // Height remains fixed
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + (offsets.cardBackgroundY * offsets.windowWidth) + offsets.cardBackgroundX,
-        offsets.windowWidth);
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + (gOffsets.cardBackgroundY * gOffsets.windowWidth) + gOffsets.cardBackgroundX,
+        gOffsets.windowWidth);
 
     if (characterEditorSelectedItem >= 0 && characterEditorSelectedItem < 7) {
         description = statGetDescription(characterEditorSelectedItem);
@@ -4069,8 +4069,8 @@ static int characterEditorEditName()
     int windowHeight = _editorFrmImages[EDITOR_GRAPHIC_CHARWIN].getHeight();
 
     // Use offsets for name window positioning
-    int nameWindowX = (screenGetWidth() - offsets.windowWidth) / 2 + 17;
-    int nameWindowY = (screenGetHeight() - offsets.windowHeight) / 2 + offsets.nameWindowOffsetY;
+    int nameWindowX = (screenGetWidth() - gOffsets.windowWidth) / 2 + 17;
+    int nameWindowY = (screenGetHeight() - gOffsets.windowHeight) / 2 + gOffsets.nameWindowOffsetY;
 
     int win = windowCreate(nameWindowX, nameWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (win == -1) {
@@ -4178,7 +4178,7 @@ static void _PrintName(unsigned char* buf, int pitch)
     strcpy(str, v4);
 
     // Use offset for name position
-    fontDrawText(buf + offsets.nameButtonY * pitch + NAME_BUTTON_X,
+    fontDrawText(buf + gOffsets.nameButtonY * pitch + NAME_BUTTON_X,
         str,
         pitch,
         pitch,
@@ -4208,8 +4208,8 @@ static int characterEditorEditAge()
     windowHeight = _editorFrmImages[EDITOR_GRAPHIC_CHARWIN].getHeight();
 
     // Use offsets for window positioning
-    int ageWindowX = (screenGetWidth() - offsets.windowWidth) / 2 + _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth() + 9;
-    int ageWindowY = (screenGetHeight() - offsets.windowHeight) / 2 + offsets.nameWindowOffsetY;
+    int ageWindowX = (screenGetWidth() - gOffsets.windowWidth) / 2 + _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth() + 9;
+    int ageWindowY = (screenGetHeight() - gOffsets.windowHeight) / 2 + gOffsets.nameWindowOffsetY;
 
     win = windowCreate(ageWindowX, ageWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
     if (win == -1) {
@@ -4451,10 +4451,10 @@ static void characterEditorEditGender()
     int windowHeight = _editorFrmImages[EDITOR_GRAPHIC_CHARWIN].getHeight();
 
     // Use offsets for window positioning
-    int genderWindowX = (screenGetWidth() - offsets.windowWidth) / 2 + 9
+    int genderWindowX = (screenGetWidth() - gOffsets.windowWidth) / 2 + 9
         + _editorFrmImages[EDITOR_GRAPHIC_NAME_ON].getWidth()
         + _editorFrmImages[EDITOR_GRAPHIC_AGE_ON].getWidth();
-    int genderWindowY = (screenGetHeight() - offsets.windowHeight) / 2 + offsets.nameWindowOffsetY;
+    int genderWindowY = (screenGetHeight() - gOffsets.windowHeight) / 2 + gOffsets.nameWindowOffsetY;
 
     int win = windowCreate(genderWindowX, genderWindowY, windowWidth, windowHeight, 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
 
@@ -4630,8 +4630,8 @@ static void characterEditorAdjustPrimaryStat(int eventCode)
 
                 characterEditorDrawPrimaryStat(decrementingStat, cont ? ANIMATE : 0, previousValue);
                 // Use offsets for character points position
-                characterEditorDrawBigNumber(offsets.charPointsAdjustX,
-                    offsets.charPointsAdjustY,
+                characterEditorDrawBigNumber(gOffsets.charPointsAdjustX,
+                    gOffsets.charPointsAdjustY,
                     cont ? ANIMATE : 0,
                     gCharacterEditorRemainingCharacterPoints,
                     savedRemainingCharacterPoints,
@@ -4651,8 +4651,8 @@ static void characterEditorAdjustPrimaryStat(int eventCode)
 
                 characterEditorDrawPrimaryStat(incrementingStat, cont ? ANIMATE : 0, previousValue);
                 // Use offsets for character points position
-                characterEditorDrawBigNumber(offsets.charPointsAdjustX,
-                    offsets.charPointsAdjustY,
+                characterEditorDrawBigNumber(gOffsets.charPointsAdjustX,
+                    gOffsets.charPointsAdjustY,
                     cont ? ANIMATE : 0,
                     gCharacterEditorRemainingCharacterPoints,
                     savedRemainingCharacterPoints,
@@ -4700,10 +4700,10 @@ static int characterEditorShowOptions()
 
     if (gCharacterEditorIsCreationMode) {
         // Use offsets for options window positioning
-        int optionsWindowX = (offsets.windowWidth != 640)
+        int optionsWindowX = (gOffsets.windowWidth != 640)
             ? (screenGetWidth() - _editorFrmImages[41].getWidth()) / 2
             : 238;
-        int optionsWindowY = (offsets.windowHeight != 480)
+        int optionsWindowY = (gOffsets.windowHeight != 480)
             ? (screenGetHeight() - _editorFrmImages[41].getHeight()) / 2
             : 90;
 
@@ -5650,12 +5650,12 @@ static void characterEditorResetScreen()
 {
     characterEditorSelectedItem = 0;
     gCharacterEditorCurrentSkill = 0;
-    offsets.skillValueAdjustmentSliderY = offsets.skillsListStartY;
+    gOffsets.skillValueAdjustmentSliderY = gOffsets.skillsListStartY;
     characterEditorWindowSelectedFolder = 0;
 
     if (gCharacterEditorIsCreationMode) {
-        characterEditorDrawBigNumber(offsets.charPointsAdjustX,
-            offsets.charPointsAdjustY,
+        characterEditorDrawBigNumber(gOffsets.charPointsAdjustX,
+            gOffsets.charPointsAdjustY,
             0,
             gCharacterEditorRemainingCharacterPoints,
             0,
@@ -5680,74 +5680,74 @@ static void characterEditorResetScreen()
 static void characterEditorRegisterInfoAreas()
 {
     buttonCreate(gCharacterEditorWindow,
-        offsets.statsAreaX,
-        offsets.statsAreaY,
-        offsets.statsAreaWidth,
-        offsets.statsAreaHeight,
+        gOffsets.statsAreaX,
+        gOffsets.statsAreaY,
+        gOffsets.statsAreaWidth,
+        gOffsets.statsAreaHeight,
         -1, -1, 525, -1, nullptr, nullptr, nullptr, 0);
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.charPointsAreaX,
-        offsets.charPointsAreaY,
-        offsets.charPointsAreaWidth,
-        offsets.charPointsAreaHeight,
+        gOffsets.charPointsAreaX,
+        gOffsets.charPointsAreaY,
+        gOffsets.charPointsAreaWidth,
+        gOffsets.charPointsAreaHeight,
         -1, -1, 526, -1, nullptr, nullptr, nullptr, 0);
 
     if (gCharacterEditorIsCreationMode) {
         buttonCreate(gCharacterEditorWindow,
-            offsets.optionalTraitsTitleX,
-            offsets.optionalTraitsTitleY,
-            offsets.optionalTraitsTitleWidth,
-            offsets.optionalTraitsTitleHeight,
+            gOffsets.optionalTraitsTitleX,
+            gOffsets.optionalTraitsTitleY,
+            gOffsets.optionalTraitsTitleWidth,
+            gOffsets.optionalTraitsTitleHeight,
             -1, -1, 533, -1, nullptr, nullptr, nullptr, 0);
         buttonCreate(gCharacterEditorWindow,
-            offsets.optionalTraitsListX,
-            offsets.optionalTraitsListY,
-            offsets.optionalTraitsListWidth,
-            offsets.optionalTraitsListHeight,
+            gOffsets.optionalTraitsListX,
+            gOffsets.optionalTraitsListY,
+            gOffsets.optionalTraitsListWidth,
+            gOffsets.optionalTraitsListHeight,
             -1, -1, 534, -1, nullptr, nullptr, nullptr, 0);
     } else {
         buttonCreate(gCharacterEditorWindow,
-            offsets.pcStatsFolderAreaX,
-            offsets.pcStatsFolderAreaY,
-            offsets.pcStatsFolderAreaWidth,
-            offsets.pcStatsFolderAreaHeight,
+            gOffsets.pcStatsFolderAreaX,
+            gOffsets.pcStatsFolderAreaY,
+            gOffsets.pcStatsFolderAreaWidth,
+            gOffsets.pcStatsFolderAreaHeight,
             -1, -1, 527, -1, nullptr, nullptr, nullptr, 0);
     }
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.derivedStatsTopAreaX,
-        offsets.derivedStatsTopAreaY,
-        offsets.derivedStatsTopAreaWidth,
-        offsets.derivedStatsTopAreaHeight,
+        gOffsets.derivedStatsTopAreaX,
+        gOffsets.derivedStatsTopAreaY,
+        gOffsets.derivedStatsTopAreaWidth,
+        gOffsets.derivedStatsTopAreaHeight,
         -1, -1, 528, -1, nullptr, nullptr, nullptr, 0);
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.derivedStatsBottomAreaX,
-        offsets.derivedStatsBottomAreaY,
-        offsets.derivedStatsBottomAreaWidth,
-        offsets.derivedStatsBottomAreaHeight,
+        gOffsets.derivedStatsBottomAreaX,
+        gOffsets.derivedStatsBottomAreaY,
+        gOffsets.derivedStatsBottomAreaWidth,
+        gOffsets.derivedStatsBottomAreaHeight,
         -1, -1, 529, -1, nullptr, nullptr, nullptr, 0);
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.skillsTitleAreaX,
-        offsets.skillsTitleAreaY,
-        offsets.skillsTitleAreaWidth,
-        offsets.skillsTitleAreaHeight,
+        gOffsets.skillsTitleAreaX,
+        gOffsets.skillsTitleAreaY,
+        gOffsets.skillsTitleAreaWidth,
+        gOffsets.skillsTitleAreaHeight,
         -1, -1, 530, -1, nullptr, nullptr, nullptr, 0);
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.skillsListAreaX,
-        offsets.skillsListAreaY,
-        offsets.skillsListAreaWidth,
-        offsets.skillsListAreaHeight,
+        gOffsets.skillsListAreaX,
+        gOffsets.skillsListAreaY,
+        gOffsets.skillsListAreaWidth,
+        gOffsets.skillsListAreaHeight,
         -1, -1, 531, -1, nullptr, nullptr, nullptr, 0);
 
     buttonCreate(gCharacterEditorWindow,
-        offsets.skillPointsAreaX,
-        offsets.skillPointsAreaY,
-        offsets.skillPointsAreaWidth,
-        offsets.skillPointsAreaHeight,
+        gOffsets.skillPointsAreaX,
+        gOffsets.skillPointsAreaY,
+        gOffsets.skillPointsAreaWidth,
+        gOffsets.skillPointsAreaHeight,
         -1, -1, 532, -1, nullptr, nullptr, nullptr, 0);
 }
 
@@ -5891,8 +5891,8 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
         frmImage.getWidth(),
         frmImage.getHeight(),
         frmImage.getWidth(),
-        gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.cardImageY + offsets.cardImageX,
-        offsets.windowWidth);
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.cardImageY + gOffsets.cardImageX,
+        gOffsets.windowWidth);
 
     int extraDescriptionWidth = 150;
     unsigned char* data = frmImage.getData();
@@ -5913,10 +5913,10 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
     fontSetCurrent(102);
 
     // Use offsets for card title position
-    fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.cardTitleY + offsets.cardTitleX,
+    fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.cardTitleY + gOffsets.cardTitleX,
         name,
-        offsets.windowWidth,
-        offsets.windowWidth,
+        gOffsets.windowWidth,
+        gOffsets.windowWidth,
         _colorTable[0]);
 
     int nameFontLineHeight = fontGetLineHeight();
@@ -5925,25 +5925,25 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
 
         fontSetCurrent(101);
         int attributesFontLineHeight = fontGetLineHeight();
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * (offsets.cardTitleY + nameFontLineHeight - attributesFontLineHeight) + offsets.cardTitleX + nameWidth + 8,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * (gOffsets.cardTitleY + nameFontLineHeight - attributesFontLineHeight) + gOffsets.cardTitleX + nameWidth + 8,
             attributes,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[0]);
     }
 
     // Use offsets for divider line position
-    int dividerY = offsets.cardDividerY + nameFontLineHeight;
+    int dividerY = gOffsets.cardDividerY + nameFontLineHeight;
     windowDrawLine(gCharacterEditorWindow,
-        offsets.cardDescriptionX,
+        gOffsets.cardDescriptionX,
         dividerY,
-        offsets.cardDescriptionX + offsets.cardBackgroundWidth - 10,
+        gOffsets.cardDescriptionX + gOffsets.cardBackgroundWidth - 10,
         dividerY,
         _colorTable[0]);
     windowDrawLine(gCharacterEditorWindow,
-        offsets.cardDescriptionX,
+        gOffsets.cardDescriptionX,
         dividerY + 1,
-        offsets.cardDescriptionX + offsets.cardBackgroundWidth - 10,
+        gOffsets.cardDescriptionX + gOffsets.cardBackgroundWidth - 10,
         dividerY + 1,
         _colorTable[0]);
 
@@ -5957,16 +5957,16 @@ static int characterEditorDrawCardWithOptions(int graphicId, const char* name, c
         return -1;
     }
 
-    int y = offsets.cardDescriptionStartY;
+    int y = gOffsets.cardDescriptionStartY;
     for (short i = 0; i < beginningsCount - 1; i++) {
         short beginning = beginnings[i];
         short ending = beginnings[i + 1];
         char c = description[ending];
         description[ending] = '\0';
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * y + offsets.cardDescriptionX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * y + gOffsets.cardDescriptionX,
             description + beginning,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             _colorTable[0]);
         description[ending] = c;
         y += descriptionFontLineHeight;
@@ -5991,10 +5991,10 @@ static void characterEditorHandleFolderButtonPressed()
     mouseGetPositionInWindow(gCharacterEditorWindow, &gCharacterEditorMouseX, &gCharacterEditorMouseY);
     soundPlayFile("ib3p1xx1");
 
-    if (gCharacterEditorMouseX >= offsets.folderKillsThresholdX) {
+    if (gCharacterEditorMouseX >= gOffsets.folderKillsThresholdX) {
         characterEditorSelectedItem = 41;
         characterEditorWindowSelectedFolder = EDITOR_FOLDER_KILLS;
-    } else if (gCharacterEditorMouseX > offsets.folderKarmaThresholdX) {
+    } else if (gCharacterEditorMouseX > gOffsets.folderKarmaThresholdX) {
         characterEditorSelectedItem = 42;
         characterEditorWindowSelectedFolder = EDITOR_FOLDER_KARMA;
     } else {
@@ -6031,7 +6031,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
         if (gCharacterEditorIsCreationMode) {
             characterEditorSelectedItem = 7;
         } else {
-            int offset = gCharacterEditorMouseY - 280 - offsets.infoButtonOffsetY;
+            int offset = gCharacterEditorMouseY - 280 - gOffsets.infoButtonOffsetY;
             if (offset < 0) {
                 offset = 0;
             }
@@ -6042,7 +6042,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
     case 527:
         if (!gCharacterEditorIsCreationMode) {
             fontSetCurrent(101);
-            int offset = gCharacterEditorMouseY - 364 - offsets.infoButtonOffsetY;
+            int offset = gCharacterEditorMouseY - 364 - gOffsets.infoButtonOffsetY;
             if (offset < 0) {
                 offset = 0;
             }
@@ -6051,7 +6051,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
         break;
     case 528:
         if (1) {
-            int offset = gCharacterEditorMouseY - 41 - offsets.infoButtonOffsetY;
+            int offset = gCharacterEditorMouseY - 41 - gOffsets.infoButtonOffsetY;
             if (offset < 0) {
                 offset = 0;
             }
@@ -6060,7 +6060,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
         }
         break;
     case 529: {
-        int offset = gCharacterEditorMouseY - 175 - offsets.infoButtonOffsetY;
+        int offset = gCharacterEditorMouseY - 175 - gOffsets.infoButtonOffsetY;
         if (offset < 0) {
             offset = 0;
         }
@@ -6073,7 +6073,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
         break;
     case 531:
         if (1) {
-            int offset = gCharacterEditorMouseY - 27 - offsets.infoButtonOffsetY;
+            int offset = gCharacterEditorMouseY - 27 - gOffsets.infoButtonOffsetY;
             if (offset < 0) {
                 offset = 0;
             }
@@ -6099,7 +6099,7 @@ static void characterEditorHandleInfoButtonPressed(int eventCode)
             // TODO: Original code is slightly different.
             double mouseY = gCharacterEditorMouseY;
             double fontLineHeight = fontGetLineHeight();
-            double y = 353.0 + offsets.infoButtonOffsetY;
+            double y = 353.0 + gOffsets.infoButtonOffsetY;
             double step = fontGetLineHeight() + 3 + 0.56;
             int index;
             for (index = 0; index < 8; index++) {
@@ -6240,8 +6240,8 @@ static void characterEditorHandleAdjustSkillButtonPressed(int keyCode)
             }
 
             // Changed: Use offsets for skills points value position
-            characterEditorDrawBigNumber(offsets.skillsPointsValueX,
-                offsets.skillsPointsValueY,
+            characterEditorDrawBigNumber(gOffsets.skillsPointsValueX,
+                gOffsets.skillsPointsValueY,
                 flags,
                 pcGetStat(PC_STAT_UNSPENT_SKILL_POINTS),
                 unspentSp,
@@ -6364,19 +6364,19 @@ static void characterEditorDrawOptionalTraits()
     }
 
     // Use offsets for background blitting
-    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + offsets.windowWidth * offsets.optionalTraitsBackgroundY + offsets.optionalTraitsBackgroundX,
-        offsets.optionalTraitsBackgroundWidth,
+    blitBufferToBuffer(_editorBackgroundFrmImage.getData() + gOffsets.windowWidth * gOffsets.optionalTraitsBackgroundY + gOffsets.optionalTraitsBackgroundX,
+        gOffsets.optionalTraitsBackgroundWidth,
         100,
-        offsets.windowWidth,
-        gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.optionalTraitsBackgroundY + offsets.optionalTraitsBackgroundX,
-        offsets.windowWidth);
+        gOffsets.windowWidth,
+        gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.optionalTraitsBackgroundY + gOffsets.optionalTraitsBackgroundX,
+        gOffsets.windowWidth);
 
     fontSetCurrent(101);
 
     traitsSetSelected(gCharacterEditorTempTraits[0], gCharacterEditorTempTraits[1]);
 
     step = fontGetLineHeight() + 3 + 0.56;
-    y = offsets.optionalTraitsStartY;
+    y = gOffsets.optionalTraitsStartY;
     for (i = 0; i < 8; i++) {
         if (i == v0) {
             if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
@@ -6399,15 +6399,15 @@ static void characterEditorDrawOptionalTraits()
 
         traitName = traitGetName(i);
         // Use offset for left column position
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * (int)y + offsets.optionalTraitsLeftColumnX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * (int)y + gOffsets.optionalTraitsLeftColumnX,
             traitName,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
         y += step;
     }
 
-    y = offsets.optionalTraitsStartY;
+    y = gOffsets.optionalTraitsStartY;
     for (i = 8; i < 16; i++) {
         if (i == v0) {
             if (i != gCharacterEditorTempTraits[0] && i != gCharacterEditorTempTraits[1]) {
@@ -6430,10 +6430,10 @@ static void characterEditorDrawOptionalTraits()
 
         traitName = traitGetName(i);
         // Use offset for right column position
-        fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * (int)y + offsets.optionalTraitsRightColumnX,
+        fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * (int)y + gOffsets.optionalTraitsRightColumnX,
             traitName,
-            offsets.windowWidth,
-            offsets.windowWidth,
+            gOffsets.windowWidth,
+            gOffsets.windowWidth,
             color);
         y += step;
     }
@@ -6485,8 +6485,8 @@ static void characterEditorToggleOptionalTrait(int trait)
     characterEditorDrawSkills(0);
     critterUpdateDerivedStats(gDude);
     // Use offsets for character points value position
-    characterEditorDrawBigNumber(offsets.charPointsAdjustX,
-        offsets.charPointsAdjustY,
+    characterEditorDrawBigNumber(gOffsets.charPointsAdjustX,
+        gOffsets.charPointsAdjustY,
         0,
         gCharacterEditorRemainingCharacterPoints,
         0,
@@ -7765,8 +7765,8 @@ static int characterEditorFolderViewInit()
     if (gCharacterEditorFolderViewScrollUpBtn == -1) {
         // Use offsets for scroll up button position
         gCharacterEditorFolderViewScrollUpBtn = buttonCreate(gCharacterEditorWindow,
-            offsets.folderScrollUpButtonX,
-            offsets.folderScrollUpButtonY,
+            gOffsets.folderScrollUpButtonX,
+            gOffsets.folderScrollUpButtonY,
             _editorFrmImages[22].getWidth(),
             _editorFrmImages[22].getHeight(),
             -1, -1, -1, 17000,
@@ -7783,8 +7783,8 @@ static int characterEditorFolderViewInit()
     if (gCharacterEditorFolderViewScrollDownBtn == -1) {
         // Use offsets for scroll down button position
         gCharacterEditorFolderViewScrollDownBtn = buttonCreate(gCharacterEditorWindow,
-            offsets.folderScrollDownButtonX,
-            offsets.folderScrollDownButtonY + _editorFrmImages[22].getHeight(),
+            gOffsets.folderScrollDownButtonX,
+            gOffsets.folderScrollDownButtonY + _editorFrmImages[22].getHeight(),
             _editorFrmImages[4].getWidth(),
             _editorFrmImages[4].getHeight(),
             -1, -1, -1,
@@ -7845,12 +7845,12 @@ static void characterEditorFolderViewScroll(int direction)
     if (characterEditorSelectedItem >= 10 && characterEditorSelectedItem < 43) {
         // Use offsets for card background position
         blitBufferToBuffer(
-            _editorBackgroundFrmImage.getData() + offsets.windowWidth * offsets.cardBackgroundY + offsets.cardBackgroundX,
-            offsets.cardBackgroundWidth,
+            _editorBackgroundFrmImage.getData() + gOffsets.windowWidth * gOffsets.cardBackgroundY + gOffsets.cardBackgroundX,
+            gOffsets.cardBackgroundWidth,
             170,
-            offsets.windowWidth,
-            gCharacterEditorWindowBuffer + offsets.windowWidth * offsets.cardBackgroundY + offsets.cardBackgroundX,
-            offsets.windowWidth);
+            gOffsets.windowWidth,
+            gCharacterEditorWindowBuffer + gOffsets.windowWidth * gOffsets.cardBackgroundY + gOffsets.cardBackgroundX,
+            gOffsets.windowWidth);
         characterEditorDrawCardWithOptions(gCharacterEditorFolderCardFrmId, gCharacterEditorFolderCardTitle, gCharacterEditorFolderCardSubtitle, gCharacterEditorFolderCardDescription);
     }
 }
@@ -7862,7 +7862,7 @@ static void characterEditorFolderViewClear()
 
     gCharacterEditorFolderViewCurrentLine = 0;
     // Use offset for folder view start Y position
-    gCharacterEditorFolderViewNextY = offsets.folderViewStartY;
+    gCharacterEditorFolderViewNextY = gOffsets.folderViewStartY;
 
     v0 = fontGetLineHeight();
 
@@ -7905,7 +7905,7 @@ static int characterEditorFolderViewDrawHeading(const char* string)
             }
             lineHeight = fontGetLineHeight();
             // Use folder background width for calculations
-            x = offsets.folderBackgroundWidth;
+            x = gOffsets.folderBackgroundWidth;
             y = gCharacterEditorFolderViewNextY + lineHeight / 2;
             if (string != nullptr) {
                 gap = fontGetLetterSpacing();
@@ -7914,24 +7914,24 @@ static int characterEditorFolderViewDrawHeading(const char* string)
                 // Center the heading within the folder background
                 x = (x - lineLen) / 2;
                 // Draw heading text using folder text X offset
-                fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * gCharacterEditorFolderViewNextY + offsets.folderTextX + x + gap * 2,
+                fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gCharacterEditorFolderViewNextY + gOffsets.folderTextX + x + gap * 2,
                     string,
-                    offsets.windowWidth,
-                    offsets.windowWidth,
+                    gOffsets.windowWidth,
+                    gOffsets.windowWidth,
                     _colorTable[992]);
                 // Draw right segment of the divider line
                 windowDrawLine(gCharacterEditorWindow,
-                    offsets.folderTextX + x + lineLen,
+                    gOffsets.folderTextX + x + lineLen,
                     y,
-                    offsets.folderTextX + offsets.folderBackgroundWidth,
+                    gOffsets.folderTextX + gOffsets.folderBackgroundWidth,
                     y,
                     _colorTable[992]);
             }
             // Draw left segment of the divider line
             windowDrawLine(gCharacterEditorWindow,
-                offsets.folderTextX,
+                gOffsets.folderTextX,
                 y,
-                offsets.folderTextX + x,
+                gOffsets.folderTextX + x,
                 y,
                 _colorTable[992]);
             gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
@@ -7959,10 +7959,10 @@ static bool characterEditorFolderViewDrawString(const char* string)
             }
 
             // Use folder text X offset
-            fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * gCharacterEditorFolderViewNextY + offsets.folderTextX,
+            fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gCharacterEditorFolderViewNextY + gOffsets.folderTextX,
                 string,
-                offsets.windowWidth,
-                offsets.windowWidth,
+                gOffsets.windowWidth,
+                gOffsets.windowWidth,
                 color);
             gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
         }
@@ -7997,26 +7997,26 @@ static bool characterEditorFolderViewDrawKillsEntry(const char* name, int kills)
             int v11 = gCharacterEditorFolderViewNextY + fontGetLineHeight() / 2;
 
             // Use folder text X offset
-            fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * gCharacterEditorFolderViewNextY + offsets.folderTextX,
+            fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gCharacterEditorFolderViewNextY + gOffsets.folderTextX,
                 name,
-                offsets.windowWidth,
-                offsets.windowWidth,
+                gOffsets.windowWidth,
+                gOffsets.windowWidth,
                 color);
 
             int v12 = fontGetStringWidth(name);
             // Calculate positions using folder text X and background width
             windowDrawLine(gCharacterEditorWindow,
-                offsets.folderTextX + v12 + gap,
+                gOffsets.folderTextX + v12 + gap,
                 v11,
-                offsets.folderTextX + offsets.folderBackgroundWidth - v6 - gap,
+                gOffsets.folderTextX + gOffsets.folderBackgroundWidth - v6 - gap,
                 v11,
                 color);
 
             // Use folder kills number X offset
-            fontDrawText(gCharacterEditorWindowBuffer + offsets.windowWidth * gCharacterEditorFolderViewNextY + offsets.folderKillsNumberX - v6,
+            fontDrawText(gCharacterEditorWindowBuffer + gOffsets.windowWidth * gCharacterEditorFolderViewNextY + gOffsets.folderKillsNumberX - v6,
                 killsString,
-                offsets.windowWidth,
-                offsets.windowWidth,
+                gOffsets.windowWidth,
+                gOffsets.windowWidth,
                 color);
             gCharacterEditorFolderViewNextY += gCharacterEditorFolderViewOffsetY;
         }
