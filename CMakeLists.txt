@@ -32,6 +32,10 @@ else()
     add_executable(${EXECUTABLE_NAME} WIN32 MACOSX_BUNDLE)
 endif()
 
+if(MSVC)
+  target_compile_options(${EXECUTABLE_NAME} PRIVATE /EHsc)
+endif()
+
 # Git Info
 include("cmake/gitver.cmake")
 
