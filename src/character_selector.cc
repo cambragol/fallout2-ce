@@ -102,7 +102,7 @@ static PremadeCharacterDescription gPremadeCharacterDescriptions[PREMADE_CHARACT
 };
 
 // Added for offsets handling
-CharacterSelectorOffsets gOffsets;
+static CharacterSelectorOffsets gOffsets;
 
 const CharacterSelectorOffsets gCharSelectorOffsets640 = {
     // Window

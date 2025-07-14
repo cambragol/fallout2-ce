@@ -370,12 +370,7 @@ static int gPreferencesGameDifficulty1;
 static int gPreferencesCombatLooks1;
 
 // Added for offsets handling
-PreferencesOffsets gCurrentPreferencesOffsets;
-
-// Added for widescreen background handling
-static Art* gPreferencesBackgroundArt = nullptr;
-static FrmImage _preferencesBackgroundFrmImage;
-static unsigned char* gPreferencesBackgroundData = nullptr;
+static PreferencesOffsets gOffsets;
 
 // 0x5197F8
 static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
@@ -896,9 +891,21 @@ int preferencesInit()
         gPreferenceDescriptions[index].direction = 0;
     }
 
+    // Check if we should write defaults
+    int writeOffsets = 0;
+    if (configGetInt(&gGameConfig, "debug", "write_offsets", &writeOffsets) && writeOffsets) {
+        preferencesWriteDefaultOffsetsToConfig(false, &gPreferencesOffsets640);
+        preferencesWriteDefaultOffsetsToConfig(true, &gPreferencesOffsets800);
+        configSetInt(&gGameConfig, "debug", "write_offsets", 0);
+        gameConfigSave();
+    }
+
+    // Set widescreen - must be wider in both axis and set to widescreen
+    const bool isWidescreen = gameIsWidescreen();
+
     // Load preferences from config
-    if (!preferencesLoadOffsetsFromConfig(&gCurrentPreferencesOffsets, gameIsWidescreen())) {
-        gCurrentPreferencesOffsets = gameIsWidescreen() ? gPreferencesOffsets800 : gPreferencesOffsets640;
+    if (!preferencesLoadOffsetsFromConfig(&gOffsets, gameIsWidescreen())) {
+        gOffsets = gameIsWidescreen() ? gPreferencesOffsets800 : gPreferencesOffsets640;
     }
 
     _SetSystemPrefs();
@@ -1068,11 +1075,10 @@ static void _UpdateThing(int index)
     fontSetCurrent(101);
 
     PreferenceDescription* meta = &(gPreferenceDescriptions[index]);
-    const PreferencesOffsets& offsets = gCurrentPreferencesOffsets;
-    int pitch = offsets.width; // Use offset width for pitch
+    int pitch = gOffsets.width; // Use offset width for pitch
 
     // Get position from offsets struct instead of meta
-    Point pos = offsets.preferencePositions[index];
+    Point pos = gOffsets.preferencePositions[index];
     int knobX = pos.x;
     int knobY = pos.y;
 
@@ -1080,13 +1086,13 @@ static void _UpdateThing(int index)
         int primaryOptionIndex = index - FIRST_PRIMARY_PREF;
 
         int localOffsets[PRIMARY_PREF_COUNT];
-        memcpy(localOffsets, offsets.primaryLabelYValues, sizeof(localOffsets));
+        memcpy(localOffsets, gOffsets.primaryLabelYValues, sizeof(localOffsets));
 
-        blitBufferToBuffer(gPreferencesBackgroundData + pitch * localOffsets[primaryOptionIndex] + offsets.labelX[0],
-            offsets.primaryBlitWidth,
-            offsets.primaryBlitHeight,
+        blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * localOffsets[primaryOptionIndex] + gOffsets.labelX[0],
+            gOffsets.primaryBlitWidth,
+            gOffsets.primaryBlitHeight,
             pitch,
-            gPreferencesWindowBuffer + pitch * localOffsets[primaryOptionIndex] + offsets.labelX[0],
+            gPreferencesWindowBuffer + pitch * localOffsets[primaryOptionIndex] + gOffsets.labelX[0],
             pitch);
 
         for (int valueIndex = 0; valueIndex < meta->valuesCount; valueIndex++) {
@@ -1096,7 +1102,7 @@ static void _UpdateThing(int index)
             strcpy(copy, text);
 
             // Use knobX from offsets instead of meta->knobX
-            int x = knobX + offsets.optionXOffsets[valueIndex];
+            int x = knobX + gOffsets.optionXOffsets[valueIndex];
             int len = fontGetStringWidth(copy);
             switch (valueIndex) {
             case 0:
@@ -1119,7 +1125,7 @@ static void _UpdateThing(int index)
             }
 
             // Use knobY from offsets instead of meta->knobY
-            int y = knobY + offsets.optionYOffsets[valueIndex];
+            int y = knobY + gOffsets.optionYOffsets[valueIndex];
             const char* s;
             if (*p != '\0') {
                 *p = '\0';
@@ -1143,13 +1149,13 @@ static void _UpdateThing(int index)
         int secondaryOptionIndex = index - FIRST_SECONDARY_PREF;
 
         int localOffsets[SECONDARY_PREF_COUNT];
-        memcpy(localOffsets, offsets.secondaryLabelYValues, sizeof(localOffsets));
+        memcpy(localOffsets, gOffsets.secondaryLabelYValues, sizeof(localOffsets));
 
-        blitBufferToBuffer(gPreferencesBackgroundData + pitch * localOffsets[secondaryOptionIndex] + offsets.secondaryLabelX[0],
-            offsets.secondaryBlitWidth,
-            offsets.secondaryBlitHeight,
+        blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * localOffsets[secondaryOptionIndex] + gOffsets.secondaryLabelX[0],
+            gOffsets.secondaryBlitWidth,
+            gOffsets.secondaryBlitHeight,
             pitch,
-            gPreferencesWindowBuffer + pitch * localOffsets[secondaryOptionIndex] + offsets.secondaryLabelX[0],
+            gPreferencesWindowBuffer + pitch * localOffsets[secondaryOptionIndex] + gOffsets.secondaryLabelX[0],
             pitch);
 
         // Secondary options are booleans, so it's index is also it's value.
@@ -1159,11 +1165,11 @@ static void _UpdateThing(int index)
             int x;
             if (value) {
                 // Use knobX from offsets instead of meta->knobX
-                x = knobX + offsets.secondaryOptionXOffsets[value];
+                x = knobX + gOffsets.secondaryOptionXOffsets[value];
                 meta->maxX = x;
             } else {
                 // Use knobX from offsets instead of meta->knobX
-                x = knobX + offsets.secondaryOptionXOffsets[value] - fontGetStringWidth(text);
+                x = knobX + gOffsets.secondaryOptionXOffsets[value] - fontGetStringWidth(text);
                 meta->minX = x;
             }
             // Use knobY from offsets instead of meta->knobY
@@ -1181,19 +1187,19 @@ static void _UpdateThing(int index)
             pitch);
     } else if (index >= FIRST_RANGE_PREF && index <= LAST_RANGE_PREF) {
         // Use knobY from offsets instead of meta->knobY
-        int yPos = knobY + offsets.rangeButtonOffsetY;
-        blitBufferToBuffer(gPreferencesBackgroundData + pitch * yPos + offsets.rangeStartX,
-            offsets.rangeBlitWidth,
-            offsets.rangeBlitHeight,
+        int yPos = knobY + gOffsets.rangeButtonOffsetY;
+        blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * yPos + gOffsets.rangeStartX,
+            gOffsets.rangeBlitWidth,
+            gOffsets.rangeBlitHeight,
             pitch,
-            gPreferencesWindowBuffer + pitch * yPos + offsets.rangeStartX,
+            gPreferencesWindowBuffer + pitch * yPos + gOffsets.rangeStartX,
             pitch);
 
         switch (index) {
         case PREF_COMBAT_SPEED: {
             double value = *meta->valuePtr;
             value = std::clamp(value, 0.0, 50.0);
-            int x = (int)((value - meta->minValue) * offsets.rangeSliderWidth / (meta->maxValue - meta->minValue) + offsets.rangeStartX);
+            int x = (int)((value - meta->minValue) * gOffsets.rangeSliderWidth / (meta->maxValue - meta->minValue) + gOffsets.rangeStartX);
             // Use knobY from offsets instead of meta->knobY
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_OFF].getData(),
                 21, 12, 21,
@@ -1203,7 +1209,7 @@ static void _UpdateThing(int index)
         }
         case PREF_TEXT_BASE_DELAY: {
             gPreferencesTextBaseDelay1 = std::clamp(gPreferencesTextBaseDelay1, 1.0, 6.0);
-            int x = (int)((6.0 - gPreferencesTextBaseDelay1) * offsets.textBaseDelayScale + offsets.rangeStartX);
+            int x = (int)((6.0 - gPreferencesTextBaseDelay1) * gOffsets.textBaseDelayScale + gOffsets.rangeStartX);
             // Use knobY from offsets instead of meta->knobY
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_OFF].getData(),
                 21, 12, 21,
@@ -1222,7 +1228,7 @@ static void _UpdateThing(int index)
         case PREF_SPEECH_VOLUME: {
             double value = *meta->valuePtr;
             value = std::clamp(value, meta->minValue, meta->maxValue);
-            int x = (int)((value - meta->minValue) * offsets.rangeSliderWidth / (meta->maxValue - meta->minValue) + offsets.rangeStartX);
+            int x = (int)((value - meta->minValue) * gOffsets.rangeSliderWidth / (meta->maxValue - meta->minValue) + gOffsets.rangeStartX);
             // Use knobY from offsets instead of meta->knobY
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_OFF].getData(),
                 21, 12, 21,
@@ -1247,7 +1253,7 @@ static void _UpdateThing(int index)
         }
         case PREF_BRIGHTNESS: {
             gPreferencesBrightness1 = std::clamp(gPreferencesBrightness1, 1.0, 1.17999267578125);
-            int x = (int)((gPreferencesBrightness1 - meta->minValue) * (offsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + offsets.rangeStartX);
+            int x = (int)((gPreferencesBrightness1 - meta->minValue) * (gOffsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + gOffsets.rangeStartX);
             // Use knobY from offsets instead of meta->knobY
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_OFF].getData(),
                 21, 12, 21,
@@ -1258,7 +1264,7 @@ static void _UpdateThing(int index)
         }
         case PREF_MOUSE_SENSITIVIY: {
             gPreferencesMouseSensitivity1 = std::clamp(gPreferencesMouseSensitivity1, 1.0, 2.5);
-            int x = (int)((gPreferencesMouseSensitivity1 - meta->minValue) * (offsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + offsets.rangeStartX);
+            int x = (int)((gPreferencesMouseSensitivity1 - meta->minValue) * (gOffsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + gOffsets.rangeStartX);
             // Use knobY from offsets instead of meta->knobY
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_OFF].getData(),
                 21, 12, 21,
@@ -1275,34 +1281,34 @@ static void _UpdateThing(int index)
             int x;
             switch (optionIndex) {
             case 0:
-                x = offsets.rangeLabelX[0];
+                x = gOffsets.rangeLabelX[0];
                 // TODO: Incomplete.
                 break;
             case 1:
                 switch (meta->valuesCount) {
                 case 2:
-                    x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                    x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                     break;
                 case 3:
-                    x = offsets.rangeLabelX[1] - fontGetStringWidth(str) / 2 - 2;
+                    x = gOffsets.rangeLabelX[1] - fontGetStringWidth(str) / 2 - 2;
                     break;
                 case 4:
-                    x = offsets.rangeLabelX[4] + fontGetStringWidth(str) / 2 - 8;
+                    x = gOffsets.rangeLabelX[4] + fontGetStringWidth(str) / 2 - 8;
                     break;
                 }
                 break;
             case 2:
                 switch (meta->valuesCount) {
                 case 3:
-                    x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                    x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                     break;
                 case 4:
-                    x = offsets.rangeLabelX[2] - fontGetStringWidth(str) - 4;
+                    x = gOffsets.rangeLabelX[2] - fontGetStringWidth(str) - 4;
                     break;
                 }
                 break;
             case 3:
-                x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                 break;
             }
             // Use knobY from offsets instead of meta->knobY
@@ -1553,20 +1559,8 @@ static int preferencesWindowInit()
         return -1;
     }
 
-    // Check if we should write defaults
-    int writeOffsets = 0;
-    if (configGetInt(&gGameConfig, "debug", "write_offsets", &writeOffsets) && writeOffsets) {
-        preferencesWriteDefaultOffsetsToConfig(false, &gPreferencesOffsets640);
-        preferencesWriteDefaultOffsetsToConfig(true, &gPreferencesOffsets800);
-        configSetInt(&gGameConfig, "debug", "write_offsets", 0);
-        gameConfigSave();
-    }
-
-    // Set widescreen - must be wider in both axis and set to widescreen
+    // Determine screen mode and load offsets
     const bool isWidescreen = gameIsWidescreen();
-
-    // Load directly into the global variable
-    const PreferencesOffsets& offsets = gCurrentPreferencesOffsets;
 
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", asc_5186C8, "options.msg");
@@ -1579,23 +1573,28 @@ static int preferencesWindowInit()
     _SaveSettings();
 
     for (i = 0; i < PREFERENCES_WINDOW_FRM_COUNT; i++) {
-        fid = buildFid(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], 0, 0, 0);
+        // Use widescreen variants when available
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], "_800", isWidescreen);
+
         if (!_preferencesFrmImages[i].lock(fid)) {
-            while (--i >= 0) {
-                _preferencesFrmImages[i].unlock();
+            fid = buildFid(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], 0, 0, 0);
+            if (!_preferencesFrmImages[i].lock(fid)) {
+                while (--i >= 0) {
+                    _preferencesFrmImages[i].unlock();
+                }
+                return -1;
             }
-            return -1;
         }
     }
 
     _changed = false;
 
-    int preferencesWindowX = (screenGetWidth() - offsets.width) / 2;
-    int preferencesWindowY = (screenGetHeight() - offsets.height) / 2;
+    int preferencesWindowX = (screenGetWidth() - gOffsets.width) / 2;
+    int preferencesWindowY = (screenGetHeight() - gOffsets.height) / 2;
     gPreferencesWindow = windowCreate(preferencesWindowX,
         preferencesWindowY,
-        offsets.width,
-        offsets.height,
+        gOffsets.width,
+        gOffsets.height,
         256,
         WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
     if (gPreferencesWindow == -1) {
@@ -1607,83 +1606,49 @@ static int preferencesWindowInit()
 
     gPreferencesWindowBuffer = windowGetBuffer(gPreferencesWindow);
 
-    // Release previous background resources
-    if (gPreferencesBackgroundArt) {
-        internal_free(gPreferencesBackgroundArt); // Handles ART from artLoad
-        gPreferencesBackgroundArt = nullptr;
-    }
-    _preferencesBackgroundFrmImage.unlock(); // Handles FRM fallback
-    gPreferencesBackgroundData = nullptr;
-
-    // Try loading widescreen ART from file
-    if (isWidescreen) {
-        char path[COMPAT_MAX_PATH];
-        snprintf(path, sizeof(path), "art\\intrface\\PREFSCRN_800.frm");
-        gPreferencesBackgroundArt = artLoad(path);
-
-        if (gPreferencesBackgroundArt) {
-            // DIRECT access - no locking needed for artLoad-ed files
-            gPreferencesBackgroundData = artGetFrameData(gPreferencesBackgroundArt, 0, 0);
-        }
-    }
-
-    // Fallback to standard FRM (which does need locking)
-    if (!gPreferencesBackgroundData) {
-        int fid = buildFid(OBJ_TYPE_INTERFACE, 240, 0, 0, 0);
-        if (_preferencesBackgroundFrmImage.lock(fid)) {
-            gPreferencesBackgroundData = _preferencesBackgroundFrmImage.getData();
-        }
-    }
-
-    if (!gPreferencesBackgroundData) {
-        // Log error if possible
-        debugPrint("Failed to load preferences background!\n");
-        return -1;
-    }
-
     // Copy to window buffer
-    memcpy(gPreferencesWindowBuffer, gPreferencesBackgroundData, offsets.width * offsets.height);
+    memcpy(gPreferencesWindowBuffer, _preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData(), gOffsets.width * gOffsets.height);
 
     fontSetCurrent(104);
 
     messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, 100);
-    fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.titleTextY + offsets.titleTextX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.titleTextY + gOffsets.titleTextX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
 
     fontSetCurrent(103);
 
     messageItemId = 101;
     for (i = 0; i < PRIMARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
-        x = offsets.primLabelColX - fontGetStringWidth(messageItemText) / 2;
-        fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.row1Ytab[i] + x, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+        x = gOffsets.primLabelColX - fontGetStringWidth(messageItemText) / 2;
+        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row1Ytab[i] + x, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
     for (i = 0; i < SECONDARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
-        fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.row2Ytab[i] + offsets.secLabelColX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2Ytab[i] + gOffsets.secLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
     for (i = 0; i < RANGE_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
-        fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.row3Ytab[i] + offsets.rangLabelColX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row3Ytab[i] + gOffsets.rangLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
     // DEFAULT
     messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, 120);
-    fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.defaultLabelY + offsets.defaultLabelX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.defaultLabelY + gOffsets.defaultLabelX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
 
     // DONE
     messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, 4);
-    fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.doneLabelY + offsets.doneLabelX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.doneLabelY + gOffsets.doneLabelX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
 
     // CANCEL
     messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, 121);
-    fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.cancelLabelY + offsets.cancelLabelX, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.cancelLabelY + gOffsets.cancelLabelX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
 
     // Affect player speed
     fontSetCurrent(101);
     messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, 122);
-    fontDrawText(gPreferencesWindowBuffer + offsets.width * offsets.speedLabelX + offsets.speedLabelY, messageItemText, offsets.width, offsets.width, _colorTable[18979]);
+    fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.speedLabelX + gOffsets.speedLabelY, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
 
     for (i = 0; i < PREF_COUNT; i++) {
         _UpdateThing(i);
@@ -1696,15 +1661,15 @@ static int preferencesWindowInit()
         int mouseUpEventCode;
 
         // Get the position from our offset struct - this is resolution-aware
-        Point pos = offsets.preferencePositions[i];
+        Point pos = gOffsets.preferencePositions[i];
         int knobX = pos.x;
         int knobY = pos.y;
 
         if (i >= FIRST_RANGE_PREF) {
             // Range preferences (sliders)
-            x = offsets.rangeStartX;
-            y = knobY + offsets.rangeButtonOffsetY;
-            width = offsets.rangeBlitWidth;
+            x = gOffsets.rangeStartX;
+            y = knobY + gOffsets.rangeButtonOffsetY;
+            width = gOffsets.rangeBlitWidth;
             height = 23;
             mouseEnterEventCode = 526;
             mouseExitEventCode = 526;
@@ -1713,9 +1678,9 @@ static int preferencesWindowInit()
         } else if (i >= FIRST_SECONDARY_PREF) {
             // Secondary preferences (toggle buttons)
             // Use offset-based values instead of gPreferenceDescriptions
-            x = knobX + offsets.secondaryOptionXOffsets[0];
-            y = knobY + offsets.secondaryButtonOffsetY;
-            width = (knobX + offsets.secondaryOptionXOffsets[1]) - x;
+            x = knobX + gOffsets.secondaryOptionXOffsets[0];
+            y = knobY + gOffsets.secondaryButtonOffsetY;
+            width = (knobX + gOffsets.secondaryOptionXOffsets[1]) - x;
             height = 28;
             mouseEnterEventCode = -1;
             mouseExitEventCode = -1;
@@ -1724,9 +1689,9 @@ static int preferencesWindowInit()
         } else {
             // Primary preferences (multi-option knobs)
             // Use offset-based values instead of gPreferenceDescriptions
-            x = knobX + offsets.optionXOffsets[0];
-            y = knobY + offsets.primaryButtonOffsetY;
-            width = (knobX + offsets.optionXOffsets[3]) - x;
+            x = knobX + gOffsets.optionXOffsets[0];
+            y = knobY + gOffsets.primaryButtonOffsetY;
+            width = (knobX + gOffsets.optionXOffsets[3]) - x;
             height = 48;
             mouseEnterEventCode = -1;
             mouseExitEventCode = -1;
@@ -1743,8 +1708,8 @@ static int preferencesWindowInit()
 
     // Player Speed Checkbox
     _plyrspdbid = buttonCreate(gPreferencesWindow,
-        offsets.playerSpeedCheckboxX,
-        offsets.playerSpeedCheckboxY,
+        gOffsets.playerSpeedCheckboxX,
+        gOffsets.playerSpeedCheckboxY,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_OFF].getWidth(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getHeight(),
         -1,
@@ -1762,8 +1727,8 @@ static int preferencesWindowInit()
 
     // DEFAULT Button
     btn = buttonCreate(gPreferencesWindow,
-        offsets.defaultButtonX,
-        offsets.defaultButtonY,
+        gOffsets.defaultButtonX,
+        gOffsets.defaultButtonY,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getWidth(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getHeight(),
         -1,
@@ -1780,8 +1745,8 @@ static int preferencesWindowInit()
 
     // DONE Button
     btn = buttonCreate(gPreferencesWindow,
-        offsets.doneButtonX,
-        offsets.doneButtonY,
+        gOffsets.doneButtonX,
+        gOffsets.doneButtonY,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getWidth(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getHeight(),
         -1,
@@ -1798,8 +1763,8 @@ static int preferencesWindowInit()
 
     // CANCEL Button
     btn = buttonCreate(gPreferencesWindow,
-        offsets.cancelButtonX,
-        offsets.cancelButtonY,
+        gOffsets.cancelButtonX,
+        gOffsets.cancelButtonY,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getWidth(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getHeight(),
         -1,
@@ -1830,16 +1795,7 @@ static int preferencesWindowFree()
     }
 
     windowDestroy(gPreferencesWindow);
-
-    // Clean up custom art if used
-    if (gPreferencesBackgroundArt != nullptr) {
-        internal_free(gPreferencesBackgroundArt);
-        gPreferencesBackgroundArt = nullptr;
-    }
     
-    _preferencesBackgroundFrmImage.unlock(); // Handles FRM fallback
-    gPreferencesBackgroundData = nullptr;
-
     for (int index = 0; index < PREFERENCES_WINDOW_FRM_COUNT; index++) {
         _preferencesFrmImages[index].unlock();
     }
@@ -1941,8 +1897,6 @@ static void _DoThing(int eventCode)
     int x;
     int y;
     mouseGetPositionInWindow(gPreferencesWindow, &x, &y);
-
-    const PreferencesOffsets& offsets = gCurrentPreferencesOffsets;
     
     // This preference index also contains out-of-bounds value 19,
     // which is the only preference expressed as checkbox.
@@ -1950,25 +1904,25 @@ static void _DoThing(int eventCode)
 
     if (preferenceIndex >= FIRST_PRIMARY_PREF && preferenceIndex <= LAST_PRIMARY_PREF) {
         PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
-        Point pos = offsets.preferencePositions[preferenceIndex];  // Get position directly
+        Point pos = gOffsets.preferencePositions[preferenceIndex];  // Get position directly
         int* valuePtr = meta->valuePtr;
         int value = *valuePtr;
         bool valueChanged = false;
 
         // Use hit detection offsets from struct with direct position
-        int v1 = pos.x + offsets.primaryKnobHitX;
-        int v2 = pos.y + offsets.primaryKnobHitY;
+        int v1 = pos.x + gOffsets.primaryKnobHitX;
+        int v2 = pos.y + gOffsets.primaryKnobHitY;
 
         if (sqrt(pow((double)x - (double)v1, 2) + pow((double)y - (double)v2, 2)) > 16.0) {
             if (y > pos.y) {
-                int v14 = pos.y + offsets.optionYOffsets[0];
+                int v14 = pos.y + gOffsets.optionYOffsets[0];
                 if (y >= v14 && y <= v14 + fontGetLineHeight()) {
                     if (x >= meta->minX && x <= pos.x) {
                         *valuePtr = 0;
                         meta->direction = 0;
                         valueChanged = true;
                     } else {
-                        if (meta->valuesCount >= 3 && x >= pos.x + offsets.optionXOffsets[2] && x <= meta->maxX) {
+                        if (meta->valuesCount >= 3 && x >= pos.x + gOffsets.optionXOffsets[2] && x <= meta->maxX) {
                             *valuePtr = 2;
                             meta->direction = 0;
                             valueChanged = true;
@@ -1976,7 +1930,7 @@ static void _DoThing(int eventCode)
                     }
                 }
             } else {
-                if (x >= pos.x + offsets.primaryButtonMinXOffset && x <= pos.x + offsets.primaryButtonMaxXOffset) {
+                if (x >= pos.x + gOffsets.primaryButtonMinXOffset && x <= pos.x + gOffsets.primaryButtonMaxXOffset) {
                     *valuePtr = 1;
                     if (value != 0) {
                         meta->direction = 1;
@@ -1988,8 +1942,8 @@ static void _DoThing(int eventCode)
             }
 
             if (meta->valuesCount == 4) {
-                int v19 = pos.y + offsets.optionYOffsets[3];
-                if (y >= v19 && y <= v19 + 2 * fontGetLineHeight() && x >= pos.x + offsets.optionXOffsets[3] && x <= meta->maxX) {
+                int v19 = pos.y + gOffsets.optionYOffsets[3];
+                if (y >= v19 && y <= v19 + 2 * fontGetLineHeight() && x >= pos.x + gOffsets.optionXOffsets[3] && x <= meta->maxX) {
                     *valuePtr = 3;
                     meta->direction = 1;
                     valueChanged = true;
@@ -2026,14 +1980,14 @@ static void _DoThing(int eventCode)
         }
     } else if (preferenceIndex >= FIRST_SECONDARY_PREF && preferenceIndex <= LAST_SECONDARY_PREF) {
         PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
-        Point pos = offsets.preferencePositions[preferenceIndex];  // Get position directly
+        Point pos = gOffsets.preferencePositions[preferenceIndex];  // Get position directly
         int* valuePtr = meta->valuePtr;
         int value = *valuePtr;
         bool valueChanged = false;
 
         // Use hit detection offsets from struct with direct position
-        int v1 = pos.x + offsets.secondaryKnobHitX;
-        int v2 = pos.y + offsets.secondaryKnobHitY;
+        int v1 = pos.x + gOffsets.secondaryKnobHitX;
+        int v2 = pos.y + gOffsets.secondaryKnobHitY;
 
         if (sqrt(pow((double)x - (double)v1, 2) + pow((double)y - (double)v2, 2)) > 10.0) {
             int v23 = pos.y - 5;
@@ -2041,7 +1995,7 @@ static void _DoThing(int eventCode)
                 if (x >= meta->minX && x <= pos.x) {
                     *valuePtr = preferenceIndex == PREF_COMBAT_MESSAGES ? 1 : 0;
                     valueChanged = true;
-                } else if (x >= pos.x + offsets.secondaryButtonXOffset && x <= meta->maxX) {
+                } else if (x >= pos.x + gOffsets.secondaryButtonXOffset && x <= meta->maxX) {
                     *valuePtr = preferenceIndex == PREF_COMBAT_MESSAGES ? 0 : 1;
                     valueChanged = true;
                 }
@@ -2084,17 +2038,17 @@ static void _DoThing(int eventCode)
         }
 
         // Calculate initial slider position
-        Point pos = offsets.preferencePositions[preferenceIndex];  // Get position directly
-        int v31 = (int)(value - meta->minValue) * (offsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + offsets.rangeStartX;
-        int pitch = offsets.width;
+        Point pos = gOffsets.preferencePositions[preferenceIndex];  // Get position directly
+        int v31 = (int)(value - meta->minValue) * (gOffsets.rangeSliderWidth / (meta->maxValue - meta->minValue)) + gOffsets.rangeStartX;
+        int pitch = gOffsets.width;
 
         // Restore background for slider track ONLY (12px tall)
         blitBufferToBuffer(
-            gPreferencesBackgroundData + pitch * pos.y + offsets.rangeStartX, // Use direct Y position
-            offsets.rangeBlitWidth, // 240 (640) or 300 (800)
+            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * pos.y + gOffsets.rangeStartX, // Use direct Y position
+            gOffsets.rangeBlitWidth, // 240 (640) or 300 (800)
             12, // Fixed track height (matches knob)
             pitch,
-            gPreferencesWindowBuffer + pitch * pos.y + offsets.rangeStartX,
+            gPreferencesWindowBuffer + pitch * pos.y + gOffsets.rangeStartX,
             pitch);
 
         // Draw slider knob at calculated position
@@ -2126,18 +2080,18 @@ static void _DoThing(int eventCode)
                 return;
             }
 
-            if (v31 + offsets.rangeThumbRightOffset > x) {
-                if (v31 + offsets.rangeThumbLeftOffset > x) {
-                    v31 = x - offsets.rangeThumbLeftOffset;
-                    if (v31 < offsets.rangeSliderMinX) {
-                        v31 = offsets.rangeSliderMinX;
+            if (v31 + gOffsets.rangeThumbRightOffset > x) {
+                if (v31 + gOffsets.rangeThumbLeftOffset > x) {
+                    v31 = x - gOffsets.rangeThumbLeftOffset;
+                    if (v31 < gOffsets.rangeSliderMinX) {
+                        v31 = gOffsets.rangeSliderMinX;
                     }
                 }
             } else {
                 // FIXED: Use offset instead of hardcoded 6
-                v31 = x - offsets.rangeThumbLeftOffset;
-                if (v31 > offsets.rangeSliderMaxX) {
-                    v31 = offsets.rangeSliderMaxX;
+                v31 = x - gOffsets.rangeThumbLeftOffset;
+                if (v31 > gOffsets.rangeSliderMaxX) {
+                    v31 = gOffsets.rangeSliderMaxX;
                 }
             }
 
@@ -2145,10 +2099,10 @@ static void _DoThing(int eventCode)
             double newValue;
             if (preferenceIndex == PREF_TEXT_BASE_DELAY) {
                 // Inverted calculation for text delay (1.0-6.0 range)
-                newValue = 6.0 - (((double)v31 - (double)offsets.rangeSliderMinX) * 5.0 / offsets.rangeSliderWidth);
+                newValue = 6.0 - (((double)v31 - (double)gOffsets.rangeSliderMinX) * 5.0 / gOffsets.rangeSliderWidth);
             } else {
                 // Standard calculation for other sliders
-                newValue = ((double)v31 - (double)offsets.rangeSliderMinX) * (meta->maxValue - meta->minValue) / offsets.rangeSliderWidth + meta->minValue;
+                newValue = ((double)v31 - (double)gOffsets.rangeSliderMinX) * (meta->maxValue - meta->minValue) / gOffsets.rangeSliderWidth + meta->minValue;
             }
 
             int v52 = 0;
@@ -2203,13 +2157,13 @@ static void _DoThing(int eventCode)
 
             if (v52) {
                 // Volume sliders - restore background including labels
-                int off = offsets.width * (pos.y - 12) + offsets.rangeStartX;  // Use direct Y position
-                blitBufferToBuffer(gPreferencesBackgroundData + off,
-                    offsets.rangeBlitWidth,
+                int off = gOffsets.width * (pos.y - 12) + gOffsets.rangeStartX;  // Use direct Y position
+                blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + off,
+                    gOffsets.rangeBlitWidth,
                     24,
-                    offsets.width,
+                    gOffsets.width,
                     gPreferencesWindowBuffer + off,
-                    offsets.width);
+                    gOffsets.width);
 
                 for (int optionIndex = 0; optionIndex < meta->valuesCount; optionIndex++) {
                     const char* str = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[optionIndex]);
@@ -2217,33 +2171,33 @@ static void _DoThing(int eventCode)
                     int x;
                     switch (optionIndex) {
                     case 0:
-                        x = offsets.rangeLabelX[0];
+                        x = gOffsets.rangeLabelX[0];
                         break;
                     case 1:
                         switch (meta->valuesCount) {
                         case 2:
-                            x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                            x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                             break;
                         case 3:
-                            x = offsets.rangeLabelX[1] - fontGetStringWidth(str) / 2 - 2;
+                            x = gOffsets.rangeLabelX[1] - fontGetStringWidth(str) / 2 - 2;
                             break;
                         case 4:
-                            x = offsets.rangeLabelX[4] + fontGetStringWidth(str) / 2 - 8;
+                            x = gOffsets.rangeLabelX[4] + fontGetStringWidth(str) / 2 - 8;
                             break;
                         }
                         break;
                     case 2:
                         switch (meta->valuesCount) {
                         case 3:
-                            x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                            x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                             break;
                         case 4:
-                            x = offsets.rangeLabelX[2] - fontGetStringWidth(str) - 4;
+                            x = gOffsets.rangeLabelX[2] - fontGetStringWidth(str) - 4;
                             break;
                         }
                         break;
                     case 3:
-                        x = offsets.rangeLabelX[3] - fontGetStringWidth(str);
+                        x = gOffsets.rangeLabelX[3] - fontGetStringWidth(str);
                         break;
                     }
                     fontDrawText(gPreferencesWindowBuffer + pitch * (pos.y - 12) + x,
@@ -2251,13 +2205,13 @@ static void _DoThing(int eventCode)
                 }
             } else {
                 // Non-volume sliders - restore only slider track
-                int off = offsets.width * pos.y + offsets.rangeStartX;
-                blitBufferToBuffer(gPreferencesBackgroundData + off,
-                    offsets.rangeBlitWidth,
+                int off = gOffsets.width * pos.y + gOffsets.rangeStartX;
+                blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + off,
+                    gOffsets.rangeBlitWidth,
                     12,
-                    offsets.width,
+                    gOffsets.width,
                     gPreferencesWindowBuffer + off,
-                    offsets.width);
+                    gOffsets.width);
             }
 
             blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_KNOB_ON].getData(),
