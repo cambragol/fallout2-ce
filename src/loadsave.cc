@@ -2261,7 +2261,8 @@ static void _ShowSlotList(int windowType)
     int y = 87;
     int startIndex = _currentSlotPage * slotsPerPage;
     int endIndex = startIndex + slotsPerPage;
-    if (endIndex > saveLoadTotalSlots) endIndex = saveLoadTotalSlots;
+    if (endIndex > saveLoadTotalSlots)
+        endIndex = saveLoadTotalSlots;
 
     for (int index = startIndex; index < endIndex; index++) {
         int color = index == _slot_cursor ? _colorTable[32747] : _colorTable[992];

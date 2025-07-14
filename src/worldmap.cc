@@ -1093,35 +1093,55 @@ int wmWorldMap_save(File* stream)
     EncounterTable* encounter_table;
     EncounterTableEntry* encounter_entry;
 
-    if (fileWriteBool(stream, wmGenData.didMeetFrankHorrigan) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.currentAreaId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.worldPosX) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.worldPosY) == -1) return -1;
-    if (fileWriteBool(stream, wmGenData.encounterIconIsVisible) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterMapId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterTableId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterEntryId) == -1) return -1;
-    if (fileWriteBool(stream, wmGenData.isInCar) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.currentCarAreaId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.carFuel) == -1) return -1;
-    if (fileWriteInt32(stream, wmMaxAreaNum) == -1) return -1;
+    if (fileWriteBool(stream, wmGenData.didMeetFrankHorrigan) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.currentAreaId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.worldPosX) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.worldPosY) == -1)
+        return -1;
+    if (fileWriteBool(stream, wmGenData.encounterIconIsVisible) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterMapId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterTableId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterEntryId) == -1)
+        return -1;
+    if (fileWriteBool(stream, wmGenData.isInCar) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.currentCarAreaId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.carFuel) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmMaxAreaNum) == -1)
+        return -1;
 
     for (int areaIdx = 0; areaIdx < wmMaxAreaNum; areaIdx++) {
         CityInfo* cityInfo = &(wmAreaInfoList[areaIdx]);
-        if (fileWriteInt32(stream, cityInfo->x) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->y) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->state) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->visitedState) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->entrancesLength) == -1) return -1;
+        if (fileWriteInt32(stream, cityInfo->x) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->y) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->state) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->visitedState) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->entrancesLength) == -1)
+            return -1;
 
         for (int entranceIdx = 0; entranceIdx < cityInfo->entrancesLength; entranceIdx++) {
             EntranceInfo* entrance = &(cityInfo->entrances[entranceIdx]);
-            if (fileWriteInt32(stream, entrance->state) == -1) return -1;
+            if (fileWriteInt32(stream, entrance->state) == -1)
+                return -1;
         }
     }
 
-    if (fileWriteInt32(stream, wmMaxTileNum) == -1) return -1;
-    if (fileWriteInt32(stream, wmNumHorizontalTiles) == -1) return -1;
+    if (fileWriteInt32(stream, wmMaxTileNum) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmNumHorizontalTiles) == -1)
+        return -1;
 
     for (int tileIndex = 0; tileIndex < wmMaxTileNum; tileIndex++) {
         TileInfo* tileInfo = &(wmTileInfoList[tileIndex]);
@@ -1130,7 +1150,8 @@ int wmWorldMap_save(File* stream)
             for (int row = 0; row < SUBTILE_GRID_WIDTH; row++) {
                 SubtileInfo* subtile = &(tileInfo->subtiles[column][row]);
 
-                if (fileWriteInt32(stream, subtile->state) == -1) return -1;
+                if (fileWriteInt32(stream, subtile->state) == -1)
+                    return -1;
             }
         }
     }
@@ -1148,7 +1169,8 @@ int wmWorldMap_save(File* stream)
         }
     }
 
-    if (fileWriteInt32(stream, k) == -1) return -1;
+    if (fileWriteInt32(stream, k) == -1)
+        return -1;
 
     for (i = 0; i < wmMaxEncounterInfoTables; i++) {
         encounter_table = &(wmEncounterTableList[i]);
@@ -1157,9 +1179,12 @@ int wmWorldMap_save(File* stream)
             encounter_entry = &(encounter_table->entries[j]);
 
             if (encounter_entry->counter != -1) {
-                if (fileWriteInt32(stream, i) == -1) return -1;
-                if (fileWriteInt32(stream, j) == -1) return -1;
-                if (fileWriteInt32(stream, encounter_entry->counter) == -1) return -1;
+                if (fileWriteInt32(stream, i) == -1)
+                    return -1;
+                if (fileWriteInt32(stream, j) == -1)
+                    return -1;
+                if (fileWriteInt32(stream, encounter_entry->counter) == -1)
+                    return -1;
             }
         }
     }
@@ -1170,28 +1195,44 @@ int wmWorldMap_save(File* stream)
 // 0x4BD28C
 int wmWorldMap_load(File* stream)
 {
-    if (fileReadBool(stream, &(wmGenData.didMeetFrankHorrigan)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.currentAreaId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.worldPosX)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.worldPosY)) == -1) return -1;
-    if (fileReadBool(stream, &(wmGenData.encounterIconIsVisible)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterMapId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterTableId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterEntryId)) == -1) return -1;
-    if (fileReadBool(stream, &(wmGenData.isInCar)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.currentCarAreaId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.carFuel)) == -1) return -1;
+    if (fileReadBool(stream, &(wmGenData.didMeetFrankHorrigan)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.currentAreaId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.worldPosX)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.worldPosY)) == -1)
+        return -1;
+    if (fileReadBool(stream, &(wmGenData.encounterIconIsVisible)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterMapId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterTableId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterEntryId)) == -1)
+        return -1;
+    if (fileReadBool(stream, &(wmGenData.isInCar)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.currentCarAreaId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.carFuel)) == -1)
+        return -1;
 
     int numCities;
-    if (fileReadInt32(stream, &numCities) == -1) return -1;
+    if (fileReadInt32(stream, &numCities) == -1)
+        return -1;
 
     for (int areaIdx = 0; areaIdx < numCities; areaIdx++) {
         CityInfo* city = &(wmAreaInfoList[areaIdx]);
 
-        if (fileReadInt32(stream, &(city->x)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->y)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->state)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->visitedState)) == -1) return -1;
+        if (fileReadInt32(stream, &(city->x)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->y)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->state)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->visitedState)) == -1)
+            return -1;
 
         int entranceCount;
         if (fileReadInt32(stream, &(entranceCount)) == -1) {
@@ -1208,10 +1249,12 @@ int wmWorldMap_load(File* stream)
     }
 
     int numTiles;
-    if (fileReadInt32(stream, &numTiles) == -1) return -1;
+    if (fileReadInt32(stream, &numTiles) == -1)
+        return -1;
 
     int numHorizontalTiles;
-    if (fileReadInt32(stream, &numHorizontalTiles) == -1) return -1;
+    if (fileReadInt32(stream, &numHorizontalTiles) == -1)
+        return -1;
 
     for (int tileIndex = 0; tileIndex < numTiles; tileIndex++) {
         TileInfo* tile = &(wmTileInfoList[tileIndex]);
@@ -1220,25 +1263,30 @@ int wmWorldMap_load(File* stream)
             for (int row = 0; row < SUBTILE_GRID_WIDTH; row++) {
                 SubtileInfo* subtile = &(tile->subtiles[column][row]);
 
-                if (fileReadInt32(stream, &(subtile->state)) == -1) return -1;
+                if (fileReadInt32(stream, &(subtile->state)) == -1)
+                    return -1;
             }
         }
     }
 
     int numCounters;
-    if (fileReadInt32(stream, &numCounters) == -1) return -1;
+    if (fileReadInt32(stream, &numCounters) == -1)
+        return -1;
 
     for (int counterIdx = 0; counterIdx < numCounters; counterIdx++) {
         int encounterTableIdx;
         int encounterTableEntryIdx;
 
-        if (fileReadInt32(stream, &encounterTableIdx) == -1) return -1;
+        if (fileReadInt32(stream, &encounterTableIdx) == -1)
+            return -1;
         EncounterTable* encounterTable = &(wmEncounterTableList[encounterTableIdx]);
 
-        if (fileReadInt32(stream, &encounterTableEntryIdx) == -1) return -1;
+        if (fileReadInt32(stream, &encounterTableEntryIdx) == -1)
+            return -1;
         EncounterTableEntry* encounterTableEntry = &(encounterTable->entries[encounterTableEntryIdx]);
 
-        if (fileReadInt32(stream, &(encounterTableEntry->counter)) == -1) return -1;
+        if (fileReadInt32(stream, &(encounterTableEntry->counter)) == -1)
+            return -1;
     }
 
     wmInterfaceCenterOnParty();
@@ -5744,7 +5792,8 @@ static int wmDrawCursorStopped()
                 if (wmGenData.currentSubtile) {
                     Terrain* t = &wmTerrainTypeList[wmGenData.currentSubtile->terrain];
                     difficulty = t->difficulty;
-                    if (difficulty < 1) difficulty = 1;
+                    if (difficulty < 1)
+                        difficulty = 1;
                 }
 
                 // Decide whether to drop on this step, based on terrain (difficulty)

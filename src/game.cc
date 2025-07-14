@@ -1349,8 +1349,9 @@ static int gameDbInit()
     if ((is_original || settings.system.master_override) && !settings.system.falloutce_dat_path.empty()) {
         main_file_name = settings.system.falloutce_dat_path.c_str();
         patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0') patch_file_name = nullptr;
-        
+        if (*patch_file_name == '\0')
+            patch_file_name = nullptr;
+
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
         /*if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
@@ -1379,8 +1380,9 @@ static int gameDbInit()
     if (is_original && !settings.system.falloutce_dat_path.empty() || settings.system.master_override) {
         main_file_name = settings.system.falloutce_dat_path.c_str();
         patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0') patch_file_name = nullptr;
-        
+        if (*patch_file_name == '\0')
+            patch_file_name = nullptr;
+
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
         /*if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");

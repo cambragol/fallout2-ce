@@ -1038,12 +1038,18 @@ static int artReadFrameData(unsigned char* data, File* stream, int count, int* p
     for (int index = 0; index < count; index++) {
         ArtFrame* frame = (ArtFrame*)ptr;
 
-        if (fileReadInt16(stream, &(frame->width)) == -1) return -1;
-        if (fileReadInt16(stream, &(frame->height)) == -1) return -1;
-        if (fileReadInt32(stream, &(frame->size)) == -1) return -1;
-        if (fileReadInt16(stream, &(frame->x)) == -1) return -1;
-        if (fileReadInt16(stream, &(frame->y)) == -1) return -1;
-        if (fileRead(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1) return -1;
+        if (fileReadInt16(stream, &(frame->width)) == -1)
+            return -1;
+        if (fileReadInt16(stream, &(frame->height)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(frame->size)) == -1)
+            return -1;
+        if (fileReadInt16(stream, &(frame->x)) == -1)
+            return -1;
+        if (fileReadInt16(stream, &(frame->y)) == -1)
+            return -1;
+        if (fileRead(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1)
+            return -1;
 
         ptr += sizeof(ArtFrame) + frame->size;
         ptr += paddingForSize(frame->size);
@@ -1058,14 +1064,22 @@ static int artReadFrameData(unsigned char* data, File* stream, int count, int* p
 // 0x419E1C
 static int artReadHeader(Art* art, File* stream)
 {
-    if (fileReadInt32(stream, &(art->field_0)) == -1) return -1;
-    if (fileReadInt16(stream, &(art->framesPerSecond)) == -1) return -1;
-    if (fileReadInt16(stream, &(art->actionFrame)) == -1) return -1;
-    if (fileReadInt16(stream, &(art->frameCount)) == -1) return -1;
-    if (fileReadInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileReadInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileReadInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileReadInt32(stream, &(art->dataSize)) == -1) return -1;
+    if (fileReadInt32(stream, &(art->field_0)) == -1)
+        return -1;
+    if (fileReadInt16(stream, &(art->framesPerSecond)) == -1)
+        return -1;
+    if (fileReadInt16(stream, &(art->actionFrame)) == -1)
+        return -1;
+    if (fileReadInt16(stream, &(art->frameCount)) == -1)
+        return -1;
+    if (fileReadInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileReadInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileReadInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(art->dataSize)) == -1)
+        return -1;
 
     // CE: Fix malformed `frm` files with `dataSize` set to 0 in Nevada.
     if (art->dataSize == 0) {
@@ -1152,12 +1166,18 @@ int artWriteFrameData(unsigned char* data, File* stream, int count)
     for (int index = 0; index < count; index++) {
         ArtFrame* frame = (ArtFrame*)ptr;
 
-        if (fileWriteInt16(stream, frame->width) == -1) return -1;
-        if (fileWriteInt16(stream, frame->height) == -1) return -1;
-        if (fileWriteInt32(stream, frame->size) == -1) return -1;
-        if (fileWriteInt16(stream, frame->x) == -1) return -1;
-        if (fileWriteInt16(stream, frame->y) == -1) return -1;
-        if (fileWrite(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1) return -1;
+        if (fileWriteInt16(stream, frame->width) == -1)
+            return -1;
+        if (fileWriteInt16(stream, frame->height) == -1)
+            return -1;
+        if (fileWriteInt32(stream, frame->size) == -1)
+            return -1;
+        if (fileWriteInt16(stream, frame->x) == -1)
+            return -1;
+        if (fileWriteInt16(stream, frame->y) == -1)
+            return -1;
+        if (fileWrite(ptr + sizeof(ArtFrame), frame->size, 1, stream) != 1)
+            return -1;
 
         ptr += sizeof(ArtFrame) + frame->size;
         ptr += paddingForSize(frame->size);
@@ -1171,14 +1191,22 @@ int artWriteFrameData(unsigned char* data, File* stream, int count)
 // 0x41A138
 int artWriteHeader(Art* art, File* stream)
 {
-    if (fileWriteInt32(stream, art->field_0) == -1) return -1;
-    if (fileWriteInt16(stream, art->framesPerSecond) == -1) return -1;
-    if (fileWriteInt16(stream, art->actionFrame) == -1) return -1;
-    if (fileWriteInt16(stream, art->frameCount) == -1) return -1;
-    if (fileWriteInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileWriteInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileWriteInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1) return -1;
-    if (fileWriteInt32(stream, art->dataSize) == -1) return -1;
+    if (fileWriteInt32(stream, art->field_0) == -1)
+        return -1;
+    if (fileWriteInt16(stream, art->framesPerSecond) == -1)
+        return -1;
+    if (fileWriteInt16(stream, art->actionFrame) == -1)
+        return -1;
+    if (fileWriteInt16(stream, art->frameCount) == -1)
+        return -1;
+    if (fileWriteInt16List(stream, art->xOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileWriteInt16List(stream, art->yOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileWriteInt32List(stream, art->dataOffsets, ROTATION_COUNT) == -1)
+        return -1;
+    if (fileWriteInt32(stream, art->dataSize) == -1)
+        return -1;
 
     return 0;
 }

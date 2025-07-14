@@ -176,7 +176,7 @@ int windowManagerInit(VideoSystemInitProc* videoSystemInitProc, VideoSystemExitP
         }
         _buffering = true;
     }
-    
+
     _doing_refresh_all = 0;
 
     if (!_initColors()) {
