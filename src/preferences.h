@@ -14,7 +14,7 @@ typedef enum Preference {
     PREF_VIOLENCE_LEVEL,
     PREF_TARGET_HIGHLIGHT,
     PREF_COMBAT_LOOKS,
-    
+
     // Secondary preferences (6)
     PREF_COMBAT_MESSAGES,
     PREF_COMBAT_TAUNTS,
@@ -22,7 +22,7 @@ typedef enum Preference {
     PREF_RUNNING,
     PREF_SUBTITLES,
     PREF_ITEM_HIGHLIGHT,
-    
+
     // Range preferences (8)
     PREF_COMBAT_SPEED,
     PREF_TEXT_BASE_DELAY,
@@ -32,10 +32,10 @@ typedef enum Preference {
     PREF_SPEECH_VOLUME,
     PREF_BRIGHTNESS,
     PREF_MOUSE_SENSITIVIY,
-    
+
     // Special cases
-    PREF_PLAYER_SPEEDUP = 19,  // The checkbox preference
-    
+    PREF_PLAYER_SPEEDUP = 19, // The checkbox preference
+
     // Total count (don't include in count)
     PREF_COUNT
 } Preference;
@@ -45,16 +45,16 @@ enum {
     PRIMARY_PREF_COUNT = 5,
     SECONDARY_PREF_COUNT = 6,
     RANGE_PREF_COUNT = 8,
-    
+
     FIRST_PRIMARY_PREF = PREF_GAME_DIFFICULTY,
     LAST_PRIMARY_PREF = PREF_COMBAT_LOOKS,
-    
+
     FIRST_SECONDARY_PREF = PREF_COMBAT_MESSAGES,
     LAST_SECONDARY_PREF = PREF_ITEM_HIGHLIGHT,
-    
+
     FIRST_RANGE_PREF = PREF_COMBAT_SPEED,
     LAST_RANGE_PREF = PREF_MOUSE_SENSITIVIY,
-    
+
     PRIMARY_OPTION_VALUE_COUNT = 4,
     SECONDARY_OPTION_VALUE_COUNT = 2
 };
@@ -101,19 +101,19 @@ struct PreferencesOffsets {
     // Window
     int width;
     int height;
-    
+
     // Primary preferences column (left)
     int primaryColumnX;
     int primaryKnobX;
     int primaryKnobY[5]; // For each primary preference
     int primaryLabelY[5]; // Y positions for labels
-    
+
     // Secondary preferences column (middle)
-    int secondaryColumnX; 
+    int secondaryColumnX;
     int secondaryKnobX;
     int secondaryKnobY[6]; // For each secondary preference
     int secondaryLabelY[6]; // Y positions for labels
-    
+
     // Range preferences column (right)
     int rangeColumnX;
     int rangeKnobX;
@@ -125,13 +125,13 @@ struct PreferencesOffsets {
     int rangLabelColX;
     int labelX[PRIMARY_PREF_COUNT];
     int secondaryLabelX[SECONDARY_PREF_COUNT];
-    
+
     // Range control
     int rangeStartX;
-    int rangeWidth; 
+    int rangeWidth;
     int knobWidth;
     int rangeLabelX[5];
-    
+
     // Blit dimensions
     int primaryBlitWidth;
     int primaryBlitHeight;
@@ -139,11 +139,11 @@ struct PreferencesOffsets {
     int secondaryBlitHeight;
     int rangeBlitWidth;
     int rangeBlitHeight;
-    
+
     // Title text position
     int titleTextX;
     int titleTextY;
-    
+
     // Button label positions
     int defaultLabelX;
     int defaultLabelY;
@@ -153,7 +153,7 @@ struct PreferencesOffsets {
     int cancelLabelY;
     int speedLabelX;
     int speedLabelY;
-    
+
     // Button positions
     int defaultButtonX;
     int defaultButtonY;
@@ -161,50 +161,50 @@ struct PreferencesOffsets {
     int doneButtonY;
     int cancelButtonX;
     int cancelButtonY;
-    
+
     // Checkbox position
     int playerSpeedCheckboxX;
     int playerSpeedCheckboxY;
 
     // Knob hit detection offsets
-    int primaryKnobHitX;  // +23 from knobX for primary prefs
-    int primaryKnobHitY;  // +21 from knobY for primary prefs
+    int primaryKnobHitX; // +23 from knobX for primary prefs
+    int primaryKnobHitY; // +21 from knobY for primary prefs
     int secondaryKnobHitX; // +11 from knobX for secondary prefs
     int secondaryKnobHitY; // +12 from knobY for secondary prefs
-    
+
     // Range slider parameters
-    int rangeSliderMinX;   // 384 (640) / 480 (800)
-    int rangeSliderMaxX;   // 603 (640) / 754 (800)
-    int rangeSliderWidth;  // 219 (640) / 274 (800)
-    
+    int rangeSliderMinX; // 384 (640) / 480 (800)
+    int rangeSliderMaxX; // 603 (640) / 754 (800)
+    int rangeSliderWidth; // 219 (640) / 274 (800)
+
     // Button hitbox offsets
     int primaryButtonOffsetY; // -4 from knobY
     int secondaryButtonOffsetY; // -5 from knobY
     int rangeButtonOffsetY; // -12 from knobY
 
     double textBaseDelayScale; // 43.8 for 640, 54.8 for 800
-    int rangeLabel4Option1X;  // 444 for 640, 555 for 800
-    int rangeLabel4Option2X;  // 564 for 640, 705 for 800
+    int rangeLabel4Option1X; // 444 for 640, 555 for 800
+    int rangeLabel4Option2X; // 564 for 640, 705 for 800
 
     // Position arrays
-    int row1Ytab[PRIMARY_PREF_COUNT];       // Primary knob Y positions
-    int row2Ytab[SECONDARY_PREF_COUNT];     // Secondary knob Y positions
-    int row3Ytab[RANGE_PREF_COUNT];         // Range knob Y positions
+    int row1Ytab[PRIMARY_PREF_COUNT]; // Primary knob Y positions
+    int row2Ytab[SECONDARY_PREF_COUNT]; // Secondary knob Y positions
+    int row3Ytab[RANGE_PREF_COUNT]; // Range knob Y positions
     int optionXOffsets[PRIMARY_OPTION_VALUE_COUNT]; // Primary option X offsets
     int optionYOffsets[PRIMARY_OPTION_VALUE_COUNT]; // Primary option Y offsets
     int secondaryOptionXOffsets[SECONDARY_OPTION_VALUE_COUNT]; // Secondary option X offsets
-    int primaryLabelYValues[PRIMARY_PREF_COUNT];    // Primary label Y positions
+    int primaryLabelYValues[PRIMARY_PREF_COUNT]; // Primary label Y positions
     int secondaryLabelYValues[SECONDARY_PREF_COUNT]; // Secondary label Y positions
 
     Point preferencePositions[PREF_COUNT]; // ONLY x/y pairs
 
     // New offsets (no duplicates)
-    int primaryButtonMinXOffset;  // 9
-    int primaryButtonMaxXOffset;  // 37
-    int secondaryButtonXOffset;   // 22
-    int rangeThumbLeftOffset;     // 6
-    int rangeThumbRightOffset;    // 14
-    double rangeSliderScale;      // 219.0 or 274.0
+    int primaryButtonMinXOffset; // 9
+    int primaryButtonMaxXOffset; // 37
+    int secondaryButtonXOffset; // 22
+    int rangeThumbLeftOffset; // 6
+    int rangeThumbRightOffset; // 14
+    double rangeSliderScale; // 219.0 or 274.0
 };
 
 // Global declarations

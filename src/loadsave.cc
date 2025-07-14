@@ -355,13 +355,13 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     224, // previewWidth
     133, // previewHeight
     366, // previewX
-    58,  // previewY
+    58, // previewY
     340, // previewCoverX
-    39,  // previewCoverY
+    39, // previewCoverY
 
     // Title and Text
-    48,  // titleTextX
-    27,  // titleTextY
+    48, // titleTextX
+    27, // titleTextY
     410, // doneLabelX
     348, // doneLabelY
     515, // cancelLabelX
@@ -372,14 +372,14 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     349, // doneButtonY
     495, // cancelButtonX
     349, // cancelButtonY
-    35,  // arrowUpX
-    58,  // arrowUpY
-    35,  // arrowDownX
-    79,  // arrowDownY
+    35, // arrowUpX
+    58, // arrowUpY
+    35, // arrowDownX
+    79, // arrowDownY
 
     // Slot List Area
-    55,  // slotListAreaX
-    87,  // slotListAreaY
+    55, // slotListAreaX
+    87, // slotListAreaY
     230, // slotListAreaWidth
     348, // slotListAreaHeight
 
@@ -388,8 +388,8 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     116, // commentWindowY
 
     // Slot List
-    55,  // slotListX
-    87,  // slotListY
+    55, // slotListX
+    87, // slotListY
     230, // slotListWidth
     40, // slotListBottomOffset
 
@@ -397,7 +397,7 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     396, // infoBoxX
     253, // infoBoxY
     164, // infoBoxWidth
-    60,  // infoBoxHeight
+    60, // infoBoxHeight
 
     // Info Box Text Positions
     396, // characterNameX
@@ -410,12 +410,12 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     // Page Navigation Buttons
     195, // nextPageButtonX
     425, // nextPageButtonY
-    85,  // nextPageButtonWidth
-    10,  // nextPageButtonHeight
-    55,  // prevPageButtonX
+    85, // nextPageButtonWidth
+    10, // nextPageButtonHeight
+    55, // prevPageButtonX
     425, // prevPageButtonY
     125, // prevPageButtonWidth
-    10,  // prevPageButtonHeight
+    10, // prevPageButtonHeight
 
     // Text Block Position
     253, // infoBoxTextBlockY
@@ -424,14 +424,14 @@ const LoadSaveOffsets gLoadSaveOffsets640 = {
     275, // coverWidth
     173, // coverHeight
     340, // coverX
-    39,  // coverY
+    39, // coverY
     275, // coverPitch
 
     // Slot Text Padding
-    0,    // slotTextPadding
+    0, // slotTextPadding
 
     // Pagination text positions
-    40,  // backTextOffsetX
+    40, // backTextOffsetX
     155 // moreTextOffsetX
 };
 
@@ -444,13 +444,13 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     268, // previewWidth
     145, // previewHeight
     452, // previewX
-    55,  // previewY
+    55, // previewY
     421, // previewCoverX
-    34,  // previewCoverY
+    34, // previewCoverY
 
     // Title and Text
-    69,  // titleTextX
-    37,  // titleTextY
+    69, // titleTextX
+    37, // titleTextY
     518, // doneLabelX
     358, // doneLabelY
     623, // cancelLabelX
@@ -461,14 +461,14 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     359, // doneButtonY
     603, // cancelButtonX
     359, // cancelButtonY
-    56,  // arrowUpX
-    68,  // arrowUpY
-    56,  // arrowDownX
-    89,  // arrowDownY
+    56, // arrowUpX
+    68, // arrowUpY
+    56, // arrowDownX
+    89, // arrowDownY
 
     // Slot List Area
-    76,  // slotListAreaX
-    97,  // slotListAreaY
+    76, // slotListAreaX
+    97, // slotListAreaY
     290, // slotListAreaWidth
     363, // slotListAreaHeight
 
@@ -477,8 +477,8 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     116, // commentWindowY
 
     // Slot List
-    76,  // slotListX
-    97,  // slotListY
+    76, // slotListX
+    97, // slotListY
     230, // slotListWidth
     40, // slotListBottomOffset
 
@@ -486,7 +486,7 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     477, // infoBoxX
     262, // infoBoxY
     224, // infoBoxWidth
-    60,  // infoBoxHeight
+    60, // infoBoxHeight
 
     // Info Box Text Positions
     477, // characterNameX
@@ -499,12 +499,12 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     // Page Navigation Buttons
     245, // nextPageButtonX
     445, // nextPageButtonY
-    85,  // nextPageButtonWidth
-    10,  // nextPageButtonHeight
+    85, // nextPageButtonWidth
+    10, // nextPageButtonHeight
     105, // prevPageButtonX
     445, // prevPageButtonY
     125, // prevPageButtonWidth
-    10,  // prevPageButtonHeight
+    10, // prevPageButtonHeight
 
     // Text Block Position
     262, // infoBoxTextBlockY
@@ -513,11 +513,11 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     330, // coverWidth
     188, // coverHeight
     421, // coverX
-    34,  // coverY
+    34, // coverY
     330, // coverPitch
 
     // Slot Text Padding
-    3,    // slotTextPadding
+    3, // slotTextPadding
 
     // Pagination text positions
     50, // backTextOffsetX
@@ -878,8 +878,7 @@ int lsgSaveGame(int mode)
             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
             gOffsets.previewWidth,
             gOffsets.previewHeight,
-            gOffsets.windowWidth
-        );
+            gOffsets.windowWidth);
     }
 
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
@@ -999,37 +998,34 @@ int lsgSaveGame(int mode)
                     break;
                 }
 
-    // Check if click is within the slot list area
-    if (mouseX >= gOffsets.slotListAreaX && 
-        mouseX <= gOffsets.slotListAreaX + gOffsets.slotListAreaWidth &&
-        mouseY >= gOffsets.slotListAreaY && 
-        mouseY <= gOffsets.slotListAreaY + gOffsets.slotListAreaHeight - gOffsets.slotListBottomOffset) {
+                // Check if click is within the slot list area
+                if (mouseX >= gOffsets.slotListAreaX && mouseX <= gOffsets.slotListAreaX + gOffsets.slotListAreaWidth && mouseY >= gOffsets.slotListAreaY && mouseY <= gOffsets.slotListAreaY + gOffsets.slotListAreaHeight - gOffsets.slotListBottomOffset) {
 
-                // Calculate clicked slot based on slot list position
-                int relativeSlot = (mouseY - gOffsets.slotListY) / (3 * fontGetLineHeight() + 4);
-                if (relativeSlot < 0) {
-                    relativeSlot = 0;
-                } else if (relativeSlot > 9) {
-                    relativeSlot = 9;
+                    // Calculate clicked slot based on slot list position
+                    int relativeSlot = (mouseY - gOffsets.slotListY) / (3 * fontGetLineHeight() + 4);
+                    if (relativeSlot < 0) {
+                        relativeSlot = 0;
+                    } else if (relativeSlot > 9) {
+                        relativeSlot = 9;
+                    }
+
+                    // Adjust for the current page
+                    int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
+
+                    if (clickedSlot > (saveLoadTotalSlots - 1)) {
+                        clickedSlot = (saveLoadTotalSlots - 1);
+                    }
+
+                    _slot_cursor = clickedSlot;
+                    if (clickedSlot == doubleClickSlot) {
+                        keyCode = 500;
+                        soundPlayFile("ib1p1xx1");
+                    }
+
+                    selectionChanged = true;
+                    doubleClickSlot = _slot_cursor;
+                    scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
                 }
-
-                // Adjust for the current page
-                int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-
-                if (clickedSlot > (saveLoadTotalSlots - 1)) {
-                    clickedSlot = (saveLoadTotalSlots - 1);
-                }
-
-                _slot_cursor = clickedSlot;
-                if (clickedSlot == doubleClickSlot) {
-                    keyCode = 500;
-                    soundPlayFile("ib1p1xx1");
-                }
-
-                selectionChanged = true;
-                doubleClickSlot = _slot_cursor;
-                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
-            }
             } break;
 
             case KEY_CTRL_Q:
@@ -1148,8 +1144,7 @@ int lsgSaveGame(int mode)
                             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                             gOffsets.previewWidth,
                             gOffsets.previewHeight,
-                            gOffsets.windowWidth
-                        );
+                            gOffsets.windowWidth);
                     }
 
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
@@ -1198,8 +1193,7 @@ int lsgSaveGame(int mode)
                         gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                         gOffsets.previewWidth,
                         gOffsets.previewHeight,
-                        gOffsets.windowWidth
-                    );
+                        gOffsets.windowWidth);
                 }
 
                 _DrawInfoBox(_slot_cursor);
@@ -1307,8 +1301,7 @@ int lsgSaveGame(int mode)
                             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                             gOffsets.previewWidth,
                             gOffsets.previewHeight,
-                            gOffsets.windowWidth
-                        );
+                            gOffsets.windowWidth);
                     }
 
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
@@ -1507,8 +1500,7 @@ int lsgLoadGame(int mode)
             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
             gOffsets.previewWidth,
             gOffsets.previewHeight,
-            gOffsets.windowWidth
-        );
+            gOffsets.windowWidth);
     }
 
     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
@@ -1625,32 +1617,29 @@ int lsgLoadGame(int mode)
                 }
 
                 // Check if click is within the slot list area
-    if (mouseX >= gOffsets.slotListAreaX && 
-        mouseX <= gOffsets.slotListAreaX + gOffsets.slotListAreaWidth &&
-        mouseY >= gOffsets.slotListAreaY && 
-        mouseY <= gOffsets.slotListAreaY + gOffsets.slotListAreaHeight - gOffsets.slotListBottomOffset) {
-                // Calculate clicked slot based on original logic
-                int relativeSlot = (mouseY - gOffsets.slotListY) / (3 * fontGetLineHeight() + 4);
-                if (relativeSlot < 0)
-                    relativeSlot = 0;
-                if (relativeSlot > 9)
-                    relativeSlot = 9;
+                if (mouseX >= gOffsets.slotListAreaX && mouseX <= gOffsets.slotListAreaX + gOffsets.slotListAreaWidth && mouseY >= gOffsets.slotListAreaY && mouseY <= gOffsets.slotListAreaY + gOffsets.slotListAreaHeight - gOffsets.slotListBottomOffset) {
+                    // Calculate clicked slot based on original logic
+                    int relativeSlot = (mouseY - gOffsets.slotListY) / (3 * fontGetLineHeight() + 4);
+                    if (relativeSlot < 0)
+                        relativeSlot = 0;
+                    if (relativeSlot > 9)
+                        relativeSlot = 9;
 
-                int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
-                if (clickedSlot > (saveLoadTotalSlots - 1)) {
-                    clickedSlot = saveLoadTotalSlots - 1;
+                    int clickedSlot = (_currentSlotPage * 10) + relativeSlot;
+                    if (clickedSlot > (saveLoadTotalSlots - 1)) {
+                        clickedSlot = saveLoadTotalSlots - 1;
+                    }
+
+                    _slot_cursor = clickedSlot;
+                    if (clickedSlot == doubleClickSlot) {
+                        keyCode = 500;
+                        soundPlayFile("ib1p1xx1");
+                    }
+
+                    selectionChanged = true;
+                    doubleClickSlot = _slot_cursor;
+                    scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
                 }
-
-                _slot_cursor = clickedSlot;
-                if (clickedSlot == doubleClickSlot) {
-                    keyCode = 500;
-                    soundPlayFile("ib1p1xx1");
-                }
-
-                selectionChanged = true;
-                doubleClickSlot = _slot_cursor;
-                scrollDirection = LOAD_SAVE_SCROLL_DIRECTION_NONE;
-            }
             } break;
 
             case KEY_MINUS:
@@ -1768,8 +1757,7 @@ int lsgLoadGame(int mode)
                             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                             gOffsets.previewWidth,
                             gOffsets.previewHeight,
-                            gOffsets.windowWidth
-                        );
+                            gOffsets.windowWidth);
                     }
 
                     _ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
@@ -1810,8 +1798,7 @@ int lsgLoadGame(int mode)
                         gOffsets.coverHeight,
                         gOffsets.windowWidth, // Source pitch
                         gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewCoverY + gOffsets.previewCoverX,
-                        gOffsets.windowWidth
-                    );
+                        gOffsets.windowWidth);
                     blitBufferToBufferStretch(
                         _thumbnail_image,
                         LS_PREVIEW_WIDTH,
@@ -1820,8 +1807,7 @@ int lsgLoadGame(int mode)
                         gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                         gOffsets.previewWidth,
                         gOffsets.previewHeight,
-                        gOffsets.windowWidth
-                    );
+                        gOffsets.windowWidth);
                 }
 
                 _DrawInfoBox(_slot_cursor);
@@ -1973,7 +1959,7 @@ static int lsgWindowInit(int windowType)
         int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], "_800", isWidescreen);
 
         if (!_loadsaveFrmImages[index].lock(fid)) {
-        // Fallback to base FID if variant fails
+            // Fallback to base FID if variant fails
             fid = buildFid(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], 0, 0, 0);
             if (!_loadsaveFrmImages[index].lock(fid)) {
                 while (--index >= 0) {

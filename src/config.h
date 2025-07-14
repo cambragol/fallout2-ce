@@ -36,7 +36,6 @@ bool configSetBool(Config* config, const char* sectionKey, const char* key, bool
 void configSetIntArray(Config* config, const char* section, const char* key, const int* values, int count);
 bool configGetIntArray(Config* config, const char* section, const char* key, int* values, int count);
 
-
 } // namespace fallout
 
 #endif /* CONFIG_H */

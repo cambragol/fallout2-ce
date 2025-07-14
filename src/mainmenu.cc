@@ -79,10 +79,10 @@ const MainMenuOffsets gMainMenuOffsets640 = {
     /*copyrightY*/ 460,
     /*versionX*/ 615,
     /*versionY*/ 460,
-    /*hashX*/615,
-    /*hashX*/450,
-    /*buildDateX*/615,
-    /*buildDateX*/440,
+    /*hashX*/ 615,
+    /*hashX*/ 450,
+    /*buildDateX*/ 615,
+    /*buildDateX*/ 440,
     /*buttonBaseX*/ 30,
     /*buttonBaseY*/ 19,
     /*buttonTextOffsetX*/ 0,
@@ -93,13 +93,13 @@ const MainMenuOffsets gMainMenuOffsets640 = {
 
 const MainMenuOffsets gMainMenuOffsets800 = {
     /*copyrightX*/ 15,
-    /*copyrightY*/ 480, 
+    /*copyrightY*/ 480,
     /*versionX*/ 780,
     /*versionY*/ 480,
-    /*hashX*/780,
-    /*hashX*/470,
-    /*buildDateX*/780,
-    /*buildDateX*/460,
+    /*hashX*/ 780,
+    /*hashX*/ 470,
+    /*buildDateX*/ 780,
+    /*buildDateX*/ 460,
     /*buttonBaseX*/ 47,
     /*buttonBaseY*/ 45,
     /*buttonTextOffsetX*/ 17,
@@ -120,7 +120,8 @@ static FrmImage _mainMenuButtonPressedFrmImage;
 static Art* gMainMenuBackgroundArt = nullptr; // for widescreen background
 
 // move to seperate widescreen.cc file later?
-bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) {
+bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
     const MainMenuOffsets* fallback = isWidescreen ? &gMainMenuOffsets800 : &gMainMenuOffsets640;
 
@@ -147,7 +148,8 @@ bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) 
 }
 
 // move to seperate widescreen.cc file later?
-void mainMenuWriteDefaultOffsetsToConfig(bool isWidescreen, const MainMenuOffsets* defaults) {
+void mainMenuWriteDefaultOffsetsToConfig(bool isWidescreen, const MainMenuOffsets* defaults)
+{
     const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
 
     // Write all default values to config
@@ -185,9 +187,9 @@ int mainMenuWindowInit()
     int writeOffsets = 0;
     if (configGetInt(&gGameConfig, "debug", "write_offsets", &writeOffsets) && writeOffsets) {
         // Write BOTH sets of defaults
-        mainMenuWriteDefaultOffsetsToConfig(false, &gMainMenuOffsets640);  // 640x480 defaults
-        mainMenuWriteDefaultOffsetsToConfig(true, &gMainMenuOffsets800);   // 800x600 defaults
-        
+        mainMenuWriteDefaultOffsetsToConfig(false, &gMainMenuOffsets640); // 640x480 defaults
+        mainMenuWriteDefaultOffsetsToConfig(true, &gMainMenuOffsets800); // 800x600 defaults
+
         // Disable writing and save
         configSetInt(&gGameConfig, "debug", "write_offsets", 0);
         gameConfigSave();
@@ -240,13 +242,12 @@ int mainMenuWindowInit()
         unsigned char* data = artGetFrameData(gMainMenuBackgroundArt, 0, 0);
         int width = artGetWidth(gMainMenuBackgroundArt, 0, 0);
         int height = artGetHeight(gMainMenuBackgroundArt, 0, 0);
-        
+
         blitBufferToBuffer(
             data,
             width, height, width,
             gMainMenuWindowBuffer,
-            width
-        );
+            width);
     } else {
         // Use standard FrmImage
         if (_mainMenuBackgroundFrmImage.isLocked()) {
@@ -254,8 +255,7 @@ int mainMenuWindowInit()
                 _mainMenuBackgroundFrmImage.getData(),
                 640, 480, 640,
                 gMainMenuWindowBuffer,
-                640
-            );
+                640);
             _mainMenuBackgroundFrmImage.unlock();
         }
     }

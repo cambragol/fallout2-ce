@@ -1,7 +1,7 @@
 #ifndef FALLOUT_MAINMENU_H_
 #define FALLOUT_MAINMENU_H_
 
-#include "config.h"  // For Config type
+#include "config.h" // For Config type
 
 namespace fallout {
 
@@ -21,14 +21,14 @@ typedef enum MainMenuOption {
 struct MainMenuOffsets {
     // Text
     int copyrightX;
-    int copyrightY; 
+    int copyrightY;
     int versionX;
     int versionY;
     int hashX;
     int hashY;
     int buildDateX;
     int buildDateY;
-    
+
     // Buttons
     int buttonBaseX;
     int buttonBaseY;

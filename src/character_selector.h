@@ -7,13 +7,13 @@ struct CharacterSelectorOffsets {
     // Window dimensions
     int width;
     int height;
-    
+
     // Background
     int backgroundX;
     int backgroundY;
     int backgroundWidth;
     int backgroundHeight;
-    
+
     // Buttons
     int previousButtonX;
     int previousButtonY;
@@ -27,7 +27,7 @@ struct CharacterSelectorOffsets {
     int createButtonY;
     int backButtonX;
     int backButtonY;
-    
+
     // Text positions
     int nameMidX;
     int primaryStatMidX;
@@ -35,12 +35,12 @@ struct CharacterSelectorOffsets {
     int bioX;
     int textBaseY;
     int faceY;
-    
+
     // Face position
     int faceX;
-    
+
     // Bio rendering
-    int bioMaxY;  // 260 in both versions
+    int bioMaxY; // 260 in both versions
 };
 
 int characterSelectorOpen();
