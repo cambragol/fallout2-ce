@@ -219,7 +219,7 @@ int mainMenuWindowInit()
     }
 
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
-        
+
     int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 140, "_800", gameIsWidescreen());
     if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
         // NOTE: Uninline.
