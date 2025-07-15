@@ -213,7 +213,7 @@ void endgamePlaySlideshow()
     if (endgameEndingSlideshowWindowInit() == -1) {
         return;
     }
-    
+
     restoreUserAspectPreference();
     resizeContent(640, 480);
 
@@ -229,7 +229,7 @@ void endgamePlaySlideshow()
             }
         }
     }
-    
+
     resizeContent(screenGetWidth(), screenGetHeight(), true);
 
     endgameEndingSlideshowWindowFree();
@@ -653,7 +653,7 @@ static void endgameEndingSlideshowWindowFree()
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     colorPaletteLoad("color.pal");
-    //paletteFadeTo(_cmap); // cutting this prevents the momentary return to the location map
+    // paletteFadeTo(_cmap); // cutting this prevents the momentary return to the location map
 
     colorCycleEnable();
 

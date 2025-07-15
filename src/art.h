@@ -8,7 +8,7 @@
 #include "platform_compat.h"
 #include "proto_types.h"
 
-#define FILENAME_LENGTH 32  // Standardized filename buffer size
+#define FILENAME_LENGTH 32 // Standardized filename buffer size
 
 namespace fallout {
 
@@ -187,7 +187,7 @@ int artFindVariant(int objectType, int baseIndex, const char* suffix);
 
 /**
  * @brief Gets a FID with optional variant suffix.
- * 
+ *
  * @param objectType The object type (OBJ_TYPE_*)
  * @param baseId The base art ID
  * @param suffix The variant suffix (e.g., "_800")

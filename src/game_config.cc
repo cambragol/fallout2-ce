@@ -128,7 +128,6 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_ENABLE_HIRES_STENCIL, true);
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_WIDESCREEN, false);
 
-
     if (isMapper) {
         configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, "mapper");
         configSetInt(&gGameConfig, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_OVERRIDE_LIBRARIAN_KEY, 0);

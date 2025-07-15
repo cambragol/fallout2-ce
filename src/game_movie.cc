@@ -169,10 +169,10 @@ int gameMoviePlay(int movie, int flags)
         paletteFadeTo(gPaletteBlack);
         gGameMovieFaded = true;
     }
-    
+
     // Must restore preference in case coming from Game area
     restoreUserAspectPreference();
-    resizeContent(640,480);
+    resizeContent(640, 480);
 
     int gameMovieWindowX = (screenGetWidth() - GAME_MOVIE_WINDOW_WIDTH) / 2;
     int gameMovieWindowY = (screenGetHeight() - GAME_MOVIE_WINDOW_HEIGHT) / 2;
@@ -292,14 +292,14 @@ int gameMoviePlay(int movie, int flags)
         windowSetTextColor(r, g, b);
     }
 
-    if (GameMode::isInGameMode(GameMode::kPipboy)){
+    if (GameMode::isInGameMode(GameMode::kPipboy)) {
         // other movies play from outside game area - main, scripts(worldmap)
         resizeContent(screenGetWidth(), screenGetHeight(), true);
     } else {
-        if(gameIsWidescreen()){
-            resizeContent(800,500);
+        if (gameIsWidescreen()) {
+            resizeContent(800, 500);
         } else {
-            resizeContent(640,480);
+            resizeContent(640, 480);
         }
     }
     windowDestroy(win);

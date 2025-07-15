@@ -177,7 +177,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     debugPrint(">init_options_menu\n");
 
     if (!gIsMapper && skipOpeningMovies < 2) {
-        resizeContent(640,480);
+        resizeContent(640, 480);
         showSplash();
     }
 
@@ -1196,9 +1196,9 @@ static void gameFreeGlobalVars()
 static void showHelp()
 {
     ScopedGameMode gm(GameMode::kHelp);
-    
+
     restoreUserAspectPreference();
-    resizeContent(640,480);
+    resizeContent(640, 480);
 
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
@@ -1272,8 +1272,7 @@ static void showHelp()
     if (isoWasEnabled) {
         isoEnable();
     }
-    resizeContent(screenGetWidth(),screenGetHeight(), true);
-    
+    resizeContent(screenGetWidth(), screenGetHeight(), true);
 }
 
 // 0x4440B8
@@ -1355,8 +1354,9 @@ static int gameDbInit()
     if ((is_original || settings.system.master_override) && !settings.system.falloutce_dat_path.empty()) {
         main_file_name = settings.system.falloutce_dat_path.c_str();
         patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0') patch_file_name = nullptr;
-        
+        if (*patch_file_name == '\0')
+            patch_file_name = nullptr;
+
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
         /*if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
@@ -1385,8 +1385,9 @@ static int gameDbInit()
     if (is_original && !settings.system.falloutce_dat_path.empty() || settings.system.master_override) {
         main_file_name = settings.system.falloutce_dat_path.c_str();
         patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0') patch_file_name = nullptr;
-        
+        if (*patch_file_name == '\0')
+            patch_file_name = nullptr;
+
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
         /*if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");

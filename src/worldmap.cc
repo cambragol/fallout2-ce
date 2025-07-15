@@ -851,155 +851,155 @@ static WorldmapOffsets gOffsets;
 // worldmap.cc
 const WorldmapOffsets gWorldmapOffsets640 = {
     // Window dimensions
-    640,    // windowWidth
-    480,    // windowHeight
-    
+    640, // windowWidth
+    480, // windowHeight
+
     // Viewport position and size
-    22,     // viewX (left edge of viewport area)
-    21,     // viewY (top edge of viewport area)
-    450,    // viewWidth (width of scrollable map area)
-    443,    // viewHeight (height of scrollable map area)
-    
+    22, // viewX (left edge of viewport area)
+    21, // viewY (top edge of viewport area)
+    450, // viewWidth (width of scrollable map area)
+    443, // viewHeight (height of scrollable map area)
+
     // UI Elements - dial control
-    532,    // dialX (position of worldmap dial)
-    48,     // dialY
-    
+    532, // dialX (position of worldmap dial)
+    48, // dialY
+
     // UI Elements - globe and car indicators
-    495,    // globeOverlayX (position of globe graphic)
-    330,    // globeOverlayY
-    514,    // carX (position of car graphic)
-    336,    // carY
-    499,    // carOverlayX (position of car selection highlight)
-    330,    // carOverlayY
-    500,    // carFuelBarX (position of fuel gauge)
-    339,    // carFuelBarY
-    70,     // carFuelBarHeight
-    
+    495, // globeOverlayX (position of globe graphic)
+    330, // globeOverlayY
+    514, // carX (position of car graphic)
+    336, // carY
+    499, // carOverlayX (position of car selection highlight)
+    330, // carOverlayY
+    500, // carFuelBarX (position of fuel gauge)
+    339, // carFuelBarY
+    70, // carFuelBarHeight
+
     // Scrollable destination list area
-    501,    // scrollAreaX (left edge of destination list)
-    135,     // scrollAreaY (top edge of destination list)
+    501, // scrollAreaX (left edge of destination list)
+    135, // scrollAreaY (top edge of destination list)
 
     // Destination List
-    508,    // destListX
-    138,    // destListFirstY
-    27,     // destListSpacing
-    
+    508, // destListX
+    138, // destListFirstY
+    27, // destListSpacing
+
     // Scroll Buttons
-    480,    // scrollUpX
-    137,    // scrollUpY
-    480,    // scrollDownX
-    152,    // scrollDownY
-    
+    480, // scrollUpX
+    137, // scrollUpY
+    480, // scrollDownX
+    152, // scrollDownY
+
     // Town/World Switch
-    519,    // townWorldSwitchX
-    439,     // townWorldSwitchY
+    519, // townWorldSwitchX
+    439, // townWorldSwitchY
 
     // Date Display
-    487,    // dateDisplayX
-    12,     // dateDisplayY
-    143,    // dateDisplayWidth (630-487)
-    
+    487, // dateDisplayX
+    12, // dateDisplayY
+    143, // dateDisplayWidth (630-487)
+
     // Viewport Boundaries
-    449,   // viewportMaxX
-    442,  // viewportMaxY
+    449, // viewportMaxX
+    442, // viewportMaxY
 
     // City Name Drawing
-    464,    // cityNameMaxY
+    464, // cityNameMaxY
 
-    545,    // subtileViewportMaxX
-    465,     // subtileViewportMaxY
+    545, // subtileViewportMaxX
+    465, // subtileViewportMaxY
 
-    0,     // townMapBgX (not used)
-    0,     // townMapBgY (not used)
-    95,    // townMapImageX
-    22,    // townMapImageY
-    0,     // townMapButtonXOffset
-    0,     // townMapButtonYOffset
-    0,     // townMapLabelXOffset
-    4,      // townMapLabelYOffset
+    0, // townMapBgX (not used)
+    0, // townMapBgY (not used)
+    95, // townMapImageX
+    22, // townMapImageY
+    0, // townMapButtonXOffset
+    0, // townMapButtonYOffset
+    0, // townMapLabelXOffset
+    4, // townMapLabelYOffset
 
-    450,    // townBackgroundWidth
-    442,     // townBackgroundHeight
+    450, // townBackgroundWidth
+    442, // townBackgroundHeight
 
-    203,    // mapcenterX
-    200     // mapcenterY
+    203, // mapcenterX
+    200 // mapcenterY
 };
 
 const WorldmapOffsets gWorldmapOffsets800 = {
     // Window dimensions
-    800,    // windowWidth (widescreen width)
-    500,    // windowHeight (widescreen height)
-    
-    // Viewport position and size
-    22,     // viewX (same X position as 640x480)
-    21,     // viewY (same Y position as 640x480)
-    610,    // viewWidth (wider viewport for widescreen)
-    463,    // viewHeight (taller viewport for widescreen)
-    
-    // UI Elements - dial control
-    692,    // dialX (shifted right for widescreen)
-    48,     // dialY (same vertical position)
-    
-    // UI Elements - globe and car indicators
-    655,    // globeOverlayX (shifted right proportionally)
-    330,    // globeOverlayY (same vertical position)
-    674,    // carX (shifted right proportionally)
-    336,    // carY (same vertical position)
-    659,    // carOverlayX (shifted right proportionally)
-    330,    // carOverlayY (same vertical position)
-    660,    // carFuelBarX (shifted right proportionally)
-    339,    // carFuelBarY (same vertical position)
-    70,     // carFuelBarHeight
-    
-    // Scrollable destination list area
-    661,    // scrollAreaX (shifted right for widescreen)
-    135,     // scrollAreaY (same vertical position)
+    800, // windowWidth (widescreen width)
+    500, // windowHeight (widescreen height)
 
-        // Destination List
-    668,    // destListX (+160)
-    138,    // destListFirstY (same)
-    27,     // destListSpacing (same)
-    
+    // Viewport position and size
+    22, // viewX (same X position as 640x480)
+    21, // viewY (same Y position as 640x480)
+    610, // viewWidth (wider viewport for widescreen)
+    463, // viewHeight (taller viewport for widescreen)
+
+    // UI Elements - dial control
+    692, // dialX (shifted right for widescreen)
+    48, // dialY (same vertical position)
+
+    // UI Elements - globe and car indicators
+    655, // globeOverlayX (shifted right proportionally)
+    330, // globeOverlayY (same vertical position)
+    674, // carX (shifted right proportionally)
+    336, // carY (same vertical position)
+    659, // carOverlayX (shifted right proportionally)
+    330, // carOverlayY (same vertical position)
+    660, // carFuelBarX (shifted right proportionally)
+    339, // carFuelBarY (same vertical position)
+    70, // carFuelBarHeight
+
+    // Scrollable destination list area
+    661, // scrollAreaX (shifted right for widescreen)
+    135, // scrollAreaY (same vertical position)
+
+    // Destination List
+    668, // destListX (+160)
+    138, // destListFirstY (same)
+    27, // destListSpacing (same)
+
     // Scroll Buttons
-    640,    // scrollUpX (+160)
-    137,    // scrollUpY (same)
-    640,    // scrollDownX (+160)
-    152,    // scrollDownY (same)
-    
+    640, // scrollUpX (+160)
+    137, // scrollUpY (same)
+    640, // scrollDownX (+160)
+    152, // scrollDownY (same)
+
     // Town/World Switch
-    679,    // townWorldSwitchX (+160)
-    439,     // townWorldSwitchY (same)
+    679, // townWorldSwitchX (+160)
+    439, // townWorldSwitchY (same)
 
     // Date Display
-    647,    // dateDisplayX (+160)
-    12,     // dateDisplayY (same)
-    143,    // dateDisplayWidth (same)
-    
+    647, // dateDisplayX (+160)
+    12, // dateDisplayY (same)
+    143, // dateDisplayWidth (same)
+
     // Viewport Boundaries
-    631,    // viewportMaxX (hardcoded)
-    485,    // viewportMaxY (hardcoded)
+    631, // viewportMaxX (hardcoded)
+    485, // viewportMaxY (hardcoded)
 
     // City Name Drawing
-    485,    // cityNameMaxY
-    
+    485, // cityNameMaxY
+
     // Subtile Drawing Boundaries
-    632,    // subtileViewportMaxX (hardcoded in 800x500)
-    485,     // subtileViewportMaxY (hardcoded in 800x500)
+    632, // subtileViewportMaxX (hardcoded in 800x500)
+    485, // subtileViewportMaxY (hardcoded in 800x500)
 
-    78,  // townMapBgX
-    10,  // townMapBgY
-    100,        // townMapImageX
-    31,         // townMapImageY
-    78,         // townMapButtonXOffset
-    10,         // townMapButtonYOffset
-    78,         // townMapLabelXOffset
-    14,          // townMapLabelYOffset
+    78, // townMapBgX
+    10, // townMapBgY
+    100, // townMapImageX
+    31, // townMapImageY
+    78, // townMapButtonXOffset
+    10, // townMapButtonYOffset
+    78, // townMapLabelXOffset
+    14, // townMapLabelYOffset
 
-    610,    // townBackgroundWidth
-    462,     // townBackgroundHeight
+    610, // townBackgroundWidth
+    462, // townBackgroundHeight
 
-    254,    // mapcenterX
-    208     // mapcenterY
+    254, // mapcenterX
+    208 // mapcenterY
 };
 
 bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen)
@@ -1406,35 +1406,55 @@ int wmWorldMap_save(File* stream)
     EncounterTable* encounter_table;
     EncounterTableEntry* encounter_entry;
 
-    if (fileWriteBool(stream, wmGenData.didMeetFrankHorrigan) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.currentAreaId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.worldPosX) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.worldPosY) == -1) return -1;
-    if (fileWriteBool(stream, wmGenData.encounterIconIsVisible) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterMapId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterTableId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.encounterEntryId) == -1) return -1;
-    if (fileWriteBool(stream, wmGenData.isInCar) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.currentCarAreaId) == -1) return -1;
-    if (fileWriteInt32(stream, wmGenData.carFuel) == -1) return -1;
-    if (fileWriteInt32(stream, wmMaxAreaNum) == -1) return -1;
+    if (fileWriteBool(stream, wmGenData.didMeetFrankHorrigan) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.currentAreaId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.worldPosX) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.worldPosY) == -1)
+        return -1;
+    if (fileWriteBool(stream, wmGenData.encounterIconIsVisible) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterMapId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterTableId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.encounterEntryId) == -1)
+        return -1;
+    if (fileWriteBool(stream, wmGenData.isInCar) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.currentCarAreaId) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmGenData.carFuel) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmMaxAreaNum) == -1)
+        return -1;
 
     for (int areaIdx = 0; areaIdx < wmMaxAreaNum; areaIdx++) {
         CityInfo* cityInfo = &(wmAreaInfoList[areaIdx]);
-        if (fileWriteInt32(stream, cityInfo->x) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->y) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->state) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->visitedState) == -1) return -1;
-        if (fileWriteInt32(stream, cityInfo->entrancesLength) == -1) return -1;
+        if (fileWriteInt32(stream, cityInfo->x) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->y) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->state) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->visitedState) == -1)
+            return -1;
+        if (fileWriteInt32(stream, cityInfo->entrancesLength) == -1)
+            return -1;
 
         for (int entranceIdx = 0; entranceIdx < cityInfo->entrancesLength; entranceIdx++) {
             EntranceInfo* entrance = &(cityInfo->entrances[entranceIdx]);
-            if (fileWriteInt32(stream, entrance->state) == -1) return -1;
+            if (fileWriteInt32(stream, entrance->state) == -1)
+                return -1;
         }
     }
 
-    if (fileWriteInt32(stream, wmMaxTileNum) == -1) return -1;
-    if (fileWriteInt32(stream, wmNumHorizontalTiles) == -1) return -1;
+    if (fileWriteInt32(stream, wmMaxTileNum) == -1)
+        return -1;
+    if (fileWriteInt32(stream, wmNumHorizontalTiles) == -1)
+        return -1;
 
     for (int tileIndex = 0; tileIndex < wmMaxTileNum; tileIndex++) {
         TileInfo* tileInfo = &(wmTileInfoList[tileIndex]);
@@ -1443,7 +1463,8 @@ int wmWorldMap_save(File* stream)
             for (int row = 0; row < SUBTILE_GRID_WIDTH; row++) {
                 SubtileInfo* subtile = &(tileInfo->subtiles[column][row]);
 
-                if (fileWriteInt32(stream, subtile->state) == -1) return -1;
+                if (fileWriteInt32(stream, subtile->state) == -1)
+                    return -1;
             }
         }
     }
@@ -1461,7 +1482,8 @@ int wmWorldMap_save(File* stream)
         }
     }
 
-    if (fileWriteInt32(stream, k) == -1) return -1;
+    if (fileWriteInt32(stream, k) == -1)
+        return -1;
 
     for (i = 0; i < wmMaxEncounterInfoTables; i++) {
         encounter_table = &(wmEncounterTableList[i]);
@@ -1470,9 +1492,12 @@ int wmWorldMap_save(File* stream)
             encounter_entry = &(encounter_table->entries[j]);
 
             if (encounter_entry->counter != -1) {
-                if (fileWriteInt32(stream, i) == -1) return -1;
-                if (fileWriteInt32(stream, j) == -1) return -1;
-                if (fileWriteInt32(stream, encounter_entry->counter) == -1) return -1;
+                if (fileWriteInt32(stream, i) == -1)
+                    return -1;
+                if (fileWriteInt32(stream, j) == -1)
+                    return -1;
+                if (fileWriteInt32(stream, encounter_entry->counter) == -1)
+                    return -1;
             }
         }
     }
@@ -1483,28 +1508,44 @@ int wmWorldMap_save(File* stream)
 // 0x4BD28C
 int wmWorldMap_load(File* stream)
 {
-    if (fileReadBool(stream, &(wmGenData.didMeetFrankHorrigan)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.currentAreaId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.worldPosX)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.worldPosY)) == -1) return -1;
-    if (fileReadBool(stream, &(wmGenData.encounterIconIsVisible)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterMapId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterTableId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.encounterEntryId)) == -1) return -1;
-    if (fileReadBool(stream, &(wmGenData.isInCar)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.currentCarAreaId)) == -1) return -1;
-    if (fileReadInt32(stream, &(wmGenData.carFuel)) == -1) return -1;
+    if (fileReadBool(stream, &(wmGenData.didMeetFrankHorrigan)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.currentAreaId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.worldPosX)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.worldPosY)) == -1)
+        return -1;
+    if (fileReadBool(stream, &(wmGenData.encounterIconIsVisible)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterMapId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterTableId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.encounterEntryId)) == -1)
+        return -1;
+    if (fileReadBool(stream, &(wmGenData.isInCar)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.currentCarAreaId)) == -1)
+        return -1;
+    if (fileReadInt32(stream, &(wmGenData.carFuel)) == -1)
+        return -1;
 
     int numCities;
-    if (fileReadInt32(stream, &numCities) == -1) return -1;
+    if (fileReadInt32(stream, &numCities) == -1)
+        return -1;
 
     for (int areaIdx = 0; areaIdx < numCities; areaIdx++) {
         CityInfo* city = &(wmAreaInfoList[areaIdx]);
 
-        if (fileReadInt32(stream, &(city->x)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->y)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->state)) == -1) return -1;
-        if (fileReadInt32(stream, &(city->visitedState)) == -1) return -1;
+        if (fileReadInt32(stream, &(city->x)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->y)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->state)) == -1)
+            return -1;
+        if (fileReadInt32(stream, &(city->visitedState)) == -1)
+            return -1;
 
         int entranceCount;
         if (fileReadInt32(stream, &(entranceCount)) == -1) {
@@ -1521,10 +1562,12 @@ int wmWorldMap_load(File* stream)
     }
 
     int numTiles;
-    if (fileReadInt32(stream, &numTiles) == -1) return -1;
+    if (fileReadInt32(stream, &numTiles) == -1)
+        return -1;
 
     int numHorizontalTiles;
-    if (fileReadInt32(stream, &numHorizontalTiles) == -1) return -1;
+    if (fileReadInt32(stream, &numHorizontalTiles) == -1)
+        return -1;
 
     for (int tileIndex = 0; tileIndex < numTiles; tileIndex++) {
         TileInfo* tile = &(wmTileInfoList[tileIndex]);
@@ -1533,25 +1576,30 @@ int wmWorldMap_load(File* stream)
             for (int row = 0; row < SUBTILE_GRID_WIDTH; row++) {
                 SubtileInfo* subtile = &(tile->subtiles[column][row]);
 
-                if (fileReadInt32(stream, &(subtile->state)) == -1) return -1;
+                if (fileReadInt32(stream, &(subtile->state)) == -1)
+                    return -1;
             }
         }
     }
 
     int numCounters;
-    if (fileReadInt32(stream, &numCounters) == -1) return -1;
+    if (fileReadInt32(stream, &numCounters) == -1)
+        return -1;
 
     for (int counterIdx = 0; counterIdx < numCounters; counterIdx++) {
         int encounterTableIdx;
         int encounterTableEntryIdx;
 
-        if (fileReadInt32(stream, &encounterTableIdx) == -1) return -1;
+        if (fileReadInt32(stream, &encounterTableIdx) == -1)
+            return -1;
         EncounterTable* encounterTable = &(wmEncounterTableList[encounterTableIdx]);
 
-        if (fileReadInt32(stream, &encounterTableEntryIdx) == -1) return -1;
+        if (fileReadInt32(stream, &encounterTableEntryIdx) == -1)
+            return -1;
         EncounterTableEntry* encounterTableEntry = &(encounterTable->entries[encounterTableEntryIdx]);
 
-        if (fileReadInt32(stream, &(encounterTableEntry->counter)) == -1) return -1;
+        if (fileReadInt32(stream, &(encounterTableEntry->counter)) == -1)
+            return -1;
     }
 
     wmInterfaceCenterOnParty();
@@ -3324,12 +3372,12 @@ static int wmWorldMapFunc(int a1)
     ScopedGameMode gm(GameMode::kWorldmap);
 
     wmFadeOut();
-    
+
     restoreUserAspectPreference();
-    if(gameIsWidescreen()){
-        resizeContent(800,500);
+    if (gameIsWidescreen()) {
+        resizeContent(800, 500);
     } else {
-        resizeContent(640,480);
+        resizeContent(640, 480);
     }
 
     if (wmInterfaceInit() == -1) {
@@ -3469,7 +3517,7 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
-                        
+
                         resizeContent(screenGetWidth(), screenGetHeight(), true);
 
                         mapLoadById(wmGenData.encounterMapId);
@@ -3480,11 +3528,11 @@ static int wmWorldMapFunc(int a1)
         }
 
         if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0 && (mouseEvent & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0) {
-            if (mouseHitTestInWindow(wmBkWin, 
-    gOffsets.viewX, 
-    gOffsets.viewY,
-    gOffsets.viewX + gOffsets.viewWidth,
-    gOffsets.viewY + gOffsets.viewHeight)) {
+            if (mouseHitTestInWindow(wmBkWin,
+                    gOffsets.viewX,
+                    gOffsets.viewY,
+                    gOffsets.viewX + gOffsets.viewWidth,
+                    gOffsets.viewY + gOffsets.viewHeight)) {
                 if (!wmGenData.isWalking && !wmGenData.mousePressed && abs(wmGenData.worldPosX - worldX) < 5 && abs(wmGenData.worldPosY - worldY) < 5) {
                     wmGenData.mousePressed = true;
                     wmInterfaceRefresh();
@@ -3531,9 +3579,9 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
-                        
+
                         resizeContent(screenGetWidth(), screenGetHeight(), true);
-                        
+
                         mapLoadById(map);
                         break;
                     }
@@ -3572,9 +3620,9 @@ static int wmWorldMapFunc(int a1)
                         }
 
                         wmFadeOut();
-                        
+
                         resizeContent(screenGetWidth(), screenGetHeight(), true);
-                        
+
                         mapLoadById(map);
                     }
                 }
@@ -3627,11 +3675,11 @@ static int wmWorldMapFunc(int a1)
             if (mouseHitTestInWindow(wmBkWin, gOffsets.viewX, gOffsets.viewY, gOffsets.viewWidth + gOffsets.viewX, gOffsets.viewHeight + gOffsets.viewY)) {
                 wmInterfaceScrollPixel(20, 20, wheelX, -wheelY, nullptr, true);
             } else if (mouseHitTestInWindow(wmBkWin,
-    gOffsets.scrollAreaX,
-    gOffsets.scrollAreaY,
-    gOffsets.scrollAreaX + 119, // Width remains constant
-    gOffsets.scrollAreaY + 178)) // Height remains constant) 
-    {
+                           gOffsets.scrollAreaX,
+                           gOffsets.scrollAreaY,
+                           gOffsets.scrollAreaX + 119, // Width remains constant
+                           gOffsets.scrollAreaY + 178)) // Height remains constant)
+            {
                 if (wheelY != 0) {
                     wmInterfaceScrollTabsStart(wheelY > 0 ? 27 : -27);
                 }
@@ -3728,9 +3776,9 @@ static int wmRndEncounterOccurred()
             }
 
             wmFadeOut();
-            
+
             resizeContent(640, 480);
-            
+
             mapLoadById(MAP_IN_GAME_MOVIE1);
             return 1;
         }
@@ -3746,7 +3794,7 @@ static int wmRndEncounterOccurred()
                 wmMatchAreaContainingMapIdx(wmForceEncounterMapId, &(wmGenData.currentCarAreaId));
             }
         }
-        
+
         resizeContent(screenGetWidth(), screenGetHeight(), true);
 
         // For unknown reason fadeout and blinking icon are mutually exclusive.
@@ -5743,7 +5791,7 @@ static void wmInterfaceRefreshDate(bool shouldRefreshWindow)
     if (shouldRefreshWindow) {
         Rect rect;
         rect.left = gOffsets.dateDisplayX;
-        rect.top = gOffsets.dateDisplayY; 
+        rect.top = gOffsets.dateDisplayY;
         rect.bottom = numbersFrmHeight + gOffsets.dateDisplayY;
         rect.right = gOffsets.dateDisplayX + gOffsets.dateDisplayWidth;
         windowRefreshRect(wmBkWin, &rect);
@@ -6106,7 +6154,8 @@ static int wmDrawCursorStopped()
                 if (wmGenData.currentSubtile) {
                     Terrain* t = &wmTerrainTypeList[wmGenData.currentSubtile->terrain];
                     difficulty = t->difficulty;
-                    if (difficulty < 1) difficulty = 1;
+                    if (difficulty < 1)
+                        difficulty = 1;
                 }
 
                 // Decide whether to drop on this step, based on terrain (difficulty)
@@ -6532,24 +6581,24 @@ static int wmTownMapInit()
 // 0x4C4BD0
 static int wmTownMapRefresh()
 {
-    //WM_VIEW_X (22) WM_VIEW_Y (21) 31 100
-    // town grid background image
-    if (gameIsWidescreen()){
-    blitBufferToBuffer(_townBackgroundFrmImage.getData(),
-                       gOffsets.townBackgroundWidth,
-                       gOffsets.townBackgroundHeight,
-                       gOffsets.townBackgroundWidth,
-        wmBkWinBuf + gOffsets.windowWidth * gOffsets.viewY + gOffsets.viewX,
-        gOffsets.windowWidth);
+    // WM_VIEW_X (22) WM_VIEW_Y (21) 31 100
+    //  town grid background image
+    if (gameIsWidescreen()) {
+        blitBufferToBuffer(_townBackgroundFrmImage.getData(),
+            gOffsets.townBackgroundWidth,
+            gOffsets.townBackgroundHeight,
+            gOffsets.townBackgroundWidth,
+            wmBkWinBuf + gOffsets.windowWidth * gOffsets.viewY + gOffsets.viewX,
+            gOffsets.windowWidth);
     }
-    
-    //WM_VIEW_X (22) WM_VIEW_Y (21) 31 100
+
+    // WM_VIEW_X (22) WM_VIEW_Y (21) 31 100
     blitBufferToBuffer(_townFrmImage.getData(),
         _townFrmImage.getWidth(),
         _townFrmImage.getHeight(),
         _townFrmImage.getWidth(),
         wmBkWinBuf + gOffsets.windowWidth * (gOffsets.viewY + gOffsets.townMapBgY) + gOffsets.viewX + gOffsets.townMapBgX,
-        gOffsets.windowWidth);  
+        gOffsets.windowWidth);
 
     wmRefreshInterfaceOverlay(false);
 
@@ -6887,8 +6936,8 @@ static int wmRefreshTabs()
     FrmImage labelFrm;
 
     // Calculate label position based on configurable offsets
-    int labelX = gOffsets.destListX + 22;  // 508 + 22 = 530
-    int labelY = gOffsets.destListFirstY;  // 138
+    int labelX = gOffsets.destListX + 22; // 508 + 22 = 530
+    int labelY = gOffsets.destListFirstY; // 138
 
     // Skip first empty tab (original code does this in the `wmInterfaceInit`)
     unsigned char* src = wmGenData.tabsBackgroundFrmImage.getData() + wmGenData.tabsBackgroundFrmImage.getWidth() * 27;
@@ -7067,7 +7116,7 @@ static void wmRefreshInterfaceDial(bool shouldRefreshWindow)
     if (shouldRefreshWindow) {
         Rect rect;
         rect.left = gOffsets.dialX;
-        rect.top = gOffsets.dialY - 1;  // Minor adjustment
+        rect.top = gOffsets.dialY - 1; // Minor adjustment
         rect.right = rect.left + wmGenData.dialFrmWidth;
         rect.bottom = rect.top + wmGenData.dialFrmHeight;
         windowRefreshRect(wmBkWin, &rect);

@@ -368,7 +368,7 @@ static void showDeath()
     artCacheFlush();
     colorCycleDisable();
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
-    
+
     restoreUserAspectPreference();
     resizeContent(640, 480);
 
@@ -497,11 +497,11 @@ static void showDeath()
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
 
     colorCycleEnable();
-    
-    if(gameIsWidescreen()){
-        resizeContent(800,500);
+
+    if (gameIsWidescreen()) {
+        resizeContent(800, 500);
     } else {
-        resizeContent(640,480);
+        resizeContent(640, 480);
     }
 }
 

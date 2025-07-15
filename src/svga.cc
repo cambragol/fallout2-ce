@@ -114,10 +114,9 @@ void restoreUserAspectPreference()
     gPreserveAspect = gUserAspectPreference;
 }
 
-bool gameIsWidescreen() {
-    return (settings.graphics.game_width >= 800 && 
-            settings.graphics.game_height >= 500 && 
-            settings.graphics.widescreen);
+bool gameIsWidescreen()
+{
+    return (settings.graphics.game_width >= 800 && settings.graphics.game_height >= 500 && settings.graphics.widescreen);
 }
 
 // 0x4CAE1C
@@ -133,7 +132,7 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, &gInterfaceBarWidth);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, &gInterfaceSidePanelsImageId);
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDES_ORI, &gInterfaceSidePanelsExtendFromScreenEdge);
-    
+
     // setting for stretching - later
     gStretchEnabled = settings.graphics.stretch_enabled;
     gPreserveAspect = settings.graphics.preserve_aspect;
@@ -445,13 +444,15 @@ void renderPresent()
     // Get logical rendering size fallback
     int logicalW, logicalH;
     SDL_RenderGetLogicalSize(gSdlRenderer, &logicalW, &logicalH);
-    if (logicalW == 0) logicalW = gContentWidth;
-    if (logicalH == 0) logicalH = gContentHeight;
+    if (logicalW == 0)
+        logicalW = gContentWidth;
+    if (logicalH == 0)
+        logicalH = gContentHeight;
 
     SDL_Rect srcRect, destRect;
 
     if (gStretchEnabled) {
-        
+
         int contentOffsetX = (gSdlTextureSurface->w - gContentWidth) / 2;
         int contentOffsetY = (gSdlTextureSurface->h - gContentHeight) / 2;
 

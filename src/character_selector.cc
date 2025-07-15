@@ -107,61 +107,61 @@ static CharacterSelectorOffsets gOffsets;
 const CharacterSelectorOffsets gCharSelectorOffsets640 = {
     // Window
     640, 480,
-    
+
     // Background
     40, 30, 560, 300,
-    
+
     // Buttons
-    292, 320,   // Previous
-    318, 320,   // Next
-    81, 323,    // Take
-    435, 320,   // Modify
-    80, 425,    // Create
-    461, 425,   // Back
-    
+    292, 320, // Previous
+    318, 320, // Next
+    81, 323, // Take
+    435, 320, // Modify
+    80, 425, // Create
+    461, 425, // Back
+
     // Text positions
-    318,    // nameMidX
-    362,    // primaryStatMidX
-    379,    // secondaryStatMidX
-    438,    // bioX
-    40,     // textBaseY
-    23,     // faceY
-    
+    318, // nameMidX
+    362, // primaryStatMidX
+    379, // secondaryStatMidX
+    438, // bioX
+    40, // textBaseY
+    23, // faceY
+
     // Face position
-    27,     // faceX
-    
+    27, // faceX
+
     // Bio rendering
-    260,    // bioMaxY
+    260, // bioMaxY
 };
 
 const CharacterSelectorOffsets gCharSelectorOffsets800 = {
     // Window
     800, 500,
-    
+
     // Background
     40, 30, 820, 300,
-    
+
     // Buttons
-    374, 330,   // Previous
-    397, 330,   // Next
-    100, 333,   // Take
-    583, 330,   // Modify
-    100, 435,   // Create
-    607, 435,   // Back
-    
+    374, 330, // Previous
+    397, 330, // Next
+    100, 333, // Take
+    583, 330, // Modify
+    100, 435, // Create
+    607, 435, // Back
+
     // Text positions
-    396,    // nameMidX
-    462,    // primaryStatMidX
-    479,    // secondaryStatMidX
-    538,    // bioX
-    50,     // textBaseY
-    33,     // faceY
-    
+    396, // nameMidX
+    462, // primaryStatMidX
+    479, // secondaryStatMidX
+    538, // bioX
+    50, // textBaseY
+    33, // faceY
+
     // Face position
-    67,     // faceX
-    
+    67, // faceX
+
     // Bio rendering
-    260,    // bioMaxY (same as 640)
+    260, // bioMaxY (same as 640)
 };
 
 // 0x51C8D4
@@ -209,7 +209,8 @@ static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
-bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen) {
+bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen ? "charselect800" : "charselect640";
     const CharacterSelectorOffsets* fallback = isWidescreen ? &gCharSelectorOffsets800 : &gCharSelectorOffsets640;
 
@@ -219,13 +220,13 @@ bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, b
     // Load all values from config
     configGetInt(&gGameConfig, section, "width", &offsets->width);
     configGetInt(&gGameConfig, section, "height", &offsets->height);
-    
+
     // Background
     configGetInt(&gGameConfig, section, "backgroundX", &offsets->backgroundX);
     configGetInt(&gGameConfig, section, "backgroundY", &offsets->backgroundY);
     configGetInt(&gGameConfig, section, "backgroundWidth", &offsets->backgroundWidth);
     configGetInt(&gGameConfig, section, "backgroundHeight", &offsets->backgroundHeight);
-    
+
     // Buttons
     configGetInt(&gGameConfig, section, "previousButtonX", &offsets->previousButtonX);
     configGetInt(&gGameConfig, section, "previousButtonY", &offsets->previousButtonY);
@@ -239,7 +240,7 @@ bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, b
     configGetInt(&gGameConfig, section, "createButtonY", &offsets->createButtonY);
     configGetInt(&gGameConfig, section, "backButtonX", &offsets->backButtonX);
     configGetInt(&gGameConfig, section, "backButtonY", &offsets->backButtonY);
-    
+
     // Text positions
     configGetInt(&gGameConfig, section, "nameMidX", &offsets->nameMidX);
     configGetInt(&gGameConfig, section, "primaryStatMidX", &offsets->primaryStatMidX);
@@ -247,29 +248,30 @@ bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, b
     configGetInt(&gGameConfig, section, "bioX", &offsets->bioX);
     configGetInt(&gGameConfig, section, "textBaseY", &offsets->textBaseY);
     configGetInt(&gGameConfig, section, "faceY", &offsets->faceY);
-    
+
     // Face position
     configGetInt(&gGameConfig, section, "faceX", &offsets->faceX);
-    
+
     // Bio rendering
     configGetInt(&gGameConfig, section, "bioMaxY", &offsets->bioMaxY);
 
     return true;
 }
 
-void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const CharacterSelectorOffsets* defaults) {
+void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const CharacterSelectorOffsets* defaults)
+{
     const char* section = isWidescreen ? "charselect800" : "charselect640";
 
     // Window dimensions
     configSetInt(&gGameConfig, section, "width", defaults->width);
     configSetInt(&gGameConfig, section, "height", defaults->height);
-    
+
     // Background
     configSetInt(&gGameConfig, section, "backgroundX", defaults->backgroundX);
     configSetInt(&gGameConfig, section, "backgroundY", defaults->backgroundY);
     configSetInt(&gGameConfig, section, "backgroundWidth", defaults->backgroundWidth);
     configSetInt(&gGameConfig, section, "backgroundHeight", defaults->backgroundHeight);
-    
+
     // Buttons
     configSetInt(&gGameConfig, section, "previousButtonX", defaults->previousButtonX);
     configSetInt(&gGameConfig, section, "previousButtonY", defaults->previousButtonY);
@@ -283,7 +285,7 @@ void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const Chara
     configSetInt(&gGameConfig, section, "createButtonY", defaults->createButtonY);
     configSetInt(&gGameConfig, section, "backButtonX", defaults->backButtonX);
     configSetInt(&gGameConfig, section, "backButtonY", defaults->backButtonY);
-    
+
     // Text positions
     configSetInt(&gGameConfig, section, "nameMidX", defaults->nameMidX);
     configSetInt(&gGameConfig, section, "primaryStatMidX", defaults->primaryStatMidX);
@@ -291,10 +293,10 @@ void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const Chara
     configSetInt(&gGameConfig, section, "bioX", defaults->bioX);
     configSetInt(&gGameConfig, section, "textBaseY", defaults->textBaseY);
     configSetInt(&gGameConfig, section, "faceY", defaults->faceY);
-    
+
     // Face position
     configSetInt(&gGameConfig, section, "faceX", defaults->faceX);
-    
+
     // Bio rendering
     configSetInt(&gGameConfig, section, "bioMaxY", defaults->bioMaxY);
 }
@@ -430,13 +432,12 @@ static bool characterSelectorWindowInit()
     int characterSelectorWindowX = (screenGetWidth() - gOffsets.width) / 2;
     int characterSelectorWindowY = (screenGetHeight() - gOffsets.height) / 2;
     gCharacterSelectorWindow = windowCreate(
-        characterSelectorWindowX, 
-        characterSelectorWindowY, 
-        gOffsets.width, 
-        gOffsets.height, 
-        _colorTable[0], 
-        0
-    );
+        characterSelectorWindowX,
+        characterSelectorWindowY,
+        gOffsets.width,
+        gOffsets.height,
+        _colorTable[0],
+        0);
     if (gCharacterSelectorWindow == -1) {
         return characterSelectorWindowFatalError(false);
     }
@@ -459,215 +460,204 @@ static bool characterSelectorWindowInit()
         gOffsets.height,
         gOffsets.width,
         gCharacterSelectorWindowBuffer,
-        gOffsets.width
-    );
+        gOffsets.width);
 
     // Allocate and blit background area using offsets
     gCharacterSelectorBackground = (unsigned char*)internal_malloc(
-        gOffsets.backgroundWidth * gOffsets.backgroundHeight
-    );
+        gOffsets.backgroundWidth * gOffsets.backgroundHeight);
     if (gCharacterSelectorBackground == nullptr) {
         return characterSelectorWindowFatalError(false);
     }
 
     blitBufferToBuffer(
-        backgroundFrmImage.getData() + 
-            gOffsets.width * gOffsets.backgroundY + 
-            gOffsets.backgroundX,
+        backgroundFrmImage.getData() + gOffsets.width * gOffsets.backgroundY + gOffsets.backgroundX,
         gOffsets.backgroundWidth,
         gOffsets.backgroundHeight,
         gOffsets.width,
         gCharacterSelectorBackground,
-        gOffsets.backgroundWidth
-    );
+        gOffsets.backgroundWidth);
 
     int fid;
 
-// Setup "Previous" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 122, 0, 0, 0);
-if (!_previousButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Previous" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 122, 0, 0, 0);
+    if (!_previousButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 123, 0, 0, 0);
-if (!_previousButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 123, 0, 0, 0);
+    if (!_previousButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowPreviousButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.previousButtonX,
-    gOffsets.previousButtonY,
-    20,
-    18,
-    -1,
-    -1,
-    -1,
-    500,
-    _previousButtonNormalFrmImage.getData(),
-    _previousButtonPressedFrmImage.getData(),
-    nullptr,
-    0
-);
-if (gCharacterSelectorWindowPreviousButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowPreviousButton, _gsound_med_butt_press, _gsound_med_butt_release);
+    gCharacterSelectorWindowPreviousButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.previousButtonX,
+        gOffsets.previousButtonY,
+        20,
+        18,
+        -1,
+        -1,
+        -1,
+        500,
+        _previousButtonNormalFrmImage.getData(),
+        _previousButtonPressedFrmImage.getData(),
+        nullptr,
+        0);
+    if (gCharacterSelectorWindowPreviousButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowPreviousButton, _gsound_med_butt_press, _gsound_med_butt_release);
 
-// Setup "Next" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 124, 0, 0, 0);
-if (!_nextButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Next" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 124, 0, 0, 0);
+    if (!_nextButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 125, 0, 0, 0);
-if (!_nextButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 125, 0, 0, 0);
+    if (!_nextButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowNextButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.nextButtonX,
-    gOffsets.nextButtonY,
-    20,
-    18,
-    -1,
-    -1,
-    -1,
-    501,
-    _nextButtonNormalFrmImage.getData(),
-    _nextButtonPressedFrmImage.getData(),
-    nullptr,
-    0
-);
-if (gCharacterSelectorWindowNextButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowNextButton, _gsound_med_butt_press, _gsound_med_butt_release);
+    gCharacterSelectorWindowNextButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.nextButtonX,
+        gOffsets.nextButtonY,
+        20,
+        18,
+        -1,
+        -1,
+        -1,
+        501,
+        _nextButtonNormalFrmImage.getData(),
+        _nextButtonPressedFrmImage.getData(),
+        nullptr,
+        0);
+    if (gCharacterSelectorWindowNextButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowNextButton, _gsound_med_butt_press, _gsound_med_butt_release);
 
-// Setup "Take" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-if (!_takeButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Take" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!_takeButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-if (!_takeButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!_takeButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowTakeButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.takeButtonX,
-    gOffsets.takeButtonY,
-    15,
-    16,
-    -1,
-    -1,
-    -1,
-    KEY_LOWERCASE_T,
-    _takeButtonNormalFrmImage.getData(),
-    _takeButtonPressedFrmImage.getData(),
-    nullptr,
-    BUTTON_FLAG_TRANSPARENT
-);
-if (gCharacterSelectorWindowTakeButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowTakeButton, _gsound_red_butt_press, _gsound_red_butt_release);
+    gCharacterSelectorWindowTakeButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.takeButtonX,
+        gOffsets.takeButtonY,
+        15,
+        16,
+        -1,
+        -1,
+        -1,
+        KEY_LOWERCASE_T,
+        _takeButtonNormalFrmImage.getData(),
+        _takeButtonPressedFrmImage.getData(),
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
+    if (gCharacterSelectorWindowTakeButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowTakeButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
-// Setup "Modify" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-if (!_modifyButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Modify" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!_modifyButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-if (!_modifyButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!_modifyButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowModifyButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.modifyButtonX,
-    gOffsets.modifyButtonY,
-    15,
-    16,
-    -1,
-    -1,
-    -1,
-    KEY_LOWERCASE_M,
-    _modifyButtonNormalFrmImage.getData(),
-    _modifyButtonPressedFrmImage.getData(),
-    nullptr,
-    BUTTON_FLAG_TRANSPARENT
-);
-if (gCharacterSelectorWindowModifyButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowModifyButton, _gsound_red_butt_press, _gsound_red_butt_release);
+    gCharacterSelectorWindowModifyButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.modifyButtonX,
+        gOffsets.modifyButtonY,
+        15,
+        16,
+        -1,
+        -1,
+        -1,
+        KEY_LOWERCASE_M,
+        _modifyButtonNormalFrmImage.getData(),
+        _modifyButtonPressedFrmImage.getData(),
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
+    if (gCharacterSelectorWindowModifyButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowModifyButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
-// Setup "Create" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-if (!_createButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Create" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!_createButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-if (!_createButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!_createButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowCreateButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.createButtonX,
-    gOffsets.createButtonY,
-    15,
-    16,
-    -1,
-    -1,
-    -1,
-    KEY_LOWERCASE_C,
-    _createButtonNormalFrmImage.getData(),
-    _createButtonPressedFrmImage.getData(),
-    nullptr,
-    BUTTON_FLAG_TRANSPARENT
-);
-if (gCharacterSelectorWindowCreateButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowCreateButton, _gsound_red_butt_press, _gsound_red_butt_release);
+    gCharacterSelectorWindowCreateButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.createButtonX,
+        gOffsets.createButtonY,
+        15,
+        16,
+        -1,
+        -1,
+        -1,
+        KEY_LOWERCASE_C,
+        _createButtonNormalFrmImage.getData(),
+        _createButtonPressedFrmImage.getData(),
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
+    if (gCharacterSelectorWindowCreateButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowCreateButton, _gsound_red_butt_press, _gsound_red_butt_release);
 
-// Setup "Back" button.
-fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-if (!_backButtonNormalFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    // Setup "Back" button.
+    fid = buildFid(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
+    if (!_backButtonNormalFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-if (!_backButtonPressedFrmImage.lock(fid)) {
-    return characterSelectorWindowFatalError(false);
-}
+    fid = buildFid(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
+    if (!_backButtonPressedFrmImage.lock(fid)) {
+        return characterSelectorWindowFatalError(false);
+    }
 
-gCharacterSelectorWindowBackButton = buttonCreate(
-    gCharacterSelectorWindow,
-    gOffsets.backButtonX,
-    gOffsets.backButtonY,
-    15,
-    16,
-    -1,
-    -1,
-    -1,
-    KEY_ESCAPE,
-    _backButtonNormalFrmImage.getData(),
-    _backButtonPressedFrmImage.getData(),
-    nullptr,
-    BUTTON_FLAG_TRANSPARENT
-);
-if (gCharacterSelectorWindowBackButton == -1) {
-    return characterSelectorWindowFatalError(false);
-}
-buttonSetCallbacks(gCharacterSelectorWindowBackButton, _gsound_red_butt_press, _gsound_red_butt_release);
+    gCharacterSelectorWindowBackButton = buttonCreate(
+        gCharacterSelectorWindow,
+        gOffsets.backButtonX,
+        gOffsets.backButtonY,
+        15,
+        16,
+        -1,
+        -1,
+        -1,
+        KEY_ESCAPE,
+        _backButtonNormalFrmImage.getData(),
+        _backButtonPressedFrmImage.getData(),
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
+    if (gCharacterSelectorWindowBackButton == -1) {
+        return characterSelectorWindowFatalError(false);
+    }
+    buttonSetCallbacks(gCharacterSelectorWindowBackButton, _gsound_red_butt_press, _gsound_red_butt_release);
     gCurrentPremadeCharacter = PREMADE_CHARACTER_NARG;
 
     windowRefresh(gCharacterSelectorWindow);
@@ -733,7 +723,7 @@ static void characterSelectorWindowFree()
 
     _backButtonNormalFrmImage.unlock();
     _backButtonPressedFrmImage.unlock();
-    
+
     if (gCharacterSelectorBackground != nullptr) {
         internal_free(gCharacterSelectorBackground);
         gCharacterSelectorBackground = nullptr;
@@ -787,9 +777,9 @@ static bool characterSelectorWindowRenderFace()
             int height = faceFrmImage.getHeight();
             // Use offset-based position
             int offset = gOffsets.width * gOffsets.faceY + gOffsets.faceX;
-            blitBufferToBufferTrans(data, width, height, width, 
-                                    gCharacterSelectorWindowBuffer + offset, 
-                                    gOffsets.width);
+            blitBufferToBufferTrans(data, width, height, width,
+                gCharacterSelectorWindowBuffer + offset,
+                gOffsets.width);
             success = true;
         }
         faceFrmImage.unlock();
@@ -819,8 +809,8 @@ static bool characterSelectorWindowRenderStats()
     strcpy(text, str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.nameMidX - (length / 2), 
-                text, 160, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.nameMidX - (length / 2),
+        text, 160, gOffsets.width, _colorTable[992]);
 
     // STRENGTH
     y += vh + vh + vh;
@@ -831,15 +821,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // PERCEPTION
     y += vh;
@@ -850,15 +840,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // ENDURANCE
     y += vh;
@@ -869,15 +859,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // CHARISMA
     y += vh;
@@ -888,15 +878,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // INTELLIGENCE
     y += vh;
@@ -907,15 +897,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // AGILITY
     y += vh;
@@ -926,15 +916,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // LUCK
     y += vh;
@@ -945,15 +935,15 @@ static bool characterSelectorWindowRenderStats()
     snprintf(text, sizeof(text), "%s %02d", str, value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     str = statGetValueDescription(value);
     snprintf(text, sizeof(text), "  %s", str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.primaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     y += vh; // blank line
 
@@ -967,16 +957,16 @@ static bool characterSelectorWindowRenderStats()
     }
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_MAXIMUM_HIT_POINTS);
     snprintf(text, sizeof(text), " %d/%d", critterGetHitPoints(gDude), value);
 
     length = fontGetStringWidth(text);
     // Use offset-based position
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // ARMOR CLASS
     y += vh;
@@ -985,15 +975,15 @@ static bool characterSelectorWindowRenderStats()
     strcpy(text, str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_ARMOR_CLASS);
     snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // ACTION POINTS
     y += vh;
@@ -1005,15 +995,15 @@ static bool characterSelectorWindowRenderStats()
     }
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_MAXIMUM_ACTION_POINTS);
     snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     // MELEE DAMAGE
     y += vh;
@@ -1022,15 +1012,15 @@ static bool characterSelectorWindowRenderStats()
     strcpy(text, str);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+        text, length, gOffsets.width, _colorTable[992]);
 
     value = critterGetStat(gDude, STAT_MELEE_DAMAGE);
     snprintf(text, sizeof(text), " %d", value);
 
     length = fontGetStringWidth(text);
-    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX, 
-                text, length, gOffsets.width, _colorTable[992]);
+    fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX,
+        text, length, gOffsets.width, _colorTable[992]);
 
     y += vh; // blank line
 
@@ -1045,15 +1035,15 @@ static bool characterSelectorWindowRenderStats()
         strcpy(text, str);
 
         length = fontGetStringWidth(text);
-        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                    text, length, gOffsets.width, _colorTable[992]);
+        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+            text, length, gOffsets.width, _colorTable[992]);
 
         value = skillGetValue(gDude, skills[index]);
         snprintf(text, sizeof(text), " %d%%", value);
 
         length = fontGetStringWidth(text);
-        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX, 
-                    text, length, gOffsets.width, _colorTable[992]);
+        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX,
+            text, length, gOffsets.width, _colorTable[992]);
     }
 
     // TRAITS
@@ -1067,8 +1057,8 @@ static bool characterSelectorWindowRenderStats()
         strcpy(text, str);
 
         length = fontGetStringWidth(text);
-        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length, 
-                    text, length, gOffsets.width, _colorTable[992]);
+        fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.secondaryStatMidX - length,
+            text, length, gOffsets.width, _colorTable[992]);
     }
 
     fontSetCurrent(oldFont);
@@ -1094,10 +1084,10 @@ static bool characterSelectorWindowRenderBio()
         char string[256];
         while (fileReadString(string, 256, stream) && y < gOffsets.bioMaxY) {
             fontDrawText(gCharacterSelectorWindowBuffer + gOffsets.width * y + gOffsets.bioX,
-                         string,
-                         gOffsets.width - gOffsets.bioX,
-                         gOffsets.width,
-                         _colorTable[992]);
+                string,
+                gOffsets.width - gOffsets.bioX,
+                gOffsets.width,
+                _colorTable[992]);
             y += lineHeight;
         }
 
