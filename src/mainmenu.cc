@@ -117,7 +117,6 @@ static bool gMainMenuWindowHidden;
 static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
-static Art* gMainMenuBackgroundArt = nullptr; // for widescreen background
 
 // move to seperate widescreen.cc file later?
 bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) {
@@ -194,8 +193,8 @@ int mainMenuWindowInit()
     }
 
     // Load offsets
-    MainMenuOffsets offsets;
-    mainMenuLoadOffsetsFromConfig(&offsets, isWidescreen);
+    MainMenuOffsets gOffsets;
+    mainMenuLoadOffsetsFromConfig(&gOffsets, isWidescreen);
 
     // user preference must be restored after overriding
     restoreUserAspectPreference();
@@ -204,12 +203,12 @@ int mainMenuWindowInit()
 
     colorPaletteLoad("color.pal");
 
-    int mainMenuWindowX = (screenGetWidth() - offsets.width) / 2;
-    int mainMenuWindowY = (screenGetHeight() - offsets.height) / 2;
+    int mainMenuWindowX = (screenGetWidth() - gOffsets.width) / 2;
+    int mainMenuWindowY = (screenGetHeight() - gOffsets.height) / 2;
     gMainMenuWindow = windowCreate(mainMenuWindowX,
         mainMenuWindowY,
-        offsets.width,
-        offsets.height,
+        gOffsets.width,
+        gOffsets.height,
         0,
         WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (gMainMenuWindow == -1) {
@@ -218,47 +217,15 @@ int mainMenuWindowInit()
     }
 
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
-
-    // Load main menu background
-    if (isWidescreen) {
-        // Try loading widescreen version
-        char path[COMPAT_MAX_PATH];
-        snprintf(path, sizeof(path), "art\\intrface\\mainmenu_800.frm");
-        gMainMenuBackgroundArt = artLoad(path);
-    }
-
-    if (gMainMenuBackgroundArt == nullptr) {
-        // Load standard version using FrmImage
-        int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 140, 0, 0, 0);
-        if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
-            return main_menu_fatal_error();
-        }
-    }
-
-    if (gMainMenuBackgroundArt != nullptr) {
-        // Use custom widescreen art
-        unsigned char* data = artGetFrameData(gMainMenuBackgroundArt, 0, 0);
-        int width = artGetWidth(gMainMenuBackgroundArt, 0, 0);
-        int height = artGetHeight(gMainMenuBackgroundArt, 0, 0);
         
-        blitBufferToBuffer(
-            data,
-            width, height, width,
-            gMainMenuWindowBuffer,
-            width
-        );
-    } else {
-        // Use standard FrmImage
-        if (_mainMenuBackgroundFrmImage.isLocked()) {
-            blitBufferToBuffer(
-                _mainMenuBackgroundFrmImage.getData(),
-                640, 480, 640,
-                gMainMenuWindowBuffer,
-                640
-            );
-            _mainMenuBackgroundFrmImage.unlock();
-        }
+    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 140, "_800", gameIsWidescreen());
+    if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
+        // NOTE: Uninline.
+        return main_menu_fatal_error();
     }
+
+    blitBufferToBuffer(_mainMenuBackgroundFrmImage.getData(), gOffsets.width, gOffsets.height, gOffsets.width, gMainMenuWindowBuffer, gOffsets.width);
+    _mainMenuBackgroundFrmImage.unlock();
 
     int oldFont = fontGetCurrent();
     fontSetCurrent(100);
@@ -281,7 +248,7 @@ int mainMenuWindowInit()
     // Copyright.
     msg.num = 20;
     if (messageListGetItem(&gMiscMessageList, &msg)) {
-        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + offsets.copyrightX, offsetY + offsets.copyrightY, fontSettings | 0x06000000);
+        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + gOffsets.copyrightX, offsetY + gOffsets.copyrightY, fontSettings | 0x06000000);
     }
 
     // SFALL: Make sure font settings are applied when using 0x010000 flag
@@ -292,19 +259,19 @@ int mainMenuWindowInit()
     char version[VERSION_MAX];
     versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
-    windowDrawText(gMainMenuWindow, version, 0, offsets.versionX - len, offsets.versionY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, version, 0, gOffsets.versionX - len, gOffsets.versionY, fontSettings | 0x06000000);
 
     // Hash
     char commitHash[VERSION_MAX] = "BUILD HASH: ";
     strcat(commitHash, _BUILD_HASH);
     len = fontGetStringWidth(commitHash);
-    windowDrawText(gMainMenuWindow, commitHash, 0, offsets.hashX - len, offsets.hashY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.hashX - len, gOffsets.hashY, fontSettings | 0x06000000);
 
     // Build Date
     char buildDate[VERSION_MAX] = "DATE: ";
     strcat(buildDate, _BUILD_DATE);
     len = fontGetStringWidth(buildDate);
-    windowDrawText(gMainMenuWindow, buildDate, 0, offsets.buildDateX - len, offsets.buildDateY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, buildDate, 0, gOffsets.buildDateX - len, gOffsets.buildDateY, fontSettings | 0x06000000);
 
     // menuup.frm
     fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
@@ -331,8 +298,8 @@ int mainMenuWindowInit()
 
     for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         gMainMenuButtons[index] = buttonCreate(gMainMenuWindow,
-            offsetX + offsets.buttonBaseX,
-            offsetY + offsets.buttonBaseY + index * 42 - index,
+            offsetX + gOffsets.buttonBaseX,
+            offsetY + gOffsets.buttonBaseY + index * 42 - index,
             26,
             26,
             -1,
@@ -364,7 +331,7 @@ int mainMenuWindowInit()
         msg.num = 9 + index;
         if (messageListGetItem(&gMiscMessageList, &msg)) {
             len = fontGetStringWidth(msg.text);
-            fontDrawText(gMainMenuWindowBuffer + offsets.buttonTextOffsetX + offsetX + offsets.width * (offsets.buttonTextOffsetY + offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, offsets.width - (126 - (len / 2)) - 1, offsets.width, fontSettings);
+            fontDrawText(gMainMenuWindowBuffer + gOffsets.buttonTextOffsetX + offsetX + gOffsets.width * (gOffsets.buttonTextOffsetY + offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, gOffsets.width - (126 - (len / 2)) - 1, gOffsets.width, fontSettings);
         }
     }
 
@@ -381,12 +348,6 @@ void mainMenuWindowFree()
 {
     if (!gMainMenuWindowInitialized) {
         return;
-    }
-
-    // Clean up custom art if used
-    if (gMainMenuBackgroundArt != nullptr) {
-        internal_free(gMainMenuBackgroundArt);
-        gMainMenuBackgroundArt = nullptr;
     }
 
     for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
