@@ -20,16 +20,6 @@ endif()
 
 project(${EXECUTABLE_NAME})
 
-if(MSVC)
-    # Add exception handling support
-    target_compile_options(${EXECUTABLE_NAME} PRIVATE /EHsc)
-    
-    # Keep your previous fixes
-    string(REPLACE "/WX" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    string(REPLACE "/WX" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-    target_compile_options(${EXECUTABLE_NAME} PRIVATE /wd4067 /wd4477)
-endif()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS NO)
