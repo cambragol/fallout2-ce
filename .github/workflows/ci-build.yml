@@ -339,10 +339,6 @@ jobs:
           path: out
           key: windows-${{ matrix.arch }}-cmake-v100
 
-      - name: Clean CMake cache (Windows)
-        run: Remove-Item -Recurse -Force out\build\windows-${{ matrix.arch }}
-        shell: pwsh
-
       - name: Configure
         shell: cmd
         run: |
