@@ -121,7 +121,7 @@ int displayMonitorInit()
             return -1;
         }
         _intface_full_width = backgroundFrmImage.getWidth();
-        
+
         gDisplayMonitorScrollUpButton = buttonCreate(gInterfaceBarWindow,
             DISPLAY_MONITOR_X,
             DISPLAY_MONITOR_Y,
@@ -327,12 +327,12 @@ static void displayMonitorRefresh()
     buf += _intface_full_width * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X;
 
     blitBufferToBuffer(
-        backgroundFrmImage.getData() + _intface_full_width * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X,  // Source with offset
+        backgroundFrmImage.getData() + _intface_full_width * DISPLAY_MONITOR_Y + DISPLAY_MONITOR_X, // Source with offset
         DISPLAY_MONITOR_WIDTH,
         DISPLAY_MONITOR_HEIGHT,
-        _intface_full_width,             // Source stride
-        buf,                             // Destination without offset
-        _intface_full_width              // Destination stride
+        _intface_full_width, // Source stride
+        buf, // Destination without offset
+        _intface_full_width // Destination stride
     );
 
     int oldFont = fontGetCurrent();
