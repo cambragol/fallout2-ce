@@ -20,17 +20,14 @@ endif()
 
 project(${EXECUTABLE_NAME})
 
-# Disable "treat warnings as errors" for MSVC builds
 if(MSVC)
-    # Turn off warning->error conversion
+    # Add exception handling support
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE /EHsc)
+    
+    # Keep your previous fixes
     string(REPLACE "/WX" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     string(REPLACE "/WX" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-    
-    # Disable specific warnings that are safe to ignore
-    add_compile_options(
-        /wd4067  # Unexpected tokens after preprocessor directive
-        /wd4477  # Format string type mismatch
-    )
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE /wd4067 /wd4477)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
