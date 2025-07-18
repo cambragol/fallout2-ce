@@ -339,6 +339,17 @@ jobs:
           path: out
           key: windows-${{ matrix.arch }}-cmake-v100
 
+      - name: Remove invalid CMake cache if present
+        shell: cmd
+        run: |
+          if exist out\build\windows-${{ matrix.arch }}\CMakeCache.txt (
+            findstr /C:"C:/" out\build\windows-${{ matrix.arch }}\CMakeCache.txt >nul 2>&1
+            if %errorlevel%==0 (
+              echo Deleting stale CMake cache due to path mismatch
+              rmdir /s /q out\build\windows-${{ matrix.arch }}
+            )
+          )
+
       - name: Configure
         shell: cmd
         run: |
