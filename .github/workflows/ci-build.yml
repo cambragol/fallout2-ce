@@ -312,61 +312,57 @@ jobs:
 
   windows:
     name: Windows (${{ matrix.arch }})
-    runs-on: windows-2022
+
+    runs-on: windows-2025
+
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: x86
-            generator: "Visual Studio 16 2019"
-            platform: Win32
-            toolset: v141_xp
+            generator-platform: Win32
           - arch: x64
-            generator: "Visual Studio 16 2019"
-            platform: x64
-            toolset: v141_xp
-  
+            generator-platform: x64
+
     steps:
       - name: Clone
         uses: actions/checkout@v4
-  
-      # Use Microsoft's official setup action
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-        with:
-          vs-version: '16.11'
-  
-      # Install required components
-      - name: Install XP support
-        run: |
-          choco install visualstudio2019-workload-vctools -y --package-parameters="'--add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP'"
-  
-      # Configure CMake directly without presets
-      - name: Configure CMake
+
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
         shell: cmd
         run: |
-          msbuild /version
-          cmake -B build -G "${{ matrix.generator }}" -A "${{ matrix.platform }}" -T "${{ matrix.toolset }}" ^
-            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB" ^
-            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501" ^
-            -D CMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
-  
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
+      - name: Cache cmake build
+        uses: actions/cache@v4
+        with:
+          path: out
+          key: windows-${{ matrix.arch }}-cmake-v100
+
+      - name: Configure
+        shell: cmd
+        run: |
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --preset windows-${{ matrix.arch }}
+
       - name: Build
         shell: cmd
         run: |
-          cmake --build build --config RelWithDebInfo
-  
-      - name: Rename executable
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build --preset windows-${{ matrix.arch }}-release
+
+      - name: Change executable file name
         run: |
-          move build\RelWithDebInfo\fallout2-ce.exe build\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
-  
-      - name: Upload artifact
+          mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
+
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path: build\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
+          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
           retention-days: 7
-        
+
+
   release:
     name: Release Continuous build
     runs-on: ubuntu-latest
