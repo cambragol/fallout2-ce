@@ -336,17 +336,18 @@ jobs:
           fetch-depth: 0
 
       - name: Install Visual Studio Build Tools
-        shell: cmd
+        shell: powershell
         run: |
-          choco install visualstudio2019buildtools -y --package-parameters="^
-          --add Microsoft.VisualStudio.Workload.VCTools ^
-          --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 ^
-          --add Microsoft.VisualStudio.Component.VC.v141.xp ^
-          --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 ^
-          --add Microsoft.VisualStudio.Component.Windows10SDK.10240 ^
-          --add Microsoft.VisualStudio.Component.Windows10SDK.19041 ^
-          --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP ^
-          --add Microsoft.VisualStudio.Component.WinXP"
+          $params = "--add Microsoft.VisualStudio.Workload.VCTools " +
+              "--add Microsoft.VisualStudio.Component.VC.v141.x86.x64 " +
+              "--add Microsoft.VisualStudio.Component.VC.v141.xp " +
+              "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 " +
+              "--add Microsoft.VisualStudio.Component.Windows10SDK.10240 " +
+              "--add Microsoft.VisualStudio.Component.Windows10SDK.19041 " +
+              "--add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP " +
+              "--add Microsoft.VisualStudio.Component.WinXP"
+    
+          choco install visualstudio2019buildtools -y --package-parameters="$params"
 
       - name: Clean build directory
         shell: powershell
