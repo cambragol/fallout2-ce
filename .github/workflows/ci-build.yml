@@ -147,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce.ipa
-          path: out/build/ios/fallout2-ce.ipa
+          path:  out/build/ios/fallout2-ce.ipa
           retention-days: 7
 
   linux:
@@ -201,7 +201,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-${{ matrix.arch }}
-          path: out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
+          path:  out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
           retention-days: 7
 
   linux-armhf:
@@ -241,7 +241,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-armhf
-          path: build/fallout2-ce-linux-armhf
+          path:  build/fallout2-ce-linux-armhf
           retention-days: 7
 
   linux-arm64:
@@ -272,7 +272,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-linux-arm64
-          path: build/fallout2-ce-linux-arm64
+          path:  build/fallout2-ce-linux-arm64
           retention-days: 7
 
   macos:
@@ -312,7 +312,9 @@ jobs:
 
   windows:
     name: Windows (${{ matrix.arch }})
-    runs-on: windows-2022
+
+    runs-on: windows-2025
+
     strategy:
       fail-fast: false
       matrix:
@@ -321,52 +323,45 @@ jobs:
             generator-platform: Win32
           - arch: x64
             generator-platform: x64
-  
+
     steps:
       - name: Clone
         uses: actions/checkout@v4
-  
+
       - name: Install Visual Studio 2019 Build Tools with v141_xp
         shell: cmd
         run: |
           choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
-  
-      - name: Clean CMake cache
-        shell: cmd
-        run: |
-          if exist "out\build\windows-${{ matrix.arch }}\CMakeCache.txt" del "out\build\windows-${{ matrix.arch }}\CMakeCache.txt"
-          if exist "out\build\windows-${{ matrix.arch }}\CMakeFiles" rmdir /s /q "out\build\windows-${{ matrix.arch }}\CMakeFiles"
-  
+
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: windows-${{ matrix.arch }}-cmake-v100-${{ github.run_number }}
-  
+          key: windows-${{ matrix.arch }}-cmake-v100
+
       - name: Configure
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-          cmake --preset windows-${{ matrix.arch }} ^
-            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc /wd4067 /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DNOGDI /DNOCOMM" ^
-            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501 /EHsc /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DNOGDI /DNOCOMM"
-  
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --preset windows-${{ matrix.arch }}
+
       - name: Build
         shell: cmd
         run: |
-          cmake --build --preset windows-${{ matrix.arch }}-release
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build --preset windows-${{ matrix.arch }}-release
 
       - name: Change executable file name
-        shell: cmd
         run: |
-          move /Y "out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce.exe" "out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe"
+          mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path: out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
+          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
           retention-days: 7
+
 
   release:
     name: Release Continuous build
