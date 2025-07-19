@@ -310,7 +310,7 @@ jobs:
           path: out/build/macos/Fallout II Community Edition.dmg
           retention-days: 7
 
-windows:
+  windows:
     name: Windows (${{ matrix.arch }})
     runs-on: windows-2022
     strategy:
@@ -375,12 +375,18 @@ windows:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
           cmake --build out/build/windows-${{ matrix.build_dir }} --config RelWithDebInfo
+
       - name: Rename executable
         shell: powershell
         run: |
           $source = "out/build/windows-${{ matrix.build_dir }}/RelWithDebInfo/fallout2-ce.exe"
           $dest = "out/build/windows-${{ matrix.build_dir }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe"
-          Move-Item -Path $source -Destination $dest -Force
+          if (Test-Path $source) {
+            Move-Item -Path $source -Destination $dest -Force
+          } else {
+            Write-Host "Executable not found at $source"
+            exit 1
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
