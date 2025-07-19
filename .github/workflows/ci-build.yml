@@ -325,26 +325,6 @@ jobs:
             generator-platform: x64
 
     steps:
-
-        - name: Nuclear Clean
-          shell: cmd
-          run: |
-            :: Completely wipe all build directories
-            rmdir /s /q out 2>nul || true
-            rmdir /s /q build 2>nul || true
-            del /q /f *Cache* 2>nul || true
-            
-            :: Reset Visual Studio environment
-            set VSCMD_ARG_TGT_ARCH=
-            set VSCMD_ARG_HOST_ARCH=
-            set VSCMD_ARG_VCVARS_VER=
-            
-            :: Fresh clone
-            cd ..
-            rmdir /s /q fallout2-ce 2>nul || true
-            git clone https://github.com/${{ github.repository }}.git fallout2-ce
-            cd fallout2-ce
-
       - name: Clone
         uses: actions/checkout@v4
 
@@ -353,17 +333,11 @@ jobs:
         run: |
           choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
 
-      - name: Invalidate problematic cache
-        shell: cmd
-        run: |
-          rmdir /s /q out 2>nul || true
-          echo "Current date: %date% %time%" > cache_invalidator.txt
-  
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: windows-${{ matrix.arch }}-cmake-v100-${{ hashFiles('cache_invalidator.txt') }}
+          key: windows-${{ matrix.arch }}-cmake-v100
 
       - name: Configure
         shell: cmd
@@ -374,8 +348,8 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-          cmake --build build --config Release --target fallout2-ce -- /p:TrackFileAccess=false /p:TreatWarningAsError=false /p:WarningLevel=1
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build --preset windows-${{ matrix.arch }}-release
 
       - name: Change executable file name
         run: |
