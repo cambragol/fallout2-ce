@@ -24,11 +24,48 @@ jobs:
         run: |
           sudo apt update
           sudo apt install cppcheck
+
       - name: Clone
         uses: actions/checkout@v4
 
       - name: cppcheck
         run: cppcheck --std=c++17 src/
+
+  code-format:
+    name: Code format check
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+
+      - name: Show clang-format version
+        run: |
+          clang-format --version
+
+      - name: clang-format
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            echo "Showing PR labels..."
+            gh pr view ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" --json labels
+            echo "Checking labels on PR..."
+            if gh pr view ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" --json labels --jq '.labels[].name' | grep -q "skip-formatting"; then
+              echo "skip-formatting label found - do not raise error"
+              echo "==============================="
+              find src -type f \( -name \*.cc -o -name \*.h \) | xargs clang-format --dry-run
+              exit 0
+            fi
+            echo "skip-formatting label not found - raise error if formatting is not correct"
+          else
+            echo "Not a PR, do not check labels"
+          fi
+
+          find src -type f \( -name \*.cc -o -name \*.h \) | xargs clang-format --dry-run --Werror
+
+          echo "Code is formatted correctly"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   android:
     name: Android
@@ -50,7 +87,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: os/android/app/.cxx
-          key: android-cmake-v2
+          key: android-cmake-v100
 
       - name: Setup signing config
         if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
@@ -66,9 +103,11 @@ jobs:
         run: |
           cd os/android
           ./gradlew assembleDebug
+
       - name: Change apk file name
         run: |
           mv os/android/app/build/outputs/apk/debug/app-debug.apk os/android/app/build/outputs/apk/debug/fallout2-ce.apk
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -89,18 +128,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: ios-cmake-v5
+          key: ios-cmake-v100
 
       - name: Configure
         run: |
           cmake --preset ios
+
       - name: Build
         run: |
           cmake --build --preset ios-debug
+
       - name: Pack
         run: |
           cd out/build/ios
           cpack -C Debug
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -130,26 +172,31 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt update
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
+
       - name: Dependencies (x64)
         if: matrix.arch == 'x64'
         run: |
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
+
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: linux-${{ matrix.arch }}-cmake-v3
+          key: linux-${{ matrix.arch }}-cmake-v100
 
       - name: Configure
         run: |
           cmake --preset linux-${{ matrix.arch }}-debug
+
       - name: Build
         run: |
           cmake --build --preset linux-${{ matrix.arch }}-debug
+
       - name: Change executable file name
         run: |
           mv out/build/linux-${{ matrix.arch }}-debug/fallout2-ce out/build/linux-${{ matrix.arch }}-debug/fallout2-ce-linux-${{ matrix.arch }}
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -171,6 +218,7 @@ jobs:
           sudo dpkg --add-architecture armhf
           sudo apt update
           sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libsdl2-dev:armhf zlib1g-dev:armhf
+
       - name: Configure
         run: |
           cmake \
@@ -181,12 +229,14 @@ jobs:
             -D CMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
             -D CMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
             # EOL
+
       - name: Build
         run: cmake --build build
 
       - name: Change executable file name
         run: |
           mv build/fallout2-ce build/fallout2-ce-linux-armhf
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -207,6 +257,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
+
       - name: Configure
         run: cmake -B build -D CMAKE_BUILD_TYPE=Debug -D FALLOUT_VENDORED=OFF
 
@@ -216,6 +267,7 @@ jobs:
       - name: Change executable file name
         run: |
           mv build/fallout2-ce build/fallout2-ce-linux-arm64
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -236,18 +288,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: out
-          key: macos-cmake-v6
+          key: macos-cmake-v100
 
       - name: Configure
         run: |
           cmake --preset macos
+
       - name: Build
         run: |
           cmake --build --preset macos-debug
+
       - name: Pack
         run: |
           cd out/build/macos
           cpack -C Debug
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -258,7 +313,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2022
+    runs-on: windows-2025
 
     strategy:
       fail-fast: false
@@ -273,21 +328,33 @@ jobs:
       - name: Clone
         uses: actions/checkout@v4
 
+      - name: Install Visual Studio 2019 Build Tools with v141_xp
+        shell: cmd
+        run: |
+          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: windows-${{ matrix.arch }}-cmake-v2
+          key: windows-${{ matrix.arch }}-cmake-v100
 
       - name: Configure
+        shell: cmd
         run: |
-          cmake --preset windows-${{ matrix.arch }}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --preset windows-${{ matrix.arch }}
+
       - name: Build
+        shell: cmd
         run: |
-          cmake --build --preset windows-${{ matrix.arch }}-release
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
+          && cmake --build --preset windows-${{ matrix.arch }}-release
+
       - name: Change executable file name
         run: |
           mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
@@ -338,6 +405,7 @@ jobs:
                     echo "ERROR: Duplicate artifact folder $file"
                     exit 1
                   fi
+
                   echo "Moving $file"
                   mv "$file" "../$file"
                 fi
@@ -349,10 +417,12 @@ jobs:
           ls -Rlah .
           find .
           cd ../
+
       - name: Allow GitHub to process removed release for few seconds
         if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
         run: |
           sleep 20s
+
       - name: Upload new release
         if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
         uses: softprops/action-gh-release@v0.1.15
