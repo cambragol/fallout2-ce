@@ -325,6 +325,13 @@ jobs:
             generator-platform: x64
 
     steps:
+      - name: Nuclear Clean
+        shell: cmd
+        run: |
+          rmdir /s /q out 2>nul || true
+          rmdir /s /q build 2>nul || true
+          del /q /f *Cache* 2>nul || true
+        
       - name: Clone
         uses: actions/checkout@v4
 
