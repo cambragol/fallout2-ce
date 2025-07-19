@@ -75,6 +75,7 @@ struct DebugSettings {
     bool show_script_messages = false;
     bool show_load_info = false;
     bool output_map_data_info = false;
+    bool write_offsets = false;
 };
 
 struct MapperSettings {
@@ -95,13 +96,13 @@ struct MapperSettings {
 struct GraphicSettings {
     int game_width = 640;
     int game_height = 480;
-    int scale2x = 0;
     int splash_size = 0;
     bool fullscreen = true;
     bool stretch_enabled = true;
     bool preserve_aspect = true;
     bool high_quality = false;
     bool highres_stencil = true;
+    bool widescreen = false;
 };
 
 struct Settings {

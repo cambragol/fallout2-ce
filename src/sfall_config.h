@@ -81,6 +81,7 @@ namespace fallout {
 #define SFALL_CONFIG_AUTO_OPEN_DOORS "AutoOpenDoors"
 #define SFALL_CONFIG_GAPLESS_MUSIC "GaplessMusic" // note: this isn't an sfall config
 #define SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS "WorldMapTravelMarkers"
+#define SFALL_CONFIG_ENHANCED_BARTER "EnhancedBarter"
 
 // temp for iface bar from f2_res.ini
 #define SFALL_CONFIG_IFACE_BAR_MODE "IFACE_BAR_MODE"
