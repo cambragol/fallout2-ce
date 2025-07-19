@@ -325,6 +325,26 @@ jobs:
             generator-platform: x64
 
     steps:
+
+        - name: Nuclear Clean
+          shell: cmd
+          run: |
+            :: Completely wipe all build directories
+            rmdir /s /q out 2>nul || true
+            rmdir /s /q build 2>nul || true
+            del /q /f *Cache* 2>nul || true
+            
+            :: Reset Visual Studio environment
+            set VSCMD_ARG_TGT_ARCH=
+            set VSCMD_ARG_HOST_ARCH=
+            set VSCMD_ARG_VCVARS_VER=
+            
+            :: Fresh clone
+            cd ..
+            rmdir /s /q fallout2-ce 2>nul || true
+            git clone https://github.com/${{ github.repository }}.git fallout2-ce
+            cd fallout2-ce
+
       - name: Clone
         uses: actions/checkout@v4
 
