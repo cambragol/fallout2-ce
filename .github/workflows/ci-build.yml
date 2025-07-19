@@ -339,6 +339,11 @@ jobs:
           path: out
           key: windows-${{ matrix.arch }}-cmake-v100
 
+      - name: Clean CMake cache if needed
+        shell: bash
+        run: |
+          rm -rf out/build/windows-${{ matrix.arch }}
+
       - name: Configure
         shell: cmd
         run: |
