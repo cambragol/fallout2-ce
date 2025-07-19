@@ -325,41 +325,37 @@ jobs:
             generator-platform: x64
 
     steps:
-      - name: Nuclear clean
-        shell: bash
-        run: |
-          # Remove all CMake cache files and build directories
-          rm -rf out build CMakeCache.txt CMakeFiles
-          # For Windows runners
-          if [ -d "C:/" ]; then
-            rm -rf "C:/Users/runneradmin/.cmake"
-          fi
-          
-      - name: Clone
-        uses: actions/checkout@v4
-
-      - name: Install Visual Studio 2019 Build Tools with v141_xp
+      - name: Nuclear Clean (Windows Edition)
         shell: cmd
         run: |
-          choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
+          :: Remove all possible cache locations
+          rmdir /s /q "%CD%\out" 2>nul || true
+          rmdir /s /q "%CD%\build" 2>nul || true
+          del /q /f "%CD%\CMakeCache.txt" 2>nul || true
+          rmdir /s /q "C:\Users\runneradmin\.cmake" 2>nul || true
+          :: Create fresh directory structure
+          mkdir "%CD%\out"
+          mkdir "%CD%\out\build"
+          mkdir "%CD%\out\build\windows-${{ matrix.arch }}"
 
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: windows-${{ matrix.arch }}-cmake-v100
+      - uses: actions/checkout@v4
 
-      - name: Configure
+      - name: Configure (Absolute Paths)
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --preset windows-${{ matrix.arch }}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+          cmake -S "%CD%" -B "%CD%\out\build\windows-${{ matrix.arch }}" ^
+            -G "Visual Studio 16 2019" ^
+            -A ${{ matrix.platform }} ^
+            -T v141_xp ^
+            -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug> ^
+            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc" ^
+            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501"
 
       - name: Build
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --build --preset windows-${{ matrix.arch }}-release
+          cmake --build "%CD%\out\build\windows-${{ matrix.arch }}" --config Release
 
       - name: Change executable file name
         run: |
