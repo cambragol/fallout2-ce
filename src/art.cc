@@ -4,7 +4,6 @@
 
 #include "db.h" // for fileOpen, fileClose
 #include "xfile.h" // for File type
-#include <dirent.h>
 #define DIR_SEPARATOR '/'
 
 #include <stdlib.h>
