@@ -177,6 +177,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     debugPrint(">init_options_menu\n");
 
     if (!gIsMapper && skipOpeningMovies < 2) {
+        resizeContent(640, 480);
         showSplash();
     }
 
@@ -1196,6 +1197,9 @@ static void showHelp()
 {
     ScopedGameMode gm(GameMode::kHelp);
 
+    restoreUserAspectPreference();
+    resizeContent(640, 480);
+
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
 
@@ -1268,6 +1272,7 @@ static void showHelp()
     if (isoWasEnabled) {
         isoEnable();
     }
+    resizeContent(screenGetWidth(), screenGetHeight(), true);
 }
 
 // 0x4440B8
@@ -1353,10 +1358,10 @@ static int gameDbInit()
             patch_file_name = nullptr;
 
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        /*if (falloutce_db_handle == -1) {
+        if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
             return -1;
-        }*/
+        }
     }
 
     // Load master.dat
@@ -1384,10 +1389,10 @@ static int gameDbInit()
             patch_file_name = nullptr;
 
         int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        /*if (falloutce_db_handle == -1) {
+        if (falloutce_db_handle == -1) {
             showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
             return -1;
-        }*/
+        }
     }
 
     // Load critter.dat
@@ -1423,11 +1428,6 @@ static int gameDbInit()
     }
 
     sfallLoadMods();
-
-    // drop support for f2_res to reduce confusion? Keeping it will confuse users, and all graphics will be moved into falloutce.dat
-    /*if (compat_access("f2_res.dat", 0) == 0) {
-        dbOpen("f2_res.dat", 0, nullptr, 1);
-    }*/
 
     return 0;
 }
