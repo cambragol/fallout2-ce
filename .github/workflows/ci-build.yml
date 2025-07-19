@@ -325,6 +325,16 @@ jobs:
             generator-platform: x64
 
     steps:
+      - name: Nuclear clean
+        shell: bash
+        run: |
+          # Remove all CMake cache files and build directories
+          rm -rf out build CMakeCache.txt CMakeFiles
+          # For Windows runners
+          if [ -d "C:/" ]; then
+            rm -rf "C:/Users/runneradmin/.cmake"
+          fi
+          
       - name: Clone
         uses: actions/checkout@v4
 
