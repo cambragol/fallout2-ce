@@ -334,22 +334,15 @@ jobs:
       - uses: actions/checkout@v4
   
       - name: Install VS2019 Build Tools
-        shell: pwsh
+        shell: powershell
         run: |
           choco install visualstudio2019buildtools -y --force `
             --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.xp'"
   
-      - name: Find Visual Studio
-        id: find_vs
-        shell: pwsh
-        run: |
-          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-          echo "vsPath=$vsPath" >> $env:GITHUB_OUTPUT
-  
       - name: Configure
         shell: cmd
         run: |
-          call "${{ steps.find_vs.outputs.vsPath }}\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.vc_arch }}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.vc_arch }}
           cmake -S . -B build -G "Visual Studio 16 2019" -A ${{ matrix.platform }} ^
             -T v141_xp ^
             -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>
@@ -357,7 +350,6 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          call "${{ steps.find_vs.outputs.vsPath }}\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.vc_arch }}
           cmake --build build --config Release
 
       - name: Change executable file name
