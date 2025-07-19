@@ -339,16 +339,11 @@ jobs:
           path: out
           key: windows-${{ matrix.arch }}-cmake-v100
 
-      - name: Clean CMake cache if needed
-        shell: bash
-        run: |
-          rm -rf out/build/windows-${{ matrix.arch }}
-
       - name: Configure
         shell: cmd
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --preset windows-${{ matrix.arch }} -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc"
+          && cmake --preset windows-${{ matrix.arch }}
 
       - name: Build
         shell: cmd
