@@ -373,16 +373,30 @@ static bool createRenderer(int width, int height)
 
     gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
     if (gSdlTexture == nullptr) {
+        SDL_DestroyRenderer(gSdlRenderer);
+        gSdlRenderer = nullptr;
         return false;
     }
 
     Uint32 format;
     if (SDL_QueryTexture(gSdlTexture, &format, nullptr, nullptr, nullptr) != 0) {
+        SDL_DestroyTexture(gSdlTexture);
+        SDL_DestroyRenderer(gSdlRenderer);
+        gSdlTexture = nullptr;
+        gSdlRenderer = nullptr;
         return false;
+    }
+
+    if (gSdlTextureSurface != nullptr) {
+        SDL_FreeSurface(gSdlTextureSurface);
     }
 
     gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
     if (gSdlTextureSurface == nullptr) {
+        SDL_DestroyTexture(gSdlTexture);
+        SDL_DestroyRenderer(gSdlRenderer);
+        gSdlTexture = nullptr;
+        gSdlRenderer = nullptr;
         return false;
     }
 
@@ -409,8 +423,40 @@ static void destroyRenderer()
 
 void handleWindowSizeChanged()
 {
+    static bool isResizing = false;
+    if (isResizing) return;
+    isResizing = true;
+
+    // Save palette by copying data (not just pointer)
+    unsigned char* originalPalette = directDrawGetPalette();
+    unsigned char paletteCopy[256 * 3];  // Standard 8-bit palette size
+    if (originalPalette) {
+        memcpy(paletteCopy, originalPalette, sizeof(paletteCopy));
+    }
+
+    // Tear down existing renderer
     destroyRenderer();
-    createRenderer(screenGetWidth(), screenGetHeight());
+    directDrawFree();
+
+    // Resize window (no error check possible - SDL doesn't return status)
+    int newWidth = settings.graphics.game_width;
+    int newHeight = settings.graphics.game_height;
+    SDL_SetWindowSize(gSdlWindow, newWidth, newHeight);
+    _scr_size = { 0, 0, newWidth - 1, newHeight - 1 };
+
+    // Reinitialize drawing surface
+    directDrawInit(newWidth, newHeight, 8);
+    _zero_vid_mem();
+
+    // Restore palette if we had one
+    if (originalPalette) {
+        directDrawSetPalette(paletteCopy);
+    }
+
+    // Recreate renderer
+    createRenderer(newWidth, newHeight);
+    
+    isResizing = false;
 }
 
 void resizeContent(int width, int height)
