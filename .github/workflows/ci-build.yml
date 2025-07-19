@@ -313,49 +313,52 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2025
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86
-            generator-platform: Win32
-          - arch: x64
-            generator-platform: x64
-
-    steps:
-      - name: Nuclear Clean (Windows Edition)
+      runs-on: windows-2022
+      strategy:
+        matrix:
+          arch: [x86, x64]
+          include:
+            - arch: x86
+              platform: Win32
+              vc_arch: x86_xp
+            - arch: x64
+              platform: x64
+              vc_arch: x64_xp
+  
+      steps:
+      - name: Clean workspace
         shell: cmd
         run: |
-          :: Remove all possible cache locations
-          rmdir /s /q "%CD%\out" 2>nul || true
-          rmdir /s /q "%CD%\build" 2>nul || true
-          del /q /f "%CD%\CMakeCache.txt" 2>nul || true
-          rmdir /s /q "C:\Users\runneradmin\.cmake" 2>nul || true
-          :: Create fresh directory structure
-          mkdir "%CD%\out"
-          mkdir "%CD%\out\build"
-          mkdir "%CD%\out\build\windows-${{ matrix.arch }}"
-
+          rmdir /s /q out build CMakeCache.txt 2>nul || true
+  
       - uses: actions/checkout@v4
-
-      - name: Configure (Absolute Paths)
+  
+      - name: Install VS2019 Build Tools
+        shell: pwsh
+        run: |
+          choco install visualstudio2019buildtools -y --force `
+            --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.xp'"
+  
+      - name: Find Visual Studio
+        id: find_vs
+        shell: pwsh
+        run: |
+          $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          echo "vsPath=$vsPath" >> $env:GITHUB_OUTPUT
+  
+      - name: Configure
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-          cmake -S "%CD%" -B "%CD%\out\build\windows-${{ matrix.arch }}" ^
-            -G "Visual Studio 16 2019" ^
-            -A ${{ matrix.platform }} ^
+          call "${{ steps.find_vs.outputs.vsPath }}\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.vc_arch }}
+          cmake -S . -B build -G "Visual Studio 16 2019" -A ${{ matrix.platform }} ^
             -T v141_xp ^
-            -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug> ^
-            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc" ^
-            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501"
-
+            -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>
+  
       - name: Build
         shell: cmd
         run: |
-          cmake --build "%CD%\out\build\windows-${{ matrix.arch }}" --config Release
+          call "${{ steps.find_vs.outputs.vsPath }}\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.vc_arch }}
+          cmake --build build --config Release
 
       - name: Change executable file name
         run: |
