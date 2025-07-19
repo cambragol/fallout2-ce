@@ -4,10 +4,6 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
 set(EXECUTABLE_NAME fallout2-ce)
 
-if (MSVC)
-    add_compile_options(/EHsc)
-endif()
-
 if(APPLE)
     if(IOS)
         set(CMAKE_OSX_DEPLOYMENT_TARGET "12" CACHE STRING "")
