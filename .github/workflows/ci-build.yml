@@ -333,11 +333,17 @@ jobs:
         run: |
           choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
 
+      - name: Invalidate problematic cache
+        shell: cmd
+        run: |
+          rmdir /s /q out 2>nul || true
+          echo "Current date: %date% %time%" > cache_invalidator.txt
+  
       - name: Cache cmake build
         uses: actions/cache@v4
         with:
           path: out
-          key: windows-${{ matrix.arch }}-cmake-v100
+          key: windows-${{ matrix.arch }}-cmake-v100-${{ hashFiles('cache_invalidator.txt') }}
 
       - name: Configure
         shell: cmd
