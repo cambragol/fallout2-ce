@@ -5,15 +5,15 @@
 #ifdef _WIN32
 #include <direct.h>
 #include <io.h>
+#include <mmsystem.h> // Unified header for all Windows versions
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <mmsystem.h>  // Unified header for all Windows versions
 #else
+#include <chrono>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <chrono>
 #endif
 
 #include <SDL.h>
