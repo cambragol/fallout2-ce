@@ -8,7 +8,7 @@
 #include "platform_compat.h"
 #include "proto_types.h"
 
-#define FILENAME_LENGTH 32 // Standardized filename buffer size 
+#define FILENAME_LENGTH 32 // Standardized filename buffer size
 
 namespace fallout {
 
