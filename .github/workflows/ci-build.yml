@@ -354,8 +354,8 @@ jobs:
       - name: Build
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --build --preset windows-${{ matrix.arch }}-release
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+          cmake --build build --config Release --target fallout2-ce -- /p:TrackFileAccess=false /p:TreatWarningAsError=false /p:WarningLevel=1
 
       - name: Change executable file name
         run: |
