@@ -315,6 +315,27 @@ if(WIN32)
 endif()
 
 if(WIN32)
+    # Always link winmm for multimedia support
+    target_link_libraries(${EXECUTABLE_NAME} winmm)
+    
+    # Conditionally link static runtime if using static CRT
+    if(CMAKE_MSVC_RUNTIME_LIBRARY MATCHES "MultiThreaded")
+        # For VS 2019 and newer
+        if(MSVC_VERSION GREATER_EQUAL 1920)
+            target_link_libraries(${EXECUTABLE_NAME} 
+                $<$<CONFIG:Debug>:libcmtd>
+                $<$<CONFIG:Debug>:libcpmtd>
+                $<$<NOT:$<CONFIG:Debug>>:libcmt>
+                $<$<NOT:$<CONFIG:Debug>>:libcpmt>
+            )
+        else()
+            # For older VS versions
+            target_link_libraries(${EXECUTABLE_NAME} libcpmt)
+        endif()
+    endif()
+endif()
+
+if(WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         winmm
         libcpmt
