@@ -348,9 +348,9 @@ jobs:
         run: |
           call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
           cmake --preset windows-${{ matrix.arch }} ^
-            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc /wd4067 /DNOMINMAX /DWIN32_LEAN_AND_MEAN" ^
-            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501 /EHsc /DNOMINMAX /DWIN32_LEAN_AND_MEAN"
-
+            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc /wd4067 /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DNOGDI /DNOCOMM" ^
+            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501 /EHsc /DNOMINMAX /DWIN32_LEAN_AND_MEAN /DNOGDI /DNOCOMM"
+  
       - name: Build
         shell: cmd
         run: |
