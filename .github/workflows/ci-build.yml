@@ -319,8 +319,8 @@ jobs:
         include:
           - arch: x86
             vcvars_arch: x86
-            toolset: v141_xp
-            sdk: "10.0.10240.0"
+            toolset: v141
+            sdk: "10.0.19041.0"  # Use a newer SDK
           - arch: x64
             vcvars_arch: x64
             toolset: v142
@@ -333,13 +333,18 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Install Windows SDK components
+        shell: powershell
+        run: |
+          # Install required Windows SDK components
+          choco install -y windows-sdk-10-version-19041-all
+
       - name: Setup Visual Studio
         uses: ilammy/msvc-dev-cmd@v1
         with:
           toolset: ${{ matrix.toolset }}
           arch: ${{ matrix.vcvars_arch }}
           sdk: ${{ matrix.sdk }}
-          vcvars_ver: 14.29  # VS 2019
 
       - name: Clean build directory
         shell: powershell
@@ -357,8 +362,8 @@ jobs:
             -G "Visual Studio 16 2019" ^
             -A ${{ matrix.vcvars_arch }} ^
             -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" ^
-            -DCMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB /EHsc" ^
-            -DCMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501"
+            -DCMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0601 /D_STATIC_CPPLIB /EHsc" ^
+            -DCMAKE_C_FLAGS="/D_WIN32_WINNT=0x0601"
 
       - name: Build project
         shell: cmd
