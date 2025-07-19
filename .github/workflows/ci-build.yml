@@ -318,68 +318,53 @@ jobs:
       matrix:
         include:
           - arch: x86
-            generator-platform: Win32
+            generator: "Visual Studio 16 2019"
+            platform: Win32
+            toolset: v141_xp
           - arch: x64
-            generator-platform: x64
+            generator: "Visual Studio 16 2019"
+            platform: x64
+            toolset: v141_xp
   
     steps:
       - name: Clone
         uses: actions/checkout@v4
   
-      - name: Install Visual Studio Build Tools
-        shell: powershell
-        run: |
-          choco install visualstudio2019buildtools -y `
-            --package-parameters="' `
-              --add Microsoft.VisualStudio.Workload.VCTools `
-              --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 `
-              --add Microsoft.VisualStudio.Component.VC.v141.xp `
-              --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-              --add Microsoft.VisualStudio.Component.Windows10SDK.10240 `
-              --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP `
-              --add Microsoft.VisualStudio.Component.WinXP'"
-  
-      # Create a fixed build path outside the workspace
-      - name: Create fixed build directory
-        shell: cmd
-        run: |
-          mkdir C:\fixed-build
-          cd C:\fixed-build
-          git clone "%GITHUB_WORKSPACE%" fallout2-ce
-  
-      # Cache only at the fixed path
-      - name: Cache cmake build
-        uses: actions/cache@v4
+      # Use Microsoft's official setup action
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
         with:
-          path: C:\fixed-build\out
-          key: windows-${{ matrix.arch }}-cmake-v100
+          vs-version: '16.11'
   
-      - name: Configure
+      # Install required components
+      - name: Install XP support
+        run: |
+          choco install visualstudio2019-workload-vctools -y --package-parameters="'--add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP'"
+  
+      # Configure CMake directly without presets
+      - name: Configure CMake
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-          cd C:\fixed-build\fallout2-ce
-          cmake --preset windows-${{ matrix.arch }} -B "C:\fixed-build\out\build\windows-${{ matrix.arch }}"
+          msbuild /version
+          cmake -B build -G "${{ matrix.generator }}" -A "${{ matrix.platform }}" -T "${{ matrix.toolset }}" ^
+            -D CMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501 /D_STATIC_CPPLIB" ^
+            -D CMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501" ^
+            -D CMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
   
       - name: Build
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
-          cd C:\fixed-build\fallout2-ce
-          cmake --build --preset windows-${{ matrix.arch }}-release
+          cmake --build build --config RelWithDebInfo
   
-      # Copy artifacts back to workspace for upload
-      - name: Copy artifacts to workspace
-        shell: cmd
+      - name: Rename executable
         run: |
-          mkdir "%GITHUB_WORKSPACE%\out\build\windows-${{ matrix.arch }}\RelWithDebInfo"
-          copy "C:\fixed-build\out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce.exe" "%GITHUB_WORKSPACE%\out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe"
+          move build\RelWithDebInfo\fallout2-ce.exe build\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
   
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path: out\build\windows-${{ matrix.arch }}\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
+          path: build\RelWithDebInfo\fallout2-ce-${{ matrix.arch }}.exe
           retention-days: 7
         
   release:
