@@ -312,56 +312,71 @@ jobs:
 
   windows:
     name: Windows (${{ matrix.arch }})
-
-    runs-on: windows-2025
-
+    runs-on: windows-2022  # Use stable 2022 runner instead of 2025
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: x86
             generator-platform: Win32
+            build_dir: x86
           - arch: x64
             generator-platform: x64
+            build_dir: x64
 
     steps:
-      - name: Clone
+      - name: Clone repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0  # Get full history for version tracking
 
-      - name: Install Visual Studio 2019 Build Tools with v141_xp
+      - name: Install Visual Studio 2019 Build Tools
         shell: cmd
         run: |
           choco install visualstudio2019buildtools -y --package-parameters="'--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.xp --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.10240 --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.WinXP --add Microsoft.VisualStudio.Component.WinXP'"
 
-      - name: Cache cmake build
-        uses: actions/cache@v4
-        with:
-          path: out
-          key: windows-${{ matrix.arch }}-cmake-v100
+      - name: Clean build directory
+        shell: powershell
+        run: |
+          # Robust path handling with PowerShell
+          $buildDir = "out/build/windows-${{ matrix.build_dir }}"
+          if (Test-Path $buildDir) {
+            Remove-Item -Recurse -Force $buildDir
+          }
+          New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 
-      - name: Configure
+      - name: Configure CMake
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --preset windows-${{ matrix.arch }}
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+          cmake -S . -B out/build/windows-${{ matrix.build_dir }} ^
+            -G "Visual Studio 16 2019" ^
+            -A ${{ matrix.generator-platform }} ^
+            -T v141_xp ^
+            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" ^
+            -DCMAKE_CXX_FLAGS="/D_WIN32_WINNT=0x0501" ^
+            -DCMAKE_C_FLAGS="/D_WIN32_WINNT=0x0501"
 
-      - name: Build
+      - name: Build project
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat" ^
-          && cmake --build --preset windows-${{ matrix.arch }}-release
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+          cmake --build out/build/windows-${{ matrix.build_dir }} --config RelWithDebInfo
 
-      - name: Change executable file name
+      - name: Rename executable
+        shell: powershell
         run: |
-          mv out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce.exe out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
+          $source = "out/build/windows-${{ matrix.build_dir }}/RelWithDebInfo/fallout2-ce.exe"
+          $dest = "out/build/windows-${{ matrix.build_dir }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe"
+          Move-Item -Path $source -Destination $dest -Force
 
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: fallout2-ce-windows-${{ matrix.arch }}
-          path:  out/build/windows-${{ matrix.arch }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
+          path: out/build/windows-${{ matrix.build_dir }}/RelWithDebInfo/fallout2-ce-${{ matrix.arch }}.exe
           retention-days: 7
-
 
   release:
     name: Release Continuous build
