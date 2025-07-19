@@ -7,20 +7,12 @@
 #include <io.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <mmsystem.h>  // Unified header for all Windows versions
 #else
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif
-
-#ifdef _WIN32
-#include <windows.h>
-#ifdef _WIN64
-#include <timeapi.h>
-#else
-#include <mmsystem.h>
-#endif
-#else
 #include <chrono>
 #endif
 
