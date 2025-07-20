@@ -194,7 +194,17 @@ int falloutMain(int argc, char** argv)
                 break;
             case MAIN_MENU_OPTIONS:
                 mainMenuWindowHide(true);
-                doPreferences(true);
+                {
+
+                    mainMenuWindowFree();
+                    doPreferences(true);
+                    // NOTE: Uninline.
+                    main_unload_new();
+
+                    // NOTE: Uninline.
+                    main_reset_system();
+                }
+                mainMenuWindowInit();
                 break;
             case MAIN_MENU_CREDITS:
                 mainMenuWindowHide(true);
