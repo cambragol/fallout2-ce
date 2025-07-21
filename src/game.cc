@@ -1509,46 +1509,17 @@ static void showSplash()
             data[i] = 0;
         }
     }
-
-    int size = settings.graphics.splash_size;
-
+    
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
-    if (size != 0 || screenWidth < width || screenHeight < height) {
-        int scaledWidth;
-        int scaledHeight;
+    // Calculate centered position
+    int x = (screenWidth - width) / 2;
+    int y = (screenHeight - height) / 2;
 
-        if (size == 2) {
-            scaledWidth = screenWidth;
-            scaledHeight = screenHeight;
-        } else {
-            if (screenHeight * width >= screenWidth * height) {
-                scaledWidth = screenWidth;
-                scaledHeight = screenWidth * height / width;
-            } else {
-                scaledWidth = screenHeight * width / height;
-                scaledHeight = screenHeight;
-            }
-        }
-
-        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
-        if (scaled != nullptr) {
-            blitBufferToBufferStretch(data, width, height, width, scaled, scaledWidth, scaledHeight, scaledWidth);
-
-            int x = screenWidth > scaledWidth ? (screenWidth - scaledWidth) / 2 : 0;
-            int y = screenHeight > scaledHeight ? (screenHeight - scaledHeight) / 2 : 0;
-            _scr_blit(scaled, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, x, y);
-            paletteFadeTo(palette);
-
-            internal_free(scaled);
-        }
-    } else {
-        int x = (screenWidth - width) / 2;
-        int y = (screenHeight - height) / 2;
-        _scr_blit(data, width, height, 0, 0, width, height, x, y);
-        paletteFadeTo(palette);
-    }
+    // Perform clean blit
+    _scr_blit(data, width, height, 0, 0, width, height, x, y);
+    paletteFadeTo(palette);
 
     internal_free(data);
     internal_free(palette);

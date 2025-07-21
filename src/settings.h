@@ -96,13 +96,13 @@ struct MapperSettings {
 struct GraphicSettings {
     int game_width = 640;
     int game_height = 480;
-    int splash_size = 0;
     bool fullscreen = true;
     bool stretch_enabled = true;
     bool preserve_aspect = true;
     bool high_quality = false;
     bool highres_stencil = true;
     bool widescreen = false;
+    bool square_pixels = false;
 };
 
 struct Settings {
