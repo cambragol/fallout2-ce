@@ -490,7 +490,7 @@ void renderPresent()
     // Calculate scale factors for DPI
     float scaleX = (float)renderW / windowW;
     float scaleY = (float)renderH / windowH;
-    float dpiScale = (scaleX < scaleY) ? scaleX : scaleY;  // Use min scale for consistency
+    float dpiScale = (scaleX < scaleY) ? scaleX : scaleY; // Use min scale for consistency
 
     // Get logical rendering size fallback
     int logicalW, logicalH;
@@ -517,30 +517,32 @@ void renderPresent()
         if (gSquarePixels) {
             // Use float for scale to support fractional values
             float scale;
-            
+
             if (dpiScale > 1.0f) {
                 // High DPI: fractional scaling
                 float maxScaleX = (float)renderW / gContentWidth;
                 float maxScaleY = (float)renderH / gContentHeight;
                 scale = (maxScaleX < maxScaleY) ? maxScaleX : maxScaleY;
-                
+
                 // Snap to 0.5 increments for better quality
                 scale = floorf(scale * 2.0f) / 2.0f;
                 // Ensure minimum scale of 0.5
-                if (scale < 0.5f) scale = 0.5f;
+                if (scale < 0.5f)
+                    scale = 0.5f;
             } else {
                 // Standard display: integer scaling
                 int maxScaleX = renderW / gContentWidth;
                 int maxScaleY = renderH / gContentHeight;
                 scale = (maxScaleX < maxScaleY) ? maxScaleX : maxScaleY;
                 // Ensure minimum scale of 1
-                if (scale < 1) scale = 1;
+                if (scale < 1)
+                    scale = 1;
             }
-            
+
             // Calculate scaled dimensions
             int scaledWidth = static_cast<int>(gContentWidth * scale);
             int scaledHeight = static_cast<int>(gContentHeight * scale);
-            
+
             // Center the scaled content
             destRect = {
                 (renderW - scaledWidth) / 2,

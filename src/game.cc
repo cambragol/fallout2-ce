@@ -1509,7 +1509,7 @@ static void showSplash()
             data[i] = 0;
         }
     }
-    
+
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
