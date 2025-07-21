@@ -908,7 +908,7 @@ void applyWidescreenPreference(bool widescreen)
     // Rebuild everything
     backgroundSoundPause(); // Pause music to avoid audio glitch
     handleWindowSizeChanged();
-     backgroundSoundResume() ;
+    backgroundSoundResume();
 }
 
 int preferencesInit()
@@ -949,7 +949,7 @@ static void _SetSystemPrefs()
     gPreferencesViolenceLevel1 = settings.preferences.violence_level;
     gPreferencesTargetHighlight1 = settings.preferences.target_highlight;
     gPreferencesCombatMessages1 = settings.preferences.combat_messages;
-    //gPreferencesWidescreen1 = settings.graphics.widescreen;
+    // gPreferencesWidescreen1 = settings.graphics.widescreen;
     gPreferencesCombatLooks1 = settings.preferences.combat_looks;
     gPreferencesCombatTaunts1 = settings.preferences.combat_taunts;
     gPreferencesLanguageFilter1 = settings.preferences.language_filter;
@@ -1415,7 +1415,7 @@ int preferencesSave(File* stream)
         goto err;
     if (fileWriteInt32(stream, gPreferencesTargetHighlight1) == -1)
         goto err;
-    //if (fileWriteInt32(stream, gPreferencesWidescreen1) == -1)
+    // if (fileWriteInt32(stream, gPreferencesWidescreen1) == -1)
     if (fileWriteInt32(stream, gPreferencesCombatLooks1) == -1)
         goto err;
     if (fileWriteInt32(stream, gPreferencesCombatMessages1) == -1)
@@ -1475,7 +1475,7 @@ int preferencesLoad(File* stream)
         goto err;
     if (fileReadInt32(stream, &gPreferencesTargetHighlight1) == -1)
         goto err;
-    //if (fileReadInt32(stream, &gPreferencesWidescreen1) == -1)
+    // if (fileReadInt32(stream, &gPreferencesWidescreen1) == -1)
     if (fileReadInt32(stream, &gPreferencesCombatLooks1) == -1)
         goto err;
     if (fileReadInt32(stream, &gPreferencesCombatMessages1) == -1)
