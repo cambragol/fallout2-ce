@@ -1350,50 +1350,62 @@ static int gameDbInit()
         }
     }
 
-    // Load falloutce.dat BEFORE master if not original & master_override not true
-    if ((is_original || settings.system.master_override) && !settings.system.falloutce_dat_path.empty()) {
-        main_file_name = settings.system.falloutce_dat_path.c_str();
-        patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0')
-            patch_file_name = nullptr;
-
-        int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        if (falloutce_db_handle == -1) {
-            showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
-            return -1;
-        }
+// Helper lambda to actually open the CE datafile
+auto loadFalloutCe = [&]() -> int {
+    const char* main_file_name  = settings.system.falloutce_dat_path.c_str();
+    const char* patch_file_name = settings.system.falloutce_patches_path.c_str();
+    if (*patch_file_name == '\0') {
+        patch_file_name = nullptr;
     }
+    int handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (handle == -1) {
+        showMesageBox(
+            "Could not find the falloutce datafile. "
+            "Please make sure the falloutce.dat file is in the folder "
+            "that you are running FALLOUT from."
+        );
+    }
+    return handle;
+};
 
-    // Load master.dat
-    main_file_name = settings.system.master_dat_path.c_str();
+bool hasFalloutCe        = !settings.system.falloutce_dat_path.empty();
+bool useMasterOverride   = settings.system.master_override;
+
+// If master.dat is *not* the “original” AND override is *not* set,
+// then load falloutce.dat *before* master.dat.
+if (!is_original && !useMasterOverride && hasFalloutCe) {
+    if (loadFalloutCe() == -1) return -1;
+}
+
+// Now load master.dat
+{
+    const char* main_file_name  = settings.system.master_dat_path.c_str();
+    const char* patch_file_name = settings.system.master_patches_path.c_str();
     if (*main_file_name == '\0') {
         main_file_name = nullptr;
     }
-
-    patch_file_name = settings.system.master_patches_path.c_str();
     if (*patch_file_name == '\0') {
         patch_file_name = nullptr;
     }
 
     int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
     if (master_db_handle == -1) {
-        showMesageBox("Could not find the master datafile. Please make sure the master.dat file is in the folder that you are running FALLOUT from.");
+        showMesageBox(
+            "Could not find the master datafile. "
+            "Please make sure the master.dat file is in the folder "
+            "that you are running FALLOUT from."
+        );
         return -1;
     }
+}
 
-    // Load falloutce.dat AFTER master if original
-    if (is_original && !settings.system.falloutce_dat_path.empty() || settings.system.master_override) {
-        main_file_name = settings.system.falloutce_dat_path.c_str();
-        patch_file_name = settings.system.falloutce_patches_path.c_str();
-        if (*patch_file_name == '\0')
-            patch_file_name = nullptr;
+// If master.dat *is* the original, OR if override is set,
+// then load falloutce.dat *after* master.dat.
+if ((is_original || useMasterOverride) && hasFalloutCe) {
 
-        int falloutce_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        if (falloutce_db_handle == -1) {
-            showMesageBox("Could not find the falloutce datafile. Please make sure the falloutce.dat file is in the folder that you are running FALLOUT from.");
-            return -1;
-        }
-    }
+    if (loadFalloutCe() == -1) return -1;
+}
+
 
     // Load critter.dat
     main_file_name = settings.system.critter_dat_path.c_str();
@@ -1408,7 +1420,11 @@ static int gameDbInit()
 
     int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
     if (critter_db_handle == -1) {
-        showMesageBox("Could not find the critter datafile. Please make sure the critter.dat file is in the folder that you are running FALLOUT from.");
+        showMesageBox(
+            "Could not find the critter datafile. "
+            "Please make sure the critter.dat file is in the folder "
+            "that you are running FALLOUT from."
+        );        
         return -1;
     }
 
