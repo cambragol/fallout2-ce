@@ -21,6 +21,7 @@
 #include "message.h"
 #include "mouse.h"
 #include "object.h"
+#include "offsets.h"
 #include "palette.h"
 #include "platform_compat.h"
 #include "preferences.h"
@@ -104,66 +105,6 @@ static PremadeCharacterDescription gPremadeCharacterDescriptions[PREMADE_CHARACT
 // Added for offsets handling
 static CharacterSelectorOffsets gOffsets;
 
-const CharacterSelectorOffsets gCharSelectorOffsets640 = {
-    // Window
-    640, 480,
-
-    // Background
-    40, 30, 560, 300,
-
-    // Buttons
-    292, 320, // Previous
-    318, 320, // Next
-    81, 323, // Take
-    435, 320, // Modify
-    80, 425, // Create
-    461, 425, // Back
-
-    // Text positions
-    318, // nameMidX
-    362, // primaryStatMidX
-    379, // secondaryStatMidX
-    438, // bioX
-    40, // textBaseY
-    23, // faceY
-
-    // Face position
-    27, // faceX
-
-    // Bio rendering
-    260, // bioMaxY
-};
-
-const CharacterSelectorOffsets gCharSelectorOffsets800 = {
-    // Window
-    800, 500,
-
-    // Background
-    40, 30, 820, 300,
-
-    // Buttons
-    374, 330, // Previous
-    397, 330, // Next
-    100, 333, // Take
-    583, 330, // Modify
-    100, 435, // Create
-    607, 435, // Back
-
-    // Text positions
-    396, // nameMidX
-    462, // primaryStatMidX
-    479, // secondaryStatMidX
-    538, // bioX
-    50, // textBaseY
-    33, // faceY
-
-    // Face position
-    67, // faceX
-
-    // Bio rendering
-    260, // bioMaxY (same as 640)
-};
-
 // 0x51C8D4
 static int gPremadeCharacterCount = PREMADE_CHARACTER_COUNT;
 
@@ -209,73 +150,16 @@ static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
-static void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets)
-{
-    // Window
-    configGetInt(config, section, "width", &offsets->width);
-    configGetInt(config, section, "height", &offsets->height);
-
-    // Background
-    configGetInt(config, section, "backgroundX", &offsets->backgroundX);
-    configGetInt(config, section, "backgroundY", &offsets->backgroundY);
-    configGetInt(config, section, "backgroundWidth", &offsets->backgroundWidth);
-    configGetInt(config, section, "backgroundHeight", &offsets->backgroundHeight);
-
-    // Buttons
-    configGetInt(config, section, "previousButtonX", &offsets->previousButtonX);
-    configGetInt(config, section, "previousButtonY", &offsets->previousButtonY);
-    configGetInt(config, section, "nextButtonX", &offsets->nextButtonX);
-    configGetInt(config, section, "nextButtonY", &offsets->nextButtonY);
-    configGetInt(config, section, "takeButtonX", &offsets->takeButtonX);
-    configGetInt(config, section, "takeButtonY", &offsets->takeButtonY);
-    configGetInt(config, section, "modifyButtonX", &offsets->modifyButtonX);
-    configGetInt(config, section, "modifyButtonY", &offsets->modifyButtonY);
-    configGetInt(config, section, "createButtonX", &offsets->createButtonX);
-    configGetInt(config, section, "createButtonY", &offsets->createButtonY);
-    configGetInt(config, section, "backButtonX", &offsets->backButtonX);
-    configGetInt(config, section, "backButtonY", &offsets->backButtonY);
-
-    // Text positions
-    configGetInt(config, section, "nameMidX", &offsets->nameMidX);
-    configGetInt(config, section, "primaryStatMidX", &offsets->primaryStatMidX);
-    configGetInt(config, section, "secondaryStatMidX", &offsets->secondaryStatMidX);
-    configGetInt(config, section, "bioX", &offsets->bioX);
-    configGetInt(config, section, "textBaseY", &offsets->textBaseY);
-    configGetInt(config, section, "faceY", &offsets->faceY);
-
-    // Face position
-    configGetInt(config, section, "faceX", &offsets->faceX);
-
-    // Bio rendering
-    configGetInt(config, section, "bioMaxY", &offsets->bioMaxY);
-}
-
 bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen)
 {
-    const char* section = isWidescreen
-        ? "charselect800"
-        : "charselect640";
-
-    const CharacterSelectorOffsets* fallback = isWidescreen
-        ? &gCharSelectorOffsets800
-        : &gCharSelectorOffsets640;
-
-    // seed from hard‑coded defaults
-    *offsets = *fallback;
-
-    // apply user config from fallout2.cfg
-    applyConfigToCharacterSelectorOffsets(&gGameConfig, section, offsets);
-
-    // apply modder overrides from data\offsets.txt, if present
-    Config txtConfig;
-    if (configInit(&txtConfig)) {
-        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors*/ true)) {
-            applyConfigToCharacterSelectorOffsets(&txtConfig, section, offsets);
-        }
-        configFree(&txtConfig);
-    }
-
-    return true;
+    return loadOffsetsFromConfig<CharacterSelectorOffsets>(
+        offsets,
+        isWidescreen,
+        "charselect",
+        gCharSelectorOffsets640,
+        gCharSelectorOffsets800,
+        applyConfigToCharacterSelectorOffsets
+    );
 }
 
 void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const CharacterSelectorOffsets* defaults)

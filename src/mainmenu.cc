@@ -11,6 +11,7 @@
 #include "kb.h"
 #include "memory.h"
 #include "mouse.h"
+#include "offsets.h"
 #include "palette.h"
 #include "platform_compat.h"
 #include "preferences.h"
@@ -73,41 +74,6 @@ static const int _return_values[MAIN_MENU_BUTTON_COUNT] = {
     MAIN_MENU_EXIT,
 };
 
-// Hardcoded offsets
-const MainMenuOffsets gMainMenuOffsets640 = {
-    /*copyrightX*/ 15,
-    /*copyrightY*/ 460,
-    /*versionX*/ 615,
-    /*versionY*/ 460,
-    /*hashX*/ 615,
-    /*hashX*/ 450,
-    /*buildDateX*/ 615,
-    /*buildDateX*/ 440,
-    /*buttonBaseX*/ 30,
-    /*buttonBaseY*/ 19,
-    /*buttonTextOffsetX*/ 0,
-    /*buttonTextOffsetY*/ 0,
-    640,
-    480
-};
-
-const MainMenuOffsets gMainMenuOffsets800 = {
-    /*copyrightX*/ 15,
-    /*copyrightY*/ 480,
-    /*versionX*/ 780,
-    /*versionY*/ 480,
-    /*hashX*/ 780,
-    /*hashX*/ 470,
-    /*buildDateX*/ 780,
-    /*buildDateX*/ 460,
-    /*buttonBaseX*/ 47,
-    /*buttonBaseY*/ 45,
-    /*buttonTextOffsetX*/ 17,
-    /*buttonTextOffsetY*/ 26,
-    800,
-    500
-};
-
 // 0x614840
 static int gMainMenuButtons[MAIN_MENU_BUTTON_COUNT];
 
@@ -118,47 +84,16 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
-static void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* o)
-{
-    configGetInt(config, section, "copyrightX", &o->copyrightX);
-    configGetInt(config, section, "copyrightY", &o->copyrightY);
-    configGetInt(config, section, "versionX", &o->versionX);
-    configGetInt(config, section, "versionY", &o->versionY);
-    configGetInt(config, section, "hashX", &o->hashX);
-    configGetInt(config, section, "hashY", &o->hashY);
-    configGetInt(config, section, "buildDateX", &o->buildDateX);
-    configGetInt(config, section, "buildDateY", &o->buildDateY);
-    configGetInt(config, section, "buttonBaseX", &o->buttonBaseX);
-    configGetInt(config, section, "buttonBaseY", &o->buttonBaseY);
-    configGetInt(config, section, "buttonTextOffsetX", &o->buttonTextOffsetX);
-    configGetInt(config, section, "buttonTextOffsetY", &o->buttonTextOffsetY);
-    configGetInt(config, section, "width", &o->width);
-    configGetInt(config, section, "height", &o->height);
-}
-
 bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
 {
-    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
-    const MainMenuOffsets* fallback = isWidescreen
-        ? &gMainMenuOffsets800
-        : &gMainMenuOffsets640;
-
-    // Initialize with fallback values
-    *offsets = *fallback;
-
-    // Apply main config settings (user configuration)
-    applyConfigToMainMenuOffsets(&gGameConfig, section, offsets);
-
-    // Apply modder overrides from data/offsets.txt
-    Config txtConfig;
-    if (configInit(&txtConfig)) {
-        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors:*/ true)) {
-            applyConfigToMainMenuOffsets(&txtConfig, section, offsets);
-        }
-        configFree(&txtConfig);
-    }
-
-    return true;
+    return loadOffsetsFromConfig<MainMenuOffsets>(
+        offsets,
+        isWidescreen,
+        "mainmenu",
+        gMainMenuOffsets640,
+        gMainMenuOffsets800,
+        applyConfigToMainMenuOffsets
+    );
 }
 
 // move to seperate widescreen.cc file later?
