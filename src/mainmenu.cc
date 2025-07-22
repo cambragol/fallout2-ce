@@ -118,30 +118,43 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
-// move to seperate widescreen.cc file later?
-bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
-{
-    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
-    const MainMenuOffsets* fallback = isWidescreen ? &gMainMenuOffsets800 : &gMainMenuOffsets640;
+static void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* o) {
+    configGetInt(config, section, "copyrightX",        &o->copyrightX);
+    configGetInt(config, section, "copyrightY",        &o->copyrightY);
+    configGetInt(config, section, "versionX",          &o->versionX);
+    configGetInt(config, section, "versionY",          &o->versionY);
+    configGetInt(config, section, "hashX",             &o->hashX);
+    configGetInt(config, section, "hashY",             &o->hashY);
+    configGetInt(config, section, "buildDateX",        &o->buildDateX);
+    configGetInt(config, section, "buildDateY",        &o->buildDateY);
+    configGetInt(config, section, "buttonBaseX",       &o->buttonBaseX);
+    configGetInt(config, section, "buttonBaseY",       &o->buttonBaseY);
+    configGetInt(config, section, "buttonTextOffsetX", &o->buttonTextOffsetX);
+    configGetInt(config, section, "buttonTextOffsetY", &o->buttonTextOffsetY);
+    configGetInt(config, section, "width",             &o->width);
+    configGetInt(config, section, "height",            &o->height);
+}
+
+bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) {
+    const char* section  = isWidescreen ? "mainmenu800" : "mainmenu640";
+    const MainMenuOffsets* fallback = isWidescreen
+        ? &gMainMenuOffsets800
+        : &gMainMenuOffsets640;
 
     // Initialize with fallback values
     *offsets = *fallback;
 
-    // Load all values from config
-    configGetInt(&gGameConfig, section, "copyrightX", &offsets->copyrightX);
-    configGetInt(&gGameConfig, section, "copyrightY", &offsets->copyrightY);
-    configGetInt(&gGameConfig, section, "versionX", &offsets->versionX);
-    configGetInt(&gGameConfig, section, "versionY", &offsets->versionY);
-    configGetInt(&gGameConfig, section, "hashX", &offsets->hashX);
-    configGetInt(&gGameConfig, section, "hashY", &offsets->hashY);
-    configGetInt(&gGameConfig, section, "buildDateX", &offsets->buildDateX);
-    configGetInt(&gGameConfig, section, "buildDateY", &offsets->buildDateY);
-    configGetInt(&gGameConfig, section, "buttonBaseX", &offsets->buttonBaseX);
-    configGetInt(&gGameConfig, section, "buttonBaseY", &offsets->buttonBaseY);
-    configGetInt(&gGameConfig, section, "buttonTextOffsetX", &offsets->buttonTextOffsetX);
-    configGetInt(&gGameConfig, section, "buttonTextOffsetY", &offsets->buttonTextOffsetY);
-    configGetInt(&gGameConfig, section, "width", &offsets->width);
-    configGetInt(&gGameConfig, section, "height", &offsets->height);
+    // Apply main config settings (user configuration)
+    applyConfigToMainMenuOffsets(&gGameConfig, section, offsets);
+
+    // Apply modder overrides from data/offsets.txt
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors:*/ true)) {
+            applyConfigToMainMenuOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
+    }
 
     return true;
 }

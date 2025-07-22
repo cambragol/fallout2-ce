@@ -524,100 +524,116 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     194 // moreTextOffsetX
 };
 
-bool loadSaveLoadOffsetsFromConfig(LoadSaveOffsets* offsets, bool isWidescreen)
-{
-    const char* section = isWidescreen ? "loadsave800" : "loadsave640";
-    const LoadSaveOffsets* fallback = isWidescreen ? &gLoadSaveOffsets800 : &gLoadSaveOffsets640;
-
-    // Initialize with fallback values
-    *offsets = *fallback;
-
+static void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveOffsets* offsets) {
     // Window
-    configGetInt(&gGameConfig, section, "windowWidth", &offsets->windowWidth);
-    configGetInt(&gGameConfig, section, "windowHeight", &offsets->windowHeight);
+    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
-    // Preview
-    configGetInt(&gGameConfig, section, "previewWidth", &offsets->previewWidth);
-    configGetInt(&gGameConfig, section, "previewHeight", &offsets->previewHeight);
-    configGetInt(&gGameConfig, section, "previewX", &offsets->previewX);
-    configGetInt(&gGameConfig, section, "previewY", &offsets->previewY);
-    configGetInt(&gGameConfig, section, "previewCoverX", &offsets->previewCoverX);
-    configGetInt(&gGameConfig, section, "previewCoverY", &offsets->previewCoverY);
+    // Preview pane
+    configGetInt(config, section, "previewWidth",  &offsets->previewWidth);
+    configGetInt(config, section, "previewHeight", &offsets->previewHeight);
+    configGetInt(config, section, "previewX",      &offsets->previewX);
+    configGetInt(config, section, "previewY",      &offsets->previewY);
+    configGetInt(config, section, "previewCoverX", &offsets->previewCoverX);
+    configGetInt(config, section, "previewCoverY", &offsets->previewCoverY);
 
-    // Title and Text
-    configGetInt(&gGameConfig, section, "titleTextX", &offsets->titleTextX);
-    configGetInt(&gGameConfig, section, "titleTextY", &offsets->titleTextY);
-    configGetInt(&gGameConfig, section, "doneLabelX", &offsets->doneLabelX);
-    configGetInt(&gGameConfig, section, "doneLabelY", &offsets->doneLabelY);
-    configGetInt(&gGameConfig, section, "cancelLabelX", &offsets->cancelLabelX);
-    configGetInt(&gGameConfig, section, "cancelLabelY", &offsets->cancelLabelY);
+    // Title & text labels
+    configGetInt(config, section, "titleTextX",   &offsets->titleTextX);
+    configGetInt(config, section, "titleTextY",   &offsets->titleTextY);
+    configGetInt(config, section, "doneLabelX",   &offsets->doneLabelX);
+    configGetInt(config, section, "doneLabelY",   &offsets->doneLabelY);
+    configGetInt(config, section, "cancelLabelX", &offsets->cancelLabelX);
+    configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
 
     // Buttons
-    configGetInt(&gGameConfig, section, "doneButtonX", &offsets->doneButtonX);
-    configGetInt(&gGameConfig, section, "doneButtonY", &offsets->doneButtonY);
-    configGetInt(&gGameConfig, section, "cancelButtonX", &offsets->cancelButtonX);
-    configGetInt(&gGameConfig, section, "cancelButtonY", &offsets->cancelButtonY);
-    configGetInt(&gGameConfig, section, "arrowUpX", &offsets->arrowUpX);
-    configGetInt(&gGameConfig, section, "arrowUpY", &offsets->arrowUpY);
-    configGetInt(&gGameConfig, section, "arrowDownX", &offsets->arrowDownX);
-    configGetInt(&gGameConfig, section, "arrowDownY", &offsets->arrowDownY);
+    configGetInt(config, section, "doneButtonX",   &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY",   &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
+    configGetInt(config, section, "arrowUpX",      &offsets->arrowUpX);
+    configGetInt(config, section, "arrowUpY",      &offsets->arrowUpY);
+    configGetInt(config, section, "arrowDownX",    &offsets->arrowDownX);
+    configGetInt(config, section, "arrowDownY",    &offsets->arrowDownY);
 
-    // Slot List Area
-    configGetInt(&gGameConfig, section, "slotListAreaX", &offsets->slotListAreaX);
-    configGetInt(&gGameConfig, section, "slotListAreaY", &offsets->slotListAreaY);
-    configGetInt(&gGameConfig, section, "slotListAreaWidth", &offsets->slotListAreaWidth);
-    configGetInt(&gGameConfig, section, "slotListAreaHeight", &offsets->slotListAreaHeight);
+    // Slot list region
+    configGetInt(config, section, "slotListAreaX",       &offsets->slotListAreaX);
+    configGetInt(config, section, "slotListAreaY",       &offsets->slotListAreaY);
+    configGetInt(config, section, "slotListAreaWidth",   &offsets->slotListAreaWidth);
+    configGetInt(config, section, "slotListAreaHeight",  &offsets->slotListAreaHeight);
 
-    // Comment Window
-    configGetInt(&gGameConfig, section, "commentWindowX", &offsets->commentWindowX);
-    configGetInt(&gGameConfig, section, "commentWindowY", &offsets->commentWindowY);
+    // Comment window
+    configGetInt(config, section, "commentWindowX", &offsets->commentWindowX);
+    configGetInt(config, section, "commentWindowY", &offsets->commentWindowY);
 
-    // Slot List
-    configGetInt(&gGameConfig, section, "slotListX", &offsets->slotListX);
-    configGetInt(&gGameConfig, section, "slotListY", &offsets->slotListY);
-    configGetInt(&gGameConfig, section, "slotListWidth", &offsets->slotListWidth);
-    configGetInt(&gGameConfig, section, "slotListBottomOffset", &offsets->slotListBottomOffset);
+    // Slot list itself
+    configGetInt(config, section, "slotListX",            &offsets->slotListX);
+    configGetInt(config, section, "slotListY",            &offsets->slotListY);
+    configGetInt(config, section, "slotListWidth",        &offsets->slotListWidth);
+    configGetInt(config, section, "slotListBottomOffset", &offsets->slotListBottomOffset);
 
-    // Info Box
-    configGetInt(&gGameConfig, section, "infoBoxX", &offsets->infoBoxX);
-    configGetInt(&gGameConfig, section, "infoBoxY", &offsets->infoBoxY);
-    configGetInt(&gGameConfig, section, "infoBoxWidth", &offsets->infoBoxWidth);
-    configGetInt(&gGameConfig, section, "infoBoxHeight", &offsets->infoBoxHeight);
+    // Info box
+    configGetInt(config, section, "infoBoxX",      &offsets->infoBoxX);
+    configGetInt(config, section, "infoBoxY",      &offsets->infoBoxY);
+    configGetInt(config, section, "infoBoxWidth",  &offsets->infoBoxWidth);
+    configGetInt(config, section, "infoBoxHeight", &offsets->infoBoxHeight);
 
-    // Info Box Text Positions
-    configGetInt(&gGameConfig, section, "characterNameX", &offsets->characterNameX);
-    configGetInt(&gGameConfig, section, "characterNameY", &offsets->characterNameY);
-    configGetInt(&gGameConfig, section, "gameDateX", &offsets->gameDateX);
-    configGetInt(&gGameConfig, section, "gameDateY", &offsets->gameDateY);
-    configGetInt(&gGameConfig, section, "locationX", &offsets->locationX);
-    configGetInt(&gGameConfig, section, "locationY", &offsets->locationY);
+    // Info text positions
+    configGetInt(config, section, "characterNameX", &offsets->characterNameX);
+    configGetInt(config, section, "characterNameY", &offsets->characterNameY);
+    configGetInt(config, section, "gameDateX",      &offsets->gameDateX);
+    configGetInt(config, section, "gameDateY",      &offsets->gameDateY);
+    configGetInt(config, section, "locationX",      &offsets->locationX);
+    configGetInt(config, section, "locationY",      &offsets->locationY);
 
-    // Page Navigation Buttons
-    configGetInt(&gGameConfig, section, "nextPageButtonX", &offsets->nextPageButtonX);
-    configGetInt(&gGameConfig, section, "nextPageButtonY", &offsets->nextPageButtonY);
-    configGetInt(&gGameConfig, section, "nextPageButtonWidth", &offsets->nextPageButtonWidth);
-    configGetInt(&gGameConfig, section, "nextPageButtonHeight", &offsets->nextPageButtonHeight);
-    configGetInt(&gGameConfig, section, "prevPageButtonX", &offsets->prevPageButtonX);
-    configGetInt(&gGameConfig, section, "prevPageButtonY", &offsets->prevPageButtonY);
-    configGetInt(&gGameConfig, section, "prevPageButtonWidth", &offsets->prevPageButtonWidth);
-    configGetInt(&gGameConfig, section, "prevPageButtonHeight", &offsets->prevPageButtonHeight);
+    // Page nav buttons
+    configGetInt(config, section, "nextPageButtonX",      &offsets->nextPageButtonX);
+    configGetInt(config, section, "nextPageButtonY",      &offsets->nextPageButtonY);
+    configGetInt(config, section, "nextPageButtonWidth",  &offsets->nextPageButtonWidth);
+    configGetInt(config, section, "nextPageButtonHeight", &offsets->nextPageButtonHeight);
+    configGetInt(config, section, "prevPageButtonX",      &offsets->prevPageButtonX);
+    configGetInt(config, section, "prevPageButtonY",      &offsets->prevPageButtonY);
+    configGetInt(config, section, "prevPageButtonWidth",  &offsets->prevPageButtonWidth);
+    configGetInt(config, section, "prevPageButtonHeight", &offsets->prevPageButtonHeight);
 
-    // Text Block Position
-    configGetInt(&gGameConfig, section, "infoBoxTextBlockY", &offsets->infoBoxTextBlockY);
+    // Info‐box text block
+    configGetInt(config, section, "infoBoxTextBlockY", &offsets->infoBoxTextBlockY);
 
-    // Cover Image Parameters
-    configGetInt(&gGameConfig, section, "coverWidth", &offsets->coverWidth);
-    configGetInt(&gGameConfig, section, "coverHeight", &offsets->coverHeight);
-    configGetInt(&gGameConfig, section, "coverX", &offsets->coverX);
-    configGetInt(&gGameConfig, section, "coverY", &offsets->coverY);
-    configGetInt(&gGameConfig, section, "coverPitch", &offsets->coverPitch);
+    // Cover image parameters
+    configGetInt(config, section, "coverWidth",  &offsets->coverWidth);
+    configGetInt(config, section, "coverHeight", &offsets->coverHeight);
+    configGetInt(config, section, "coverX",      &offsets->coverX);
+    configGetInt(config, section, "coverY",      &offsets->coverY);
+    configGetInt(config, section, "coverPitch",  &offsets->coverPitch);
 
-    // Slot Text Padding
-    configGetInt(&gGameConfig, section, "slotTextPadding", &offsets->slotTextPadding);
+    // Slot text padding & pagination text
+    configGetInt(config, section, "slotTextPadding",  &offsets->slotTextPadding);
+    configGetInt(config, section, "backTextOffsetX",  &offsets->backTextOffsetX);
+    configGetInt(config, section, "moreTextOffsetX",  &offsets->moreTextOffsetX);
+}
 
-    // Pagination text positions
-    configGetInt(&gGameConfig, section, "backTextOffsetX", &offsets->backTextOffsetX);
-    configGetInt(&gGameConfig, section, "moreTextOffsetX", &offsets->moreTextOffsetX);
+bool loadSaveLoadOffsetsFromConfig(LoadSaveOffsets* offsets, bool isWidescreen) {
+    const char* section = isWidescreen
+        ? "loadsave800"
+        : "loadsave640";
+
+    const LoadSaveOffsets* fallback = isWidescreen
+        ? &gLoadSaveOffsets800
+        : &gLoadSaveOffsets640;
+
+    // start from built‑in defaults
+    *offsets = *fallback;
+
+    // apply user’s fallout2.cfg settings
+    applyConfigToLoadSaveOffsets(&gGameConfig, section, offsets);
+
+    // apply any modder overrides
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors*/ true)) {
+            applyConfigToLoadSaveOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
+    }
 
     return true;
 }

@@ -662,117 +662,134 @@ const PreferencesOffsets gPreferencesOffsets800 = {
 static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
 static int _oldFont;
 
-bool preferencesLoadOffsetsFromConfig(PreferencesOffsets* offsets, bool isWidescreen)
-{
+// Helper function to apply config settings to offsets
+static void applyConfigToOffsets(Config* config, const char* section, PreferencesOffsets* offsets) {
+
+    // Window
+    configGetInt(config, section, "width", &offsets->width);
+    configGetInt(config, section, "height", &offsets->height);
+
+    // Primary preferences
+    configGetInt(config, section, "primaryColumnX", &offsets->primaryColumnX);
+    configGetInt(config, section, "primaryKnobX", &offsets->primaryKnobX);
+    configGetIntArray(config, section, "primaryKnobY", offsets->primaryKnobY, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "primaryLabelY", offsets->primaryLabelY, PRIMARY_PREF_COUNT);
+
+    // Secondary preferences
+    configGetInt(config, section, "secondaryColumnX", &offsets->secondaryColumnX);
+    configGetInt(config, section, "secondaryKnobX", &offsets->secondaryKnobX);
+    configGetIntArray(config, section, "secondaryKnobY", offsets->secondaryKnobY, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "secondaryLabelY", offsets->secondaryLabelY, SECONDARY_PREF_COUNT);
+
+    // Range preferences
+    configGetInt(config, section, "rangeColumnX", &offsets->rangeColumnX);
+    configGetInt(config, section, "rangeKnobX", &offsets->rangeKnobX);
+    configGetIntArray(config, section, "rangeKnobY", offsets->rangeKnobY, RANGE_PREF_COUNT);
+
+    // Label positions
+    configGetInt(config, section, "primLabelColX", &offsets->primLabelColX);
+    configGetInt(config, section, "secLabelColX", &offsets->secLabelColX);
+    configGetInt(config, section, "rangLabelColX", &offsets->rangLabelColX);
+    configGetIntArray(config, section, "labelX", offsets->labelX, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "secondaryLabelX", offsets->secondaryLabelX, SECONDARY_PREF_COUNT);
+
+    // Range control
+    configGetInt(config, section, "rangeStartX", &offsets->rangeStartX);
+    configGetInt(config, section, "rangeWidth", &offsets->rangeWidth);
+    configGetInt(config, section, "knobWidth", &offsets->knobWidth);
+    configGetIntArray(config, section, "rangeLabelX", offsets->rangeLabelX, 4);
+
+    // Blit dimensions
+    configGetInt(config, section, "primaryBlitWidth", &offsets->primaryBlitWidth);
+    configGetInt(config, section, "primaryBlitHeight", &offsets->primaryBlitHeight);
+    configGetInt(config, section, "secondaryBlitWidth", &offsets->secondaryBlitWidth);
+    configGetInt(config, section, "secondaryBlitHeight", &offsets->secondaryBlitHeight);
+    configGetInt(config, section, "rangeBlitWidth", &offsets->rangeBlitWidth);
+    configGetInt(config, section, "rangeBlitHeight", &offsets->rangeBlitHeight);
+
+    // Title and buttons
+    configGetInt(config, section, "titleTextX", &offsets->titleTextX);
+    configGetInt(config, section, "titleTextY", &offsets->titleTextY);
+    configGetInt(config, section, "defaultLabelX", &offsets->defaultLabelX);
+    configGetInt(config, section, "defaultLabelY", &offsets->defaultLabelY);
+    configGetInt(config, section, "doneLabelX", &offsets->doneLabelX);
+    configGetInt(config, section, "doneLabelY", &offsets->doneLabelY);
+    configGetInt(config, section, "cancelLabelX", &offsets->cancelLabelX);
+    configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
+    configGetInt(config, section, "speedLabelX", &offsets->speedLabelX);
+    configGetInt(config, section, "speedLabelY", &offsets->speedLabelY);
+    configGetInt(config, section, "defaultButtonX", &offsets->defaultButtonX);
+    configGetInt(config, section, "defaultButtonY", &offsets->defaultButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
+    configGetInt(config, section, "playerSpeedCheckboxX", &offsets->playerSpeedCheckboxX);
+    configGetInt(config, section, "playerSpeedCheckboxY", &offsets->playerSpeedCheckboxY);
+
+    // Hit detection
+    configGetInt(config, section, "primaryKnobHitX", &offsets->primaryKnobHitX);
+    configGetInt(config, section, "primaryKnobHitY", &offsets->primaryKnobHitY);
+    configGetInt(config, section, "secondaryKnobHitX", &offsets->secondaryKnobHitX);
+    configGetInt(config, section, "secondaryKnobHitY", &offsets->secondaryKnobHitY);
+    configGetInt(config, section, "rangeSliderMinX", &offsets->rangeSliderMinX);
+    configGetInt(config, section, "rangeSliderMaxX", &offsets->rangeSliderMaxX);
+    configGetInt(config, section, "rangeSliderWidth", &offsets->rangeSliderWidth);
+    configGetInt(config, section, "primaryButtonOffsetY", &offsets->primaryButtonOffsetY);
+    configGetInt(config, section, "secondaryButtonOffsetY", &offsets->secondaryButtonOffsetY);
+    configGetInt(config, section, "rangeButtonOffsetY", &offsets->rangeButtonOffsetY);
+
+    configGetDouble(config, section, "textBaseDelayScale", &offsets->textBaseDelayScale);
+    configGetInt(config, section, "rangeLabel4Option1X", &offsets->rangeLabel4Option1X);
+    configGetInt(config, section, "rangeLabel4Option2X", &offsets->rangeLabel4Option2X);
+
+    configGetIntArray(config, section, "row1Ytab", offsets->row1Ytab, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "row2Ytab", offsets->row2Ytab, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "row3Ytab", offsets->row3Ytab, RANGE_PREF_COUNT);
+
+    configGetIntArray(config, section, "optionXOffsets", offsets->optionXOffsets, 4);
+    configGetIntArray(config, section, "optionYOffsets", offsets->optionYOffsets, 4);
+    configGetIntArray(config, section, "secondaryOptionXOffsets", offsets->secondaryOptionXOffsets, 2);
+
+    configGetIntArray(config, section, "primaryLabelYValues", offsets->primaryLabelYValues, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "secondaryLabelYValues", offsets->secondaryLabelYValues, SECONDARY_PREF_COUNT);
+
+    configGetInt(config, section, "primaryButtonMinXOffset", &offsets->primaryButtonMinXOffset);
+    configGetInt(config, section, "primaryButtonMaxXOffset", &offsets->primaryButtonMaxXOffset);
+    configGetInt(config, section, "secondaryButtonXOffset", &offsets->secondaryButtonXOffset);
+    configGetInt(config, section, "rangeThumbLeftOffset", &offsets->rangeThumbLeftOffset);
+    configGetInt(config, section, "rangeThumbRightOffset", &offsets->rangeThumbRightOffset);
+    configGetDouble(config, section, "rangeSliderScale", &offsets->rangeSliderScale);
+
+    // Preference positions
+    for (int i = 0; i < PREF_COUNT; i++) {
+        char key[64];
+        snprintf(key, sizeof(key), "preferencePositions%dX", i);
+        configGetInt(config, section, key, &offsets->preferencePositions[i].x);
+        snprintf(key, sizeof(key), "preferencePositions%dY", i);
+        configGetInt(config, section, key, &offsets->preferencePositions[i].y);
+    }
+}
+
+bool preferencesLoadOffsetsFromConfig(PreferencesOffsets* offsets, bool isWidescreen) {
     const char* section = isWidescreen ? "preferences800" : "preferences640";
     const PreferencesOffsets* fallback = isWidescreen ? &gPreferencesOffsets800 : &gPreferencesOffsets640;
+    char message[256];
 
     // Initialize with fallback values
     *offsets = *fallback;
 
-    // Window
-    configGetInt(&gGameConfig, section, "width", &offsets->width);
-    configGetInt(&gGameConfig, section, "height", &offsets->height);
+    // Apply main config settings (user configuration)
+    applyConfigToOffsets(&gGameConfig, section, offsets);
 
-    // Primary preferences
-    configGetInt(&gGameConfig, section, "primaryColumnX", &offsets->primaryColumnX);
-    configGetInt(&gGameConfig, section, "primaryKnobX", &offsets->primaryKnobX);
-    configGetIntArray(&gGameConfig, section, "primaryKnobY", offsets->primaryKnobY, PRIMARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "primaryLabelY", offsets->primaryLabelY, PRIMARY_PREF_COUNT);
-
-    // Secondary preferences
-    configGetInt(&gGameConfig, section, "secondaryColumnX", &offsets->secondaryColumnX);
-    configGetInt(&gGameConfig, section, "secondaryKnobX", &offsets->secondaryKnobX);
-    configGetIntArray(&gGameConfig, section, "secondaryKnobY", offsets->secondaryKnobY, SECONDARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "secondaryLabelY", offsets->secondaryLabelY, SECONDARY_PREF_COUNT);
-
-    // Range preferences
-    configGetInt(&gGameConfig, section, "rangeColumnX", &offsets->rangeColumnX);
-    configGetInt(&gGameConfig, section, "rangeKnobX", &offsets->rangeKnobX);
-    configGetIntArray(&gGameConfig, section, "rangeKnobY", offsets->rangeKnobY, RANGE_PREF_COUNT);
-
-    // Label positions
-    configGetInt(&gGameConfig, section, "primLabelColX", &offsets->primLabelColX);
-    configGetInt(&gGameConfig, section, "secLabelColX", &offsets->secLabelColX);
-    configGetInt(&gGameConfig, section, "rangLabelColX", &offsets->rangLabelColX);
-    configGetIntArray(&gGameConfig, section, "labelX", offsets->labelX, PRIMARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "secondaryLabelX", offsets->secondaryLabelX, SECONDARY_PREF_COUNT);
-
-    // Range control
-    configGetInt(&gGameConfig, section, "rangeStartX", &offsets->rangeStartX);
-    configGetInt(&gGameConfig, section, "rangeWidth", &offsets->rangeWidth);
-    configGetInt(&gGameConfig, section, "knobWidth", &offsets->knobWidth);
-    configGetIntArray(&gGameConfig, section, "rangeLabelX", offsets->rangeLabelX, 4);
-
-    // Blit dimensions
-    configGetInt(&gGameConfig, section, "primaryBlitWidth", &offsets->primaryBlitWidth);
-    configGetInt(&gGameConfig, section, "primaryBlitHeight", &offsets->primaryBlitHeight);
-    configGetInt(&gGameConfig, section, "secondaryBlitWidth", &offsets->secondaryBlitWidth);
-    configGetInt(&gGameConfig, section, "secondaryBlitHeight", &offsets->secondaryBlitHeight);
-    configGetInt(&gGameConfig, section, "rangeBlitWidth", &offsets->rangeBlitWidth);
-    configGetInt(&gGameConfig, section, "rangeBlitHeight", &offsets->rangeBlitHeight);
-
-    // Title and buttons
-    configGetInt(&gGameConfig, section, "titleTextX", &offsets->titleTextX);
-    configGetInt(&gGameConfig, section, "titleTextY", &offsets->titleTextY);
-    configGetInt(&gGameConfig, section, "defaultLabelX", &offsets->defaultLabelX);
-    configGetInt(&gGameConfig, section, "defaultLabelY", &offsets->defaultLabelY);
-    configGetInt(&gGameConfig, section, "doneLabelX", &offsets->doneLabelX);
-    configGetInt(&gGameConfig, section, "doneLabelY", &offsets->doneLabelY);
-    configGetInt(&gGameConfig, section, "cancelLabelX", &offsets->cancelLabelX);
-    configGetInt(&gGameConfig, section, "cancelLabelY", &offsets->cancelLabelY);
-    configGetInt(&gGameConfig, section, "speedLabelX", &offsets->speedLabelX);
-    configGetInt(&gGameConfig, section, "speedLabelY", &offsets->speedLabelY);
-    configGetInt(&gGameConfig, section, "defaultButtonX", &offsets->defaultButtonX);
-    configGetInt(&gGameConfig, section, "defaultButtonY", &offsets->defaultButtonY);
-    configGetInt(&gGameConfig, section, "doneButtonX", &offsets->doneButtonX);
-    configGetInt(&gGameConfig, section, "doneButtonY", &offsets->doneButtonY);
-    configGetInt(&gGameConfig, section, "cancelButtonX", &offsets->cancelButtonX);
-    configGetInt(&gGameConfig, section, "cancelButtonY", &offsets->cancelButtonY);
-    configGetInt(&gGameConfig, section, "playerSpeedCheckboxX", &offsets->playerSpeedCheckboxX);
-    configGetInt(&gGameConfig, section, "playerSpeedCheckboxY", &offsets->playerSpeedCheckboxY);
-
-    // Hit detection
-    configGetInt(&gGameConfig, section, "primaryKnobHitX", &offsets->primaryKnobHitX);
-    configGetInt(&gGameConfig, section, "primaryKnobHitY", &offsets->primaryKnobHitY);
-    configGetInt(&gGameConfig, section, "secondaryKnobHitX", &offsets->secondaryKnobHitX);
-    configGetInt(&gGameConfig, section, "secondaryKnobHitY", &offsets->secondaryKnobHitY);
-    configGetInt(&gGameConfig, section, "rangeSliderMinX", &offsets->rangeSliderMinX);
-    configGetInt(&gGameConfig, section, "rangeSliderMaxX", &offsets->rangeSliderMaxX);
-    configGetInt(&gGameConfig, section, "rangeSliderWidth", &offsets->rangeSliderWidth);
-    configGetInt(&gGameConfig, section, "primaryButtonOffsetY", &offsets->primaryButtonOffsetY);
-    configGetInt(&gGameConfig, section, "secondaryButtonOffsetY", &offsets->secondaryButtonOffsetY);
-    configGetInt(&gGameConfig, section, "rangeButtonOffsetY", &offsets->rangeButtonOffsetY);
-
-    configGetDouble(&gGameConfig, section, "textBaseDelayScale", &offsets->textBaseDelayScale);
-    configGetInt(&gGameConfig, section, "rangeLabel4Option1X", &offsets->rangeLabel4Option1X);
-    configGetInt(&gGameConfig, section, "rangeLabel4Option2X", &offsets->rangeLabel4Option2X);
-
-    configGetIntArray(&gGameConfig, section, "row1Ytab", offsets->row1Ytab, PRIMARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "row2Ytab", offsets->row2Ytab, SECONDARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "row3Ytab", offsets->row3Ytab, RANGE_PREF_COUNT);
-
-    configGetIntArray(&gGameConfig, section, "optionXOffsets", offsets->optionXOffsets, 4);
-    configGetIntArray(&gGameConfig, section, "optionYOffsets", offsets->optionYOffsets, 4);
-    configGetIntArray(&gGameConfig, section, "secondaryOptionXOffsets", offsets->secondaryOptionXOffsets, 2);
-
-    configGetIntArray(&gGameConfig, section, "primaryLabelYValues", offsets->primaryLabelYValues, PRIMARY_PREF_COUNT);
-    configGetIntArray(&gGameConfig, section, "secondaryLabelYValues", offsets->secondaryLabelYValues, SECONDARY_PREF_COUNT);
-
-    configGetInt(&gGameConfig, section, "primaryButtonMinXOffset", &offsets->primaryButtonMinXOffset);
-    configGetInt(&gGameConfig, section, "primaryButtonMaxXOffset", &offsets->primaryButtonMaxXOffset);
-    configGetInt(&gGameConfig, section, "secondaryButtonXOffset", &offsets->secondaryButtonXOffset);
-    configGetInt(&gGameConfig, section, "rangeThumbLeftOffset", &offsets->rangeThumbLeftOffset);
-    configGetInt(&gGameConfig, section, "rangeThumbRightOffset", &offsets->rangeThumbRightOffset);
-    configGetDouble(&gGameConfig, section, "rangeSliderScale", &offsets->rangeSliderScale);
-
-    // Load preference positions
-    for (int i = 0; i < PREF_COUNT; i++) {
-        char key[64];
-        snprintf(key, sizeof(key), "preferencePositions%dX", i);
-        configGetInt(&gGameConfig, section, key, &offsets->preferencePositions[i].x);
-        snprintf(key, sizeof(key), "preferencePositions%dY", i);
-        configGetInt(&gGameConfig, section, key, &offsets->preferencePositions[i].y);
+    // Apply modder overrides
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        // Use the standard file access pattern like other parts of the codebase
+        if (configRead(&txtConfig, "data\\offsets.txt", true)) {
+            applyConfigToOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
     }
 
     return true;

@@ -1220,111 +1220,129 @@ const CharacterEditorOffsets gCharEditorOffsets800 = {
 
 };
 
-bool characterEditorLoadOffsetsFromConfig(CharacterEditorOffsets* offsets, bool isWidescreen)
-{
-    const char* section = isWidescreen ? "character_editor800" : "character_editor640";
-    const CharacterEditorOffsets* fallback = isWidescreen ? &gCharEditorOffsets800 : &gCharEditorOffsets640;
-
-    // Initialize with fallback values
-    *offsets = *fallback;
-
-    // Window
-    configGetInt(&gGameConfig, section, "windowWidth", &offsets->windowWidth);
-    configGetInt(&gGameConfig, section, "windowHeight", &offsets->windowHeight);
+static void applyConfigToCharacterEditorOffsets(Config* config, const char* section, CharacterEditorOffsets* offsets) {
+    // Window dimensions
+    configGetInt(config, section, "windowWidth",                     &offsets->windowWidth);
+    configGetInt(config, section, "windowHeight",                    &offsets->windowHeight);
 
     // Buttons
-    configGetInt(&gGameConfig, section, "nameButtonX", &offsets->nameButtonX);
-    configGetInt(&gGameConfig, section, "nameButtonY", &offsets->nameButtonY);
-    configGetInt(&gGameConfig, section, "tagSkillsButtonX", &offsets->tagSkillsButtonX);
-    configGetInt(&gGameConfig, section, "tagSkillsButtonY", &offsets->tagSkillsButtonY);
-    configGetInt(&gGameConfig, section, "printButtonX", &offsets->printButtonX);
-    configGetInt(&gGameConfig, section, "printButtonY", &offsets->printButtonY);
-    configGetInt(&gGameConfig, section, "doneButtonX", &offsets->doneButtonX);
-    configGetInt(&gGameConfig, section, "doneButtonY", &offsets->doneButtonY);
-    configGetInt(&gGameConfig, section, "cancelButtonX", &offsets->cancelButtonX);
-    configGetInt(&gGameConfig, section, "cancelButtonY", &offsets->cancelButtonY);
-    configGetInt(&gGameConfig, section, "optionalTraitsLeftButtonX", &offsets->optionalTraitsLeftButtonX);
-    configGetInt(&gGameConfig, section, "optionalTraitsRightButtonX", &offsets->optionalTraitsRightButtonX);
-    configGetInt(&gGameConfig, section, "optionalTraitsButtonY", &offsets->optionalTraitsButtonY);
-    configGetInt(&gGameConfig, section, "specialStatsButtonX", &offsets->specialStatsButtonX);
+    configGetInt(config, section, "nameButtonX",                     &offsets->nameButtonX);
+    configGetInt(config, section, "nameButtonY",                     &offsets->nameButtonY);
+    configGetInt(config, section, "tagSkillsButtonX",                &offsets->tagSkillsButtonX);
+    configGetInt(config, section, "tagSkillsButtonY",                &offsets->tagSkillsButtonY);
+    configGetInt(config, section, "printButtonX",                    &offsets->printButtonX);
+    configGetInt(config, section, "printButtonY",                    &offsets->printButtonY);
+    configGetInt(config, section, "doneButtonX",                     &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY",                     &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX",                   &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY",                   &offsets->cancelButtonY);
+    configGetInt(config, section, "optionalTraitsLeftButtonX",       &offsets->optionalTraitsLeftButtonX);
+    configGetInt(config, section, "optionalTraitsRightButtonX",      &offsets->optionalTraitsRightButtonX);
+    configGetInt(config, section, "optionalTraitsButtonY",           &offsets->optionalTraitsButtonY);
+    configGetInt(config, section, "specialStatsButtonX",             &offsets->specialStatsButtonX);
 
-    // Primary stat Y positions (array)
-    configGetIntArray(&gGameConfig, section, "primaryStatY", offsets->primaryStatY, 7);
+    // Primary stat Y (array of 7)
+    configGetIntArray(config, section, "primaryStatY",   offsets->primaryStatY,   7);
 
-    // Adjustment slider
-    configGetInt(&gGameConfig, section, "skillValueAdjustmentSliderY", &offsets->skillValueAdjustmentSliderY);
+    // Skill‐adjustment slider
+    configGetInt(config, section, "skillValueAdjustmentSliderY", &offsets->skillValueAdjustmentSliderY);
 
     // Folder view
-    configGetInt(&gGameConfig, section, "folderViewOffsetY", &offsets->folderViewOffsetY);
-    configGetInt(&gGameConfig, section, "karmaFolderTopLine", &offsets->karmaFolderTopLine);
+    configGetInt(config, section, "folderViewOffsetY",  &offsets->folderViewOffsetY);
+    configGetInt(config, section, "karmaFolderTopLine", &offsets->karmaFolderTopLine);
 
     // Text positions
-    configGetInt(&gGameConfig, section, "charPointsTextX", &offsets->charPointsTextX);
-    configGetInt(&gGameConfig, section, "charPointsTextY", &offsets->charPointsTextY);
-    configGetInt(&gGameConfig, section, "charPointsValueX", &offsets->charPointsValueX);
-    configGetInt(&gGameConfig, section, "charPointsValueY", &offsets->charPointsValueY);
-    configGetInt(&gGameConfig, section, "optionalTraitsTextX", &offsets->optionalTraitsTextX);
-    configGetInt(&gGameConfig, section, "optionalTraitsTextY", &offsets->optionalTraitsTextY);
-    configGetInt(&gGameConfig, section, "tagSkillsTextX", &offsets->tagSkillsTextX);
-    configGetInt(&gGameConfig, section, "tagSkillsTextY", &offsets->tagSkillsTextY);
+    configGetInt(config, section, "charPointsTextX",     &offsets->charPointsTextX);
+    configGetInt(config, section, "charPointsTextY",     &offsets->charPointsTextY);
+    configGetInt(config, section, "charPointsValueX",    &offsets->charPointsValueX);
+    configGetInt(config, section, "charPointsValueY",    &offsets->charPointsValueY);
+    configGetInt(config, section, "optionalTraitsTextX", &offsets->optionalTraitsTextX);
+    configGetInt(config, section, "optionalTraitsTextY", &offsets->optionalTraitsTextY);
+    configGetInt(config, section, "tagSkillsTextX",      &offsets->tagSkillsTextX);
+    configGetInt(config, section, "tagSkillsTextY",      &offsets->tagSkillsTextY);
 
-    // Button positions
-    configGetInt(&gGameConfig, section, "sliderPlusX", &offsets->sliderPlusX);
-    configGetInt(&gGameConfig, section, "sliderPlusY", &offsets->sliderPlusY);
-    configGetInt(&gGameConfig, section, "folderButtonX", &offsets->folderButtonX);
-    configGetInt(&gGameConfig, section, "folderButtonY", &offsets->folderButtonY);
-    configGetInt(&gGameConfig, section, "optionsButtonX", &offsets->optionsButtonX);
-    configGetInt(&gGameConfig, section, "optionsButtonY", &offsets->optionsButtonY);
-    configGetInt(&gGameConfig, section, "doneButtonGraphicX", &offsets->doneButtonGraphicX);
-    configGetInt(&gGameConfig, section, "doneButtonGraphicY", &offsets->doneButtonGraphicY);
-    configGetInt(&gGameConfig, section, "cancelButtonGraphicX", &offsets->cancelButtonGraphicX);
-    configGetInt(&gGameConfig, section, "cancelButtonGraphicY", &offsets->cancelButtonGraphicY);
+    // Slider & folder buttons
+    configGetInt(config, section, "sliderPlusX",   &offsets->sliderPlusX);
+    configGetInt(config, section, "sliderPlusY",   &offsets->sliderPlusY);
+    configGetInt(config, section, "folderButtonX", &offsets->folderButtonX);
+    configGetInt(config, section, "folderButtonY", &offsets->folderButtonY);
+    configGetInt(config, section, "optionsButtonX",&offsets->optionsButtonX);
+    configGetInt(config, section, "optionsButtonY",&offsets->optionsButtonY);
+    configGetInt(config, section, "doneButtonGraphicX",   &offsets->doneButtonGraphicX);
+    configGetInt(config, section, "doneButtonGraphicY",   &offsets->doneButtonGraphicY);
+    configGetInt(config, section, "cancelButtonGraphicX", &offsets->cancelButtonGraphicX);
+    configGetInt(config, section, "cancelButtonGraphicY", &offsets->cancelButtonGraphicY);
 
-    // Folder view positions
-    configGetInt(&gGameConfig, section, "folderBackgroundX", &offsets->folderBackgroundX);
-    configGetInt(&gGameConfig, section, "folderBackgroundY", &offsets->folderBackgroundY);
-    configGetInt(&gGameConfig, section, "folderBackgroundWidth", &offsets->folderBackgroundWidth);
-    configGetInt(&gGameConfig, section, "folderBackgroundHeight", &offsets->folderBackgroundHeight);
-    configGetInt(&gGameConfig, section, "folderSelectedX", &offsets->folderSelectedX);
-    configGetInt(&gGameConfig, section, "folderSelectedY", &offsets->folderSelectedY);
+    // Folder view decorations
+    configGetInt(config, section, "folderBackgroundX",      &offsets->folderBackgroundX);
+    configGetInt(config, section, "folderBackgroundY",      &offsets->folderBackgroundY);
+    configGetInt(config, section, "folderBackgroundWidth",  &offsets->folderBackgroundWidth);
+    configGetInt(config, section, "folderBackgroundHeight", &offsets->folderBackgroundHeight);
+    configGetInt(config, section, "folderSelectedX",        &offsets->folderSelectedX);
+    configGetInt(config, section, "folderSelectedY",        &offsets->folderSelectedY);
 
-    // PC stats positions
-    configGetInt(&gGameConfig, section, "pcStatsX", &offsets->pcStatsX);
-    configGetInt(&gGameConfig, section, "pcStatsY", &offsets->pcStatsY);
-    configGetInt(&gGameConfig, section, "pcStatsWidth", &offsets->pcStatsWidth);
-    configGetInt(&gGameConfig, section, "pcStatsHeight", &offsets->pcStatsHeight);
+    // PC stats panel
+    configGetInt(config, section, "pcStatsX",               &offsets->pcStatsX);
+    configGetInt(config, section, "pcStatsY",               &offsets->pcStatsY);
+    configGetInt(config, section, "pcStatsWidth",           &offsets->pcStatsWidth);
+    configGetInt(config, section, "pcStatsHeight",          &offsets->pcStatsHeight);
 
-    // Primary stats positions
-    configGetInt(&gGameConfig, section, "primaryStatBigNumberX", &offsets->primaryStatBigNumberX);
-    configGetInt(&gGameConfig, section, "primaryStatDescriptionX", &offsets->primaryStatDescriptionX);
+    // Primary stats labels
+    configGetInt(config, section, "primaryStatBigNumberX",  &offsets->primaryStatBigNumberX);
+    configGetInt(config, section, "primaryStatDescriptionX",&offsets->primaryStatDescriptionX);
 
-    // Derived stats positions
-    configGetInt(&gGameConfig, section, "derivedStatsTopX", &offsets->derivedStatsTopX);
-    configGetInt(&gGameConfig, section, "derivedStatsTopY", &offsets->derivedStatsTopY);
-    configGetInt(&gGameConfig, section, "derivedStatsTopWidth", &offsets->derivedStatsTopWidth);
-    configGetInt(&gGameConfig, section, "derivedStatsTopHeight", &offsets->derivedStatsTopHeight);
-    configGetInt(&gGameConfig, section, "derivedStatsBottomX", &offsets->derivedStatsBottomX);
-    configGetInt(&gGameConfig, section, "derivedStatsBottomY", &offsets->derivedStatsBottomY);
-    configGetInt(&gGameConfig, section, "derivedStatsBottomWidth", &offsets->derivedStatsBottomWidth);
-    configGetInt(&gGameConfig, section, "derivedStatsBottomHeight", &offsets->derivedStatsBottomHeight);
-    configGetInt(&gGameConfig, section, "derivedStatsLabelX", &offsets->derivedStatsLabelX);
-    configGetInt(&gGameConfig, section, "derivedStatsValueX", &offsets->derivedStatsValueX);
+    // Derived stats panel
+    configGetInt(config, section, "derivedStatsTopX",       &offsets->derivedStatsTopX);
+    configGetInt(config, section, "derivedStatsTopY",       &offsets->derivedStatsTopY);
+    configGetInt(config, section, "derivedStatsTopWidth",   &offsets->derivedStatsTopWidth);
+    configGetInt(config, section, "derivedStatsTopHeight",  &offsets->derivedStatsTopHeight);
+    configGetInt(config, section, "derivedStatsBottomX",    &offsets->derivedStatsBottomX);
+    configGetInt(config, section, "derivedStatsBottomY",    &offsets->derivedStatsBottomY);
+    configGetInt(config, section, "derivedStatsBottomWidth",&offsets->derivedStatsBottomWidth);
+    configGetInt(config, section, "derivedStatsBottomHeight",&offsets->derivedStatsBottomHeight);
+    configGetInt(config, section, "derivedStatsLabelX",     &offsets->derivedStatsLabelX);
+    configGetInt(config, section, "derivedStatsValueX",     &offsets->derivedStatsValueX);
 
-    // New folder view elements
-    configGetInt(&gGameConfig, section, "folderScrollUpButtonX", &offsets->folderScrollUpButtonX);
-    configGetInt(&gGameConfig, section, "folderScrollUpButtonY", &offsets->folderScrollUpButtonY);
-    configGetInt(&gGameConfig, section, "folderScrollDownButtonX", &offsets->folderScrollDownButtonX);
-    configGetInt(&gGameConfig, section, "folderScrollDownButtonY", &offsets->folderScrollDownButtonY);
-    configGetInt(&gGameConfig, section, "folderTextX", &offsets->folderTextX);
-    configGetInt(&gGameConfig, section, "folderKillsNumberX", &offsets->folderKillsNumberX);
-    configGetInt(&gGameConfig, section, "folderViewStartY", &offsets->folderViewStartY);
+    // New folder scroll buttons & text
+    configGetInt(config, section, "folderScrollUpButtonX",   &offsets->folderScrollUpButtonX);
+    configGetInt(config, section, "folderScrollUpButtonY",   &offsets->folderScrollUpButtonY);
+    configGetInt(config, section, "folderScrollDownButtonX", &offsets->folderScrollDownButtonX);
+    configGetInt(config, section, "folderScrollDownButtonY", &offsets->folderScrollDownButtonY);
+    configGetInt(config, section, "folderTextX",             &offsets->folderTextX);
+    configGetInt(config, section, "folderKillsNumberX",      &offsets->folderKillsNumberX);
+    configGetInt(config, section, "folderViewStartY",        &offsets->folderViewStartY);
 
-    configGetInt(&gGameConfig, section, "infoButtonOffsetY", &offsets->infoButtonOffsetY);
-    configGetInt(&gGameConfig, section, "sliderOffsetY", &offsets->sliderOffsetY);
+    // Misc offsets
+    configGetInt(config, section, "infoButtonOffsetY", &offsets->infoButtonOffsetY);
+    configGetInt(config, section, "sliderOffsetY",     &offsets->sliderOffsetY);
+    configGetInt(config, section, "perksTitleX",       &offsets->perksTitleX);
+    configGetInt(config, section, "karmaTitleX",       &offsets->karmaTitleX);
+    configGetInt(config, section, "killsTitleX",       &offsets->killsTitleX);
+}
 
-    configGetInt(&gGameConfig, section, "perksTitleX", &offsets->perksTitleX);
-    configGetInt(&gGameConfig, section, "karmaTitleX", &offsets->karmaTitleX);
-    configGetInt(&gGameConfig, section, "killsTitleX", &offsets->killsTitleX);
+bool characterEditorLoadOffsetsFromConfig(CharacterEditorOffsets* offsets, bool isWidescreen) {
+    const char* section = isWidescreen
+        ? "character_editor800"
+        : "character_editor640";
+
+    const CharacterEditorOffsets* fallback = isWidescreen
+        ? &gCharEditorOffsets800
+        : &gCharEditorOffsets640;
+
+    // seed from hard‑coded defaults
+    *offsets = *fallback;
+
+    // apply user config from fallout2.cfg
+    applyConfigToCharacterEditorOffsets(&gGameConfig, section, offsets);
+
+    // apply modder overrides from data\offsets.txt, if present
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors*/ true)) {
+            applyConfigToCharacterEditorOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
+    }
 
     return true;
 }

@@ -209,51 +209,69 @@ static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
-bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen)
-{
-    const char* section = isWidescreen ? "charselect800" : "charselect640";
-    const CharacterSelectorOffsets* fallback = isWidescreen ? &gCharSelectorOffsets800 : &gCharSelectorOffsets640;
-
-    // Initialize with fallback values
-    *offsets = *fallback;
-
-    // Load all values from config
-    configGetInt(&gGameConfig, section, "width", &offsets->width);
-    configGetInt(&gGameConfig, section, "height", &offsets->height);
+static void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets) {
+    // Window
+    configGetInt(config, section, "width",  &offsets->width);
+    configGetInt(config, section, "height", &offsets->height);
 
     // Background
-    configGetInt(&gGameConfig, section, "backgroundX", &offsets->backgroundX);
-    configGetInt(&gGameConfig, section, "backgroundY", &offsets->backgroundY);
-    configGetInt(&gGameConfig, section, "backgroundWidth", &offsets->backgroundWidth);
-    configGetInt(&gGameConfig, section, "backgroundHeight", &offsets->backgroundHeight);
+    configGetInt(config, section, "backgroundX",      &offsets->backgroundX);
+    configGetInt(config, section, "backgroundY",      &offsets->backgroundY);
+    configGetInt(config, section, "backgroundWidth",  &offsets->backgroundWidth);
+    configGetInt(config, section, "backgroundHeight", &offsets->backgroundHeight);
 
     // Buttons
-    configGetInt(&gGameConfig, section, "previousButtonX", &offsets->previousButtonX);
-    configGetInt(&gGameConfig, section, "previousButtonY", &offsets->previousButtonY);
-    configGetInt(&gGameConfig, section, "nextButtonX", &offsets->nextButtonX);
-    configGetInt(&gGameConfig, section, "nextButtonY", &offsets->nextButtonY);
-    configGetInt(&gGameConfig, section, "takeButtonX", &offsets->takeButtonX);
-    configGetInt(&gGameConfig, section, "takeButtonY", &offsets->takeButtonY);
-    configGetInt(&gGameConfig, section, "modifyButtonX", &offsets->modifyButtonX);
-    configGetInt(&gGameConfig, section, "modifyButtonY", &offsets->modifyButtonY);
-    configGetInt(&gGameConfig, section, "createButtonX", &offsets->createButtonX);
-    configGetInt(&gGameConfig, section, "createButtonY", &offsets->createButtonY);
-    configGetInt(&gGameConfig, section, "backButtonX", &offsets->backButtonX);
-    configGetInt(&gGameConfig, section, "backButtonY", &offsets->backButtonY);
+    configGetInt(config, section, "previousButtonX", &offsets->previousButtonX);
+    configGetInt(config, section, "previousButtonY", &offsets->previousButtonY);
+    configGetInt(config, section, "nextButtonX",     &offsets->nextButtonX);
+    configGetInt(config, section, "nextButtonY",     &offsets->nextButtonY);
+    configGetInt(config, section, "takeButtonX",     &offsets->takeButtonX);
+    configGetInt(config, section, "takeButtonY",     &offsets->takeButtonY);
+    configGetInt(config, section, "modifyButtonX",   &offsets->modifyButtonX);
+    configGetInt(config, section, "modifyButtonY",   &offsets->modifyButtonY);
+    configGetInt(config, section, "createButtonX",   &offsets->createButtonX);
+    configGetInt(config, section, "createButtonY",   &offsets->createButtonY);
+    configGetInt(config, section, "backButtonX",     &offsets->backButtonX);
+    configGetInt(config, section, "backButtonY",     &offsets->backButtonY);
 
     // Text positions
-    configGetInt(&gGameConfig, section, "nameMidX", &offsets->nameMidX);
-    configGetInt(&gGameConfig, section, "primaryStatMidX", &offsets->primaryStatMidX);
-    configGetInt(&gGameConfig, section, "secondaryStatMidX", &offsets->secondaryStatMidX);
-    configGetInt(&gGameConfig, section, "bioX", &offsets->bioX);
-    configGetInt(&gGameConfig, section, "textBaseY", &offsets->textBaseY);
-    configGetInt(&gGameConfig, section, "faceY", &offsets->faceY);
+    configGetInt(config, section, "nameMidX",          &offsets->nameMidX);
+    configGetInt(config, section, "primaryStatMidX",   &offsets->primaryStatMidX);
+    configGetInt(config, section, "secondaryStatMidX", &offsets->secondaryStatMidX);
+    configGetInt(config, section, "bioX",              &offsets->bioX);
+    configGetInt(config, section, "textBaseY",         &offsets->textBaseY);
+    configGetInt(config, section, "faceY",             &offsets->faceY);
 
     // Face position
-    configGetInt(&gGameConfig, section, "faceX", &offsets->faceX);
+    configGetInt(config, section, "faceX", &offsets->faceX);
 
     // Bio rendering
-    configGetInt(&gGameConfig, section, "bioMaxY", &offsets->bioMaxY);
+    configGetInt(config, section, "bioMaxY", &offsets->bioMaxY);
+}
+
+bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen) {
+    const char* section = isWidescreen
+        ? "charselect800"
+        : "charselect640";
+
+    const CharacterSelectorOffsets* fallback = isWidescreen
+        ? &gCharSelectorOffsets800
+        : &gCharSelectorOffsets640;
+
+    // seed from hard‑coded defaults
+    *offsets = *fallback;
+
+    // apply user config from fallout2.cfg
+    applyConfigToCharacterSelectorOffsets(&gGameConfig, section, offsets);
+
+    // apply modder overrides from data\offsets.txt, if present
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors*/ true)) {
+            applyConfigToCharacterSelectorOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
+    }
 
     return true;
 }

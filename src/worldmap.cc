@@ -1002,83 +1002,102 @@ const WorldmapOffsets gWorldmapOffsets800 = {
     208 // mapcenterY
 };
 
-bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen)
-{
-    const char* section = isWidescreen ? "worldmap800" : "worldmap640";
-    const WorldmapOffsets* fallback = isWidescreen ? &gWorldmapOffsets800 : &gWorldmapOffsets640;
-
-    // Initialize with fallback values
-    *offsets = *fallback;
-
-    // Window
-    configGetInt(&gGameConfig, section, "windowWidth", &offsets->windowWidth);
-    configGetInt(&gGameConfig, section, "windowHeight", &offsets->windowHeight);
+static void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapOffsets* offsets) {
+    // Window size
+    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Viewport
-    configGetInt(&gGameConfig, section, "viewX", &offsets->viewX);
-    configGetInt(&gGameConfig, section, "viewY", &offsets->viewY);
-    configGetInt(&gGameConfig, section, "viewWidth", &offsets->viewWidth);
-    configGetInt(&gGameConfig, section, "viewHeight", &offsets->viewHeight);
+    configGetInt(config, section, "viewX",      &offsets->viewX);
+    configGetInt(config, section, "viewY",      &offsets->viewY);
+    configGetInt(config, section, "viewWidth",  &offsets->viewWidth);
+    configGetInt(config, section, "viewHeight", &offsets->viewHeight);
 
-    // UI Elements
-    configGetInt(&gGameConfig, section, "dialX", &offsets->dialX);
-    configGetInt(&gGameConfig, section, "dialY", &offsets->dialY);
-    configGetInt(&gGameConfig, section, "scrollUpX", &offsets->scrollUpX);
-    configGetInt(&gGameConfig, section, "scrollUpY", &offsets->scrollUpY);
-    configGetInt(&gGameConfig, section, "scrollDownX", &offsets->scrollDownX);
-    configGetInt(&gGameConfig, section, "scrollDownY", &offsets->scrollDownY);
-    configGetInt(&gGameConfig, section, "globeOverlayX", &offsets->globeOverlayX);
-    configGetInt(&gGameConfig, section, "globeOverlayY", &offsets->globeOverlayY);
-    configGetInt(&gGameConfig, section, "carX", &offsets->carX);
-    configGetInt(&gGameConfig, section, "carY", &offsets->carY);
-    configGetInt(&gGameConfig, section, "carOverlayX", &offsets->carOverlayX);
-    configGetInt(&gGameConfig, section, "carOverlayY", &offsets->carOverlayY);
-    configGetInt(&gGameConfig, section, "carFuelBarX", &offsets->carFuelBarX);
-    configGetInt(&gGameConfig, section, "carFuelBarY", &offsets->carFuelBarY);
-    configGetInt(&gGameConfig, section, "carFuelBarHeight", &offsets->carFuelBarHeight);
-    configGetInt(&gGameConfig, section, "townWorldSwitchX", &offsets->townWorldSwitchX);
-    configGetInt(&gGameConfig, section, "townWorldSwitchY", &offsets->townWorldSwitchY);
+    // UI elements
+    configGetInt(config, section, "dialX",            &offsets->dialX);
+    configGetInt(config, section, "dialY",            &offsets->dialY);
+    configGetInt(config, section, "scrollUpX",        &offsets->scrollUpX);
+    configGetInt(config, section, "scrollUpY",        &offsets->scrollUpY);
+    configGetInt(config, section, "scrollDownX",      &offsets->scrollDownX);
+    configGetInt(config, section, "scrollDownY",      &offsets->scrollDownY);
+    configGetInt(config, section, "globeOverlayX",    &offsets->globeOverlayX);
+    configGetInt(config, section, "globeOverlayY",    &offsets->globeOverlayY);
+    configGetInt(config, section, "carX",             &offsets->carX);
+    configGetInt(config, section, "carY",             &offsets->carY);
+    configGetInt(config, section, "carOverlayX",      &offsets->carOverlayX);
+    configGetInt(config, section, "carOverlayY",      &offsets->carOverlayY);
+    configGetInt(config, section, "carFuelBarX",      &offsets->carFuelBarX);
+    configGetInt(config, section, "carFuelBarY",      &offsets->carFuelBarY);
+    configGetInt(config, section, "carFuelBarHeight", &offsets->carFuelBarHeight);
+    configGetInt(config, section, "townWorldSwitchX", &offsets->townWorldSwitchX);
+    configGetInt(config, section, "townWorldSwitchY", &offsets->townWorldSwitchY);
 
-    // Scroll Area
-    configGetInt(&gGameConfig, section, "scrollAreaX", &offsets->scrollAreaX);
-    configGetInt(&gGameConfig, section, "scrollAreaY", &offsets->scrollAreaY);
+    // Scroll area
+    configGetInt(config, section, "scrollAreaX", &offsets->scrollAreaX);
+    configGetInt(config, section, "scrollAreaY", &offsets->scrollAreaY);
 
-    // Destination List
-    configGetInt(&gGameConfig, section, "destListX", &offsets->destListX);
-    configGetInt(&gGameConfig, section, "destListFirstY", &offsets->destListFirstY);
-    configGetInt(&gGameConfig, section, "destListSpacing", &offsets->destListSpacing);
+    // Destination list
+    configGetInt(config, section, "destListX",       &offsets->destListX);
+    configGetInt(config, section, "destListFirstY",  &offsets->destListFirstY);
+    configGetInt(config, section, "destListSpacing", &offsets->destListSpacing);
 
-    // Date Display
-    configGetInt(&gGameConfig, section, "dateDisplayX", &offsets->dateDisplayX);
-    configGetInt(&gGameConfig, section, "dateDisplayY", &offsets->dateDisplayY);
-    configGetInt(&gGameConfig, section, "dateDisplayWidth", &offsets->dateDisplayWidth);
+    // Date display
+    configGetInt(config, section, "dateDisplayX",     &offsets->dateDisplayX);
+    configGetInt(config, section, "dateDisplayY",     &offsets->dateDisplayY);
+    configGetInt(config, section, "dateDisplayWidth", &offsets->dateDisplayWidth);
 
-    // Viewport Boundaries
-    configGetInt(&gGameConfig, section, "viewportMaxX", &offsets->viewportMaxX);
-    configGetInt(&gGameConfig, section, "viewportMaxY", &offsets->viewportMaxY);
+    // Viewport boundaries
+    configGetInt(config, section, "viewportMaxX", &offsets->viewportMaxX);
+    configGetInt(config, section, "viewportMaxY", &offsets->viewportMaxY);
 
-    // City Name Drawing
-    configGetInt(&gGameConfig, section, "cityNameMaxY", &offsets->cityNameMaxY);
+    // City name drawing
+    configGetInt(config, section, "cityNameMaxY", &offsets->cityNameMaxY);
 
-    // Subtile Drawing Boundaries
-    configGetInt(&gGameConfig, section, "subtileViewportMaxX", &offsets->subtileViewportMaxX);
-    configGetInt(&gGameConfig, section, "subtileViewportMaxY", &offsets->subtileViewportMaxY);
+    // Subtile boundaries
+    configGetInt(config, section, "subtileViewportMaxX", &offsets->subtileViewportMaxX);
+    configGetInt(config, section, "subtileViewportMaxY", &offsets->subtileViewportMaxY);
 
-    // Town Map
-    configGetInt(&gGameConfig, section, "townMapBgX", &offsets->townMapBgX);
-    configGetInt(&gGameConfig, section, "townMapBgY", &offsets->townMapBgY);
-    configGetInt(&gGameConfig, section, "townMapImageX", &offsets->townMapImageX);
-    configGetInt(&gGameConfig, section, "townMapImageY", &offsets->townMapImageY);
-    configGetInt(&gGameConfig, section, "townMapButtonXOffset", &offsets->townMapButtonXOffset);
-    configGetInt(&gGameConfig, section, "townMapButtonYOffset", &offsets->townMapButtonYOffset);
-    configGetInt(&gGameConfig, section, "townMapLabelXOffset", &offsets->townMapLabelXOffset);
-    configGetInt(&gGameConfig, section, "townMapLabelYOffset", &offsets->townMapLabelYOffset);
+    // Town map positions
+    configGetInt(config, section, "townMapBgX",          &offsets->townMapBgX);
+    configGetInt(config, section, "townMapBgY",          &offsets->townMapBgY);
+    configGetInt(config, section, "townMapImageX",       &offsets->townMapImageX);
+    configGetInt(config, section, "townMapImageY",       &offsets->townMapImageY);
+    configGetInt(config, section, "townMapButtonXOffset", &offsets->townMapButtonXOffset);
+    configGetInt(config, section, "townMapButtonYOffset", &offsets->townMapButtonYOffset);
+    configGetInt(config, section, "townMapLabelXOffset",  &offsets->townMapLabelXOffset);
+    configGetInt(config, section, "townMapLabelYOffset",  &offsets->townMapLabelYOffset);
 
-    configGetInt(&gGameConfig, section, "townBackgroundWidth", &offsets->townBackgroundWidth);
-    configGetInt(&gGameConfig, section, "townBackgroundHeight", &offsets->townBackgroundHeight);
+    configGetInt(config, section, "townBackgroundWidth",  &offsets->townBackgroundWidth);
+    configGetInt(config, section, "townBackgroundHeight", &offsets->townBackgroundHeight);
 
-    configGetInt(&gGameConfig, section, "mapcenterX", &offsets->mapcenterX);
-    configGetInt(&gGameConfig, section, "mapcenterY", &offsets->mapcenterY);
+    // Map center
+    configGetInt(config, section, "mapcenterX", &offsets->mapcenterX);
+    configGetInt(config, section, "mapcenterY", &offsets->mapcenterY);
+}
+
+bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen) {
+    const char* section = isWidescreen
+        ? "worldmap800"
+        : "worldmap640";
+
+    const WorldmapOffsets* fallback = isWidescreen
+        ? &gWorldmapOffsets800
+        : &gWorldmapOffsets640;
+
+    // start from built‑in defaults
+    *offsets = *fallback;
+
+    // apply user’s fallout2.cfg settings
+    applyConfigToWorldmapOffsets(&gGameConfig, section, offsets);
+
+    // apply any modder overrides
+    Config txtConfig;
+    if (configInit(&txtConfig)) {
+        if (configRead(&txtConfig, "data\\offsets.txt", /*ignoreErrors*/ true)) {
+            applyConfigToWorldmapOffsets(&txtConfig, section, offsets);
+        }
+        configFree(&txtConfig);
+    }
 
     return true;
 }
