@@ -46,7 +46,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-format-18
           echo "CLANG_FORMAT_VERSION=$(clang-format-18 --version)" >> $GITHUB_ENV
-
+          
       - name: Check for skip-formatting label (PR only)
         if: github.event_name == 'pull_request'
         run: |
@@ -62,38 +62,48 @@ jobs:
 
       - name: Check formatting
         if: env.skip-formatting != 'true'
+        id: check-formatting
         run: |
           echo "Checking code formatting with $CLANG_FORMAT_VERSION"
           if ! find src -type f \( -name "*.cc" -o -name "*.h" \) -print0 | xargs -0 clang-format-18 --dry-run --Werror; then
             echo "format_needed=true" >> $GITHUB_ENV
             echo "Formatting issues found - will attempt to auto-format"
-            exit 0
           else
             echo "Code is properly formatted"
           fi
-
+          
       - name: Auto-format if needed
         if: env.format_needed == 'true' && env.skip-formatting != 'true'
         run: |
           echo "Applying clang-format..."
           find src -type f \( -name "*.cc" -o -name "*.h" \) -print0 | xargs -0 clang-format-18 -i
-
-          echo "Committing formatting changes..."
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
+          # Check if there are changes after formatting
           if ! git diff --quiet; then
+            echo "Committing formatting changes..."
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -u
             git commit -m "chore: auto-format with clang-format"
             git push
             echo "Formatting changes pushed"
+            
+            # Set flag indicating changes were pushed
+            echo "changes_pushed=true" >> $GITHUB_ENV
           else
             echo "No formatting changes after auto-format"
           fi
-
-      - name: Fail if formatting still needed
+          
+      - name: Re-run workflow on new commit
+        if: env.changes_pushed == 'true'
+        run: |
+          echo "Formatting changes pushed, workflow will restart"
+          exit 1  # Will cause job to fail but trigger new workflow
+          
+      - name: Check formatting after push
         if: env.format_needed == 'true' && env.skip-formatting != 'true' && github.event_name != 'pull_request'
         run: |
+          # This step should only run if no changes were pushed
           echo "::error::Code formatting issues detected that couldn't be auto-fixed"
           exit 1
           
