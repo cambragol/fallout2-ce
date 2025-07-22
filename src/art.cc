@@ -1864,9 +1864,14 @@ static void artCacheFreeImpl(void* ptr)
     internal_free(ptr);
 }
 
-static int buildFidInternal(unsigned int frmId, unsigned char weaponCode,
-    unsigned char animType, unsigned char objectType,
-    unsigned char rotation)
+/* FID Structure:
+    3 bits for rotation
+    4 bits for object type
+    8 bits for animation type
+    4 bits for weapon code
+    12 bits for frame ID
+*/
+static int buildFidInternal(unsigned short frmId, unsigned char weaponCode, unsigned char animType, unsigned char objectType, unsigned char rotation)
 {
     unsigned int ext_flag = 0;
 
