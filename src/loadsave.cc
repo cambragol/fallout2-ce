@@ -355,8 +355,7 @@ bool loadSaveLoadOffsetsFromConfig(LoadSaveOffsets* offsets, bool isWidescreen)
         "loadsave",
         gLoadSaveOffsets640,
         gLoadSaveOffsets800,
-        applyConfigToLoadSaveOffsets
-    );
+        applyConfigToLoadSaveOffsets);
 }
 
 void loadSaveWriteDefaultOffsetsToConfig(bool isWidescreen, const LoadSaveOffsets* defaults)

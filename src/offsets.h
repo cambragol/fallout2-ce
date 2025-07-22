@@ -576,13 +576,13 @@ extern const WorldmapOffsets gWorldmapOffsets800;
 
 template <typename Offsets>
 bool loadOffsetsFromConfig(
-    Offsets*        offsets,
-    bool            isWidescreen,
-    char const*     sectionBaseName,
-    Offsets const&  fallback640,
-    Offsets const&  fallback800,
-    void           (*applyFunc)(Config*, char const*, Offsets*)
-) {
+    Offsets* offsets,
+    bool isWidescreen,
+    char const* sectionBaseName,
+    Offsets const& fallback640,
+    Offsets const& fallback800,
+    void (*applyFunc)(Config*, char const*, Offsets*))
+{
     char section[32];
     if (isWidescreen) {
         snprintf(section, sizeof(section), "%s800", sectionBaseName);

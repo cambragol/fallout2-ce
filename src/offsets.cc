@@ -1124,155 +1124,158 @@ const WorldmapOffsets gWorldmapOffsets800 = {
     208 // mapcenterY
 };
 
-void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* offsets) {
-    configGetInt(config, section, "copyrightX",        &offsets->copyrightX);
-    configGetInt(config, section, "copyrightY",        &offsets->copyrightY);
-    configGetInt(config, section, "versionX",          &offsets->versionX);
-    configGetInt(config, section, "versionY",          &offsets->versionY);
-    configGetInt(config, section, "hashX",             &offsets->hashX);
-    configGetInt(config, section, "hashY",             &offsets->hashY);
-    configGetInt(config, section, "buildDateX",        &offsets->buildDateX);
-    configGetInt(config, section, "buildDateY",        &offsets->buildDateY);
-    configGetInt(config, section, "buttonBaseX",       &offsets->buttonBaseX);
-    configGetInt(config, section, "buttonBaseY",       &offsets->buttonBaseY);
+void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* offsets)
+{
+    configGetInt(config, section, "copyrightX", &offsets->copyrightX);
+    configGetInt(config, section, "copyrightY", &offsets->copyrightY);
+    configGetInt(config, section, "versionX", &offsets->versionX);
+    configGetInt(config, section, "versionY", &offsets->versionY);
+    configGetInt(config, section, "hashX", &offsets->hashX);
+    configGetInt(config, section, "hashY", &offsets->hashY);
+    configGetInt(config, section, "buildDateX", &offsets->buildDateX);
+    configGetInt(config, section, "buildDateY", &offsets->buildDateY);
+    configGetInt(config, section, "buttonBaseX", &offsets->buttonBaseX);
+    configGetInt(config, section, "buttonBaseY", &offsets->buttonBaseY);
     configGetInt(config, section, "buttonTextOffsetX", &offsets->buttonTextOffsetX);
     configGetInt(config, section, "buttonTextOffsetY", &offsets->buttonTextOffsetY);
-    configGetInt(config, section, "width",             &offsets->width);
-    configGetInt(config, section, "height",            &offsets->height);
+    configGetInt(config, section, "width", &offsets->width);
+    configGetInt(config, section, "height", &offsets->height);
 }
 
-void applyConfigToCharacterEditorOffsets(Config* config, const char* section, CharacterEditorOffsets* offsets) {
+void applyConfigToCharacterEditorOffsets(Config* config, const char* section, CharacterEditorOffsets* offsets)
+{
     // Window dimensions
-    configGetInt(config, section, "windowWidth",                     &offsets->windowWidth);
-    configGetInt(config, section, "windowHeight",                    &offsets->windowHeight);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
+    configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Buttons
-    configGetInt(config, section, "nameButtonX",                     &offsets->nameButtonX);
-    configGetInt(config, section, "nameButtonY",                     &offsets->nameButtonY);
-    configGetInt(config, section, "tagSkillsButtonX",                &offsets->tagSkillsButtonX);
-    configGetInt(config, section, "tagSkillsButtonY",                &offsets->tagSkillsButtonY);
-    configGetInt(config, section, "printButtonX",                    &offsets->printButtonX);
-    configGetInt(config, section, "printButtonY",                    &offsets->printButtonY);
-    configGetInt(config, section, "doneButtonX",                     &offsets->doneButtonX);
-    configGetInt(config, section, "doneButtonY",                     &offsets->doneButtonY);
-    configGetInt(config, section, "cancelButtonX",                   &offsets->cancelButtonX);
-    configGetInt(config, section, "cancelButtonY",                   &offsets->cancelButtonY);
-    configGetInt(config, section, "optionalTraitsLeftButtonX",       &offsets->optionalTraitsLeftButtonX);
-    configGetInt(config, section, "optionalTraitsRightButtonX",      &offsets->optionalTraitsRightButtonX);
-    configGetInt(config, section, "optionalTraitsButtonY",           &offsets->optionalTraitsButtonY);
-    configGetInt(config, section, "specialStatsButtonX",             &offsets->specialStatsButtonX);
+    configGetInt(config, section, "nameButtonX", &offsets->nameButtonX);
+    configGetInt(config, section, "nameButtonY", &offsets->nameButtonY);
+    configGetInt(config, section, "tagSkillsButtonX", &offsets->tagSkillsButtonX);
+    configGetInt(config, section, "tagSkillsButtonY", &offsets->tagSkillsButtonY);
+    configGetInt(config, section, "printButtonX", &offsets->printButtonX);
+    configGetInt(config, section, "printButtonY", &offsets->printButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
+    configGetInt(config, section, "optionalTraitsLeftButtonX", &offsets->optionalTraitsLeftButtonX);
+    configGetInt(config, section, "optionalTraitsRightButtonX", &offsets->optionalTraitsRightButtonX);
+    configGetInt(config, section, "optionalTraitsButtonY", &offsets->optionalTraitsButtonY);
+    configGetInt(config, section, "specialStatsButtonX", &offsets->specialStatsButtonX);
 
     // Primary stat Y (array of 7)
-    configGetIntArray(config, section, "primaryStatY",   offsets->primaryStatY,   7);
+    configGetIntArray(config, section, "primaryStatY", offsets->primaryStatY, 7);
 
     // Skill‐adjustment slider
     configGetInt(config, section, "skillValueAdjustmentSliderY", &offsets->skillValueAdjustmentSliderY);
 
     // Folder view
-    configGetInt(config, section, "folderViewOffsetY",  &offsets->folderViewOffsetY);
+    configGetInt(config, section, "folderViewOffsetY", &offsets->folderViewOffsetY);
     configGetInt(config, section, "karmaFolderTopLine", &offsets->karmaFolderTopLine);
 
     // Text positions
-    configGetInt(config, section, "charPointsTextX",     &offsets->charPointsTextX);
-    configGetInt(config, section, "charPointsTextY",     &offsets->charPointsTextY);
-    configGetInt(config, section, "charPointsValueX",    &offsets->charPointsValueX);
-    configGetInt(config, section, "charPointsValueY",    &offsets->charPointsValueY);
+    configGetInt(config, section, "charPointsTextX", &offsets->charPointsTextX);
+    configGetInt(config, section, "charPointsTextY", &offsets->charPointsTextY);
+    configGetInt(config, section, "charPointsValueX", &offsets->charPointsValueX);
+    configGetInt(config, section, "charPointsValueY", &offsets->charPointsValueY);
     configGetInt(config, section, "optionalTraitsTextX", &offsets->optionalTraitsTextX);
     configGetInt(config, section, "optionalTraitsTextY", &offsets->optionalTraitsTextY);
-    configGetInt(config, section, "tagSkillsTextX",      &offsets->tagSkillsTextX);
-    configGetInt(config, section, "tagSkillsTextY",      &offsets->tagSkillsTextY);
+    configGetInt(config, section, "tagSkillsTextX", &offsets->tagSkillsTextX);
+    configGetInt(config, section, "tagSkillsTextY", &offsets->tagSkillsTextY);
 
     // Slider & folder buttons
-    configGetInt(config, section, "sliderPlusX",   &offsets->sliderPlusX);
-    configGetInt(config, section, "sliderPlusY",   &offsets->sliderPlusY);
+    configGetInt(config, section, "sliderPlusX", &offsets->sliderPlusX);
+    configGetInt(config, section, "sliderPlusY", &offsets->sliderPlusY);
     configGetInt(config, section, "folderButtonX", &offsets->folderButtonX);
     configGetInt(config, section, "folderButtonY", &offsets->folderButtonY);
-    configGetInt(config, section, "optionsButtonX",&offsets->optionsButtonX);
-    configGetInt(config, section, "optionsButtonY",&offsets->optionsButtonY);
-    configGetInt(config, section, "doneButtonGraphicX",   &offsets->doneButtonGraphicX);
-    configGetInt(config, section, "doneButtonGraphicY",   &offsets->doneButtonGraphicY);
+    configGetInt(config, section, "optionsButtonX", &offsets->optionsButtonX);
+    configGetInt(config, section, "optionsButtonY", &offsets->optionsButtonY);
+    configGetInt(config, section, "doneButtonGraphicX", &offsets->doneButtonGraphicX);
+    configGetInt(config, section, "doneButtonGraphicY", &offsets->doneButtonGraphicY);
     configGetInt(config, section, "cancelButtonGraphicX", &offsets->cancelButtonGraphicX);
     configGetInt(config, section, "cancelButtonGraphicY", &offsets->cancelButtonGraphicY);
 
     // Folder view decorations
-    configGetInt(config, section, "folderBackgroundX",      &offsets->folderBackgroundX);
-    configGetInt(config, section, "folderBackgroundY",      &offsets->folderBackgroundY);
-    configGetInt(config, section, "folderBackgroundWidth",  &offsets->folderBackgroundWidth);
+    configGetInt(config, section, "folderBackgroundX", &offsets->folderBackgroundX);
+    configGetInt(config, section, "folderBackgroundY", &offsets->folderBackgroundY);
+    configGetInt(config, section, "folderBackgroundWidth", &offsets->folderBackgroundWidth);
     configGetInt(config, section, "folderBackgroundHeight", &offsets->folderBackgroundHeight);
-    configGetInt(config, section, "folderSelectedX",        &offsets->folderSelectedX);
-    configGetInt(config, section, "folderSelectedY",        &offsets->folderSelectedY);
+    configGetInt(config, section, "folderSelectedX", &offsets->folderSelectedX);
+    configGetInt(config, section, "folderSelectedY", &offsets->folderSelectedY);
 
     // PC stats panel
-    configGetInt(config, section, "pcStatsX",               &offsets->pcStatsX);
-    configGetInt(config, section, "pcStatsY",               &offsets->pcStatsY);
-    configGetInt(config, section, "pcStatsWidth",           &offsets->pcStatsWidth);
-    configGetInt(config, section, "pcStatsHeight",          &offsets->pcStatsHeight);
+    configGetInt(config, section, "pcStatsX", &offsets->pcStatsX);
+    configGetInt(config, section, "pcStatsY", &offsets->pcStatsY);
+    configGetInt(config, section, "pcStatsWidth", &offsets->pcStatsWidth);
+    configGetInt(config, section, "pcStatsHeight", &offsets->pcStatsHeight);
 
     // Primary stats labels
-    configGetInt(config, section, "primaryStatBigNumberX",  &offsets->primaryStatBigNumberX);
-    configGetInt(config, section, "primaryStatDescriptionX",&offsets->primaryStatDescriptionX);
+    configGetInt(config, section, "primaryStatBigNumberX", &offsets->primaryStatBigNumberX);
+    configGetInt(config, section, "primaryStatDescriptionX", &offsets->primaryStatDescriptionX);
 
     // Derived stats panel
-    configGetInt(config, section, "derivedStatsTopX",       &offsets->derivedStatsTopX);
-    configGetInt(config, section, "derivedStatsTopY",       &offsets->derivedStatsTopY);
-    configGetInt(config, section, "derivedStatsTopWidth",   &offsets->derivedStatsTopWidth);
-    configGetInt(config, section, "derivedStatsTopHeight",  &offsets->derivedStatsTopHeight);
-    configGetInt(config, section, "derivedStatsBottomX",    &offsets->derivedStatsBottomX);
-    configGetInt(config, section, "derivedStatsBottomY",    &offsets->derivedStatsBottomY);
-    configGetInt(config, section, "derivedStatsBottomWidth",&offsets->derivedStatsBottomWidth);
-    configGetInt(config, section, "derivedStatsBottomHeight",&offsets->derivedStatsBottomHeight);
-    configGetInt(config, section, "derivedStatsLabelX",     &offsets->derivedStatsLabelX);
-    configGetInt(config, section, "derivedStatsValueX",     &offsets->derivedStatsValueX);
+    configGetInt(config, section, "derivedStatsTopX", &offsets->derivedStatsTopX);
+    configGetInt(config, section, "derivedStatsTopY", &offsets->derivedStatsTopY);
+    configGetInt(config, section, "derivedStatsTopWidth", &offsets->derivedStatsTopWidth);
+    configGetInt(config, section, "derivedStatsTopHeight", &offsets->derivedStatsTopHeight);
+    configGetInt(config, section, "derivedStatsBottomX", &offsets->derivedStatsBottomX);
+    configGetInt(config, section, "derivedStatsBottomY", &offsets->derivedStatsBottomY);
+    configGetInt(config, section, "derivedStatsBottomWidth", &offsets->derivedStatsBottomWidth);
+    configGetInt(config, section, "derivedStatsBottomHeight", &offsets->derivedStatsBottomHeight);
+    configGetInt(config, section, "derivedStatsLabelX", &offsets->derivedStatsLabelX);
+    configGetInt(config, section, "derivedStatsValueX", &offsets->derivedStatsValueX);
 
     // New folder scroll buttons & text
-    configGetInt(config, section, "folderScrollUpButtonX",   &offsets->folderScrollUpButtonX);
-    configGetInt(config, section, "folderScrollUpButtonY",   &offsets->folderScrollUpButtonY);
+    configGetInt(config, section, "folderScrollUpButtonX", &offsets->folderScrollUpButtonX);
+    configGetInt(config, section, "folderScrollUpButtonY", &offsets->folderScrollUpButtonY);
     configGetInt(config, section, "folderScrollDownButtonX", &offsets->folderScrollDownButtonX);
     configGetInt(config, section, "folderScrollDownButtonY", &offsets->folderScrollDownButtonY);
-    configGetInt(config, section, "folderTextX",             &offsets->folderTextX);
-    configGetInt(config, section, "folderKillsNumberX",      &offsets->folderKillsNumberX);
-    configGetInt(config, section, "folderViewStartY",        &offsets->folderViewStartY);
+    configGetInt(config, section, "folderTextX", &offsets->folderTextX);
+    configGetInt(config, section, "folderKillsNumberX", &offsets->folderKillsNumberX);
+    configGetInt(config, section, "folderViewStartY", &offsets->folderViewStartY);
 
     // Misc offsets
     configGetInt(config, section, "infoButtonOffsetY", &offsets->infoButtonOffsetY);
-    configGetInt(config, section, "sliderOffsetY",     &offsets->sliderOffsetY);
-    configGetInt(config, section, "perksTitleX",       &offsets->perksTitleX);
-    configGetInt(config, section, "karmaTitleX",       &offsets->karmaTitleX);
-    configGetInt(config, section, "killsTitleX",       &offsets->killsTitleX);
+    configGetInt(config, section, "sliderOffsetY", &offsets->sliderOffsetY);
+    configGetInt(config, section, "perksTitleX", &offsets->perksTitleX);
+    configGetInt(config, section, "karmaTitleX", &offsets->karmaTitleX);
+    configGetInt(config, section, "killsTitleX", &offsets->killsTitleX);
 }
 
-void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets) {
+void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets)
+{
     // Window
-    configGetInt(config, section, "width",  &offsets->width);
+    configGetInt(config, section, "width", &offsets->width);
     configGetInt(config, section, "height", &offsets->height);
 
     // Background
-    configGetInt(config, section, "backgroundX",      &offsets->backgroundX);
-    configGetInt(config, section, "backgroundY",      &offsets->backgroundY);
-    configGetInt(config, section, "backgroundWidth",  &offsets->backgroundWidth);
+    configGetInt(config, section, "backgroundX", &offsets->backgroundX);
+    configGetInt(config, section, "backgroundY", &offsets->backgroundY);
+    configGetInt(config, section, "backgroundWidth", &offsets->backgroundWidth);
     configGetInt(config, section, "backgroundHeight", &offsets->backgroundHeight);
 
     // Buttons
     configGetInt(config, section, "previousButtonX", &offsets->previousButtonX);
     configGetInt(config, section, "previousButtonY", &offsets->previousButtonY);
-    configGetInt(config, section, "nextButtonX",     &offsets->nextButtonX);
-    configGetInt(config, section, "nextButtonY",     &offsets->nextButtonY);
-    configGetInt(config, section, "takeButtonX",     &offsets->takeButtonX);
-    configGetInt(config, section, "takeButtonY",     &offsets->takeButtonY);
-    configGetInt(config, section, "modifyButtonX",   &offsets->modifyButtonX);
-    configGetInt(config, section, "modifyButtonY",   &offsets->modifyButtonY);
-    configGetInt(config, section, "createButtonX",   &offsets->createButtonX);
-    configGetInt(config, section, "createButtonY",   &offsets->createButtonY);
-    configGetInt(config, section, "backButtonX",     &offsets->backButtonX);
-    configGetInt(config, section, "backButtonY",     &offsets->backButtonY);
+    configGetInt(config, section, "nextButtonX", &offsets->nextButtonX);
+    configGetInt(config, section, "nextButtonY", &offsets->nextButtonY);
+    configGetInt(config, section, "takeButtonX", &offsets->takeButtonX);
+    configGetInt(config, section, "takeButtonY", &offsets->takeButtonY);
+    configGetInt(config, section, "modifyButtonX", &offsets->modifyButtonX);
+    configGetInt(config, section, "modifyButtonY", &offsets->modifyButtonY);
+    configGetInt(config, section, "createButtonX", &offsets->createButtonX);
+    configGetInt(config, section, "createButtonY", &offsets->createButtonY);
+    configGetInt(config, section, "backButtonX", &offsets->backButtonX);
+    configGetInt(config, section, "backButtonY", &offsets->backButtonY);
 
     // Text positions
-    configGetInt(config, section, "nameMidX",          &offsets->nameMidX);
-    configGetInt(config, section, "primaryStatMidX",   &offsets->primaryStatMidX);
+    configGetInt(config, section, "nameMidX", &offsets->nameMidX);
+    configGetInt(config, section, "primaryStatMidX", &offsets->primaryStatMidX);
     configGetInt(config, section, "secondaryStatMidX", &offsets->secondaryStatMidX);
-    configGetInt(config, section, "bioX",              &offsets->bioX);
-    configGetInt(config, section, "textBaseY",         &offsets->textBaseY);
-    configGetInt(config, section, "faceY",             &offsets->faceY);
+    configGetInt(config, section, "bioX", &offsets->bioX);
+    configGetInt(config, section, "textBaseY", &offsets->textBaseY);
+    configGetInt(config, section, "faceY", &offsets->faceY);
 
     // Face position
     configGetInt(config, section, "faceX", &offsets->faceX);
@@ -1281,94 +1284,96 @@ void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, 
     configGetInt(config, section, "bioMaxY", &offsets->bioMaxY);
 }
 
-void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveOffsets* offsets) {
+void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveOffsets* offsets)
+{
     // Window
-    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
     configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Preview pane
-    configGetInt(config, section, "previewWidth",  &offsets->previewWidth);
+    configGetInt(config, section, "previewWidth", &offsets->previewWidth);
     configGetInt(config, section, "previewHeight", &offsets->previewHeight);
-    configGetInt(config, section, "previewX",      &offsets->previewX);
-    configGetInt(config, section, "previewY",      &offsets->previewY);
+    configGetInt(config, section, "previewX", &offsets->previewX);
+    configGetInt(config, section, "previewY", &offsets->previewY);
     configGetInt(config, section, "previewCoverX", &offsets->previewCoverX);
     configGetInt(config, section, "previewCoverY", &offsets->previewCoverY);
 
     // Title & text labels
-    configGetInt(config, section, "titleTextX",   &offsets->titleTextX);
-    configGetInt(config, section, "titleTextY",   &offsets->titleTextY);
-    configGetInt(config, section, "doneLabelX",   &offsets->doneLabelX);
-    configGetInt(config, section, "doneLabelY",   &offsets->doneLabelY);
+    configGetInt(config, section, "titleTextX", &offsets->titleTextX);
+    configGetInt(config, section, "titleTextY", &offsets->titleTextY);
+    configGetInt(config, section, "doneLabelX", &offsets->doneLabelX);
+    configGetInt(config, section, "doneLabelY", &offsets->doneLabelY);
     configGetInt(config, section, "cancelLabelX", &offsets->cancelLabelX);
     configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
 
     // Buttons
-    configGetInt(config, section, "doneButtonX",   &offsets->doneButtonX);
-    configGetInt(config, section, "doneButtonY",   &offsets->doneButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
     configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
     configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
-    configGetInt(config, section, "arrowUpX",      &offsets->arrowUpX);
-    configGetInt(config, section, "arrowUpY",      &offsets->arrowUpY);
-    configGetInt(config, section, "arrowDownX",    &offsets->arrowDownX);
-    configGetInt(config, section, "arrowDownY",    &offsets->arrowDownY);
+    configGetInt(config, section, "arrowUpX", &offsets->arrowUpX);
+    configGetInt(config, section, "arrowUpY", &offsets->arrowUpY);
+    configGetInt(config, section, "arrowDownX", &offsets->arrowDownX);
+    configGetInt(config, section, "arrowDownY", &offsets->arrowDownY);
 
     // Slot list region
-    configGetInt(config, section, "slotListAreaX",       &offsets->slotListAreaX);
-    configGetInt(config, section, "slotListAreaY",       &offsets->slotListAreaY);
-    configGetInt(config, section, "slotListAreaWidth",   &offsets->slotListAreaWidth);
-    configGetInt(config, section, "slotListAreaHeight",  &offsets->slotListAreaHeight);
+    configGetInt(config, section, "slotListAreaX", &offsets->slotListAreaX);
+    configGetInt(config, section, "slotListAreaY", &offsets->slotListAreaY);
+    configGetInt(config, section, "slotListAreaWidth", &offsets->slotListAreaWidth);
+    configGetInt(config, section, "slotListAreaHeight", &offsets->slotListAreaHeight);
 
     // Comment window
     configGetInt(config, section, "commentWindowX", &offsets->commentWindowX);
     configGetInt(config, section, "commentWindowY", &offsets->commentWindowY);
 
     // Slot list itself
-    configGetInt(config, section, "slotListX",            &offsets->slotListX);
-    configGetInt(config, section, "slotListY",            &offsets->slotListY);
-    configGetInt(config, section, "slotListWidth",        &offsets->slotListWidth);
+    configGetInt(config, section, "slotListX", &offsets->slotListX);
+    configGetInt(config, section, "slotListY", &offsets->slotListY);
+    configGetInt(config, section, "slotListWidth", &offsets->slotListWidth);
     configGetInt(config, section, "slotListBottomOffset", &offsets->slotListBottomOffset);
 
     // Info box
-    configGetInt(config, section, "infoBoxX",      &offsets->infoBoxX);
-    configGetInt(config, section, "infoBoxY",      &offsets->infoBoxY);
-    configGetInt(config, section, "infoBoxWidth",  &offsets->infoBoxWidth);
+    configGetInt(config, section, "infoBoxX", &offsets->infoBoxX);
+    configGetInt(config, section, "infoBoxY", &offsets->infoBoxY);
+    configGetInt(config, section, "infoBoxWidth", &offsets->infoBoxWidth);
     configGetInt(config, section, "infoBoxHeight", &offsets->infoBoxHeight);
 
     // Info text positions
     configGetInt(config, section, "characterNameX", &offsets->characterNameX);
     configGetInt(config, section, "characterNameY", &offsets->characterNameY);
-    configGetInt(config, section, "gameDateX",      &offsets->gameDateX);
-    configGetInt(config, section, "gameDateY",      &offsets->gameDateY);
-    configGetInt(config, section, "locationX",      &offsets->locationX);
-    configGetInt(config, section, "locationY",      &offsets->locationY);
+    configGetInt(config, section, "gameDateX", &offsets->gameDateX);
+    configGetInt(config, section, "gameDateY", &offsets->gameDateY);
+    configGetInt(config, section, "locationX", &offsets->locationX);
+    configGetInt(config, section, "locationY", &offsets->locationY);
 
     // Page nav buttons
-    configGetInt(config, section, "nextPageButtonX",      &offsets->nextPageButtonX);
-    configGetInt(config, section, "nextPageButtonY",      &offsets->nextPageButtonY);
-    configGetInt(config, section, "nextPageButtonWidth",  &offsets->nextPageButtonWidth);
+    configGetInt(config, section, "nextPageButtonX", &offsets->nextPageButtonX);
+    configGetInt(config, section, "nextPageButtonY", &offsets->nextPageButtonY);
+    configGetInt(config, section, "nextPageButtonWidth", &offsets->nextPageButtonWidth);
     configGetInt(config, section, "nextPageButtonHeight", &offsets->nextPageButtonHeight);
-    configGetInt(config, section, "prevPageButtonX",      &offsets->prevPageButtonX);
-    configGetInt(config, section, "prevPageButtonY",      &offsets->prevPageButtonY);
-    configGetInt(config, section, "prevPageButtonWidth",  &offsets->prevPageButtonWidth);
+    configGetInt(config, section, "prevPageButtonX", &offsets->prevPageButtonX);
+    configGetInt(config, section, "prevPageButtonY", &offsets->prevPageButtonY);
+    configGetInt(config, section, "prevPageButtonWidth", &offsets->prevPageButtonWidth);
     configGetInt(config, section, "prevPageButtonHeight", &offsets->prevPageButtonHeight);
 
     // Info‐box text block
     configGetInt(config, section, "infoBoxTextBlockY", &offsets->infoBoxTextBlockY);
 
     // Cover image parameters
-    configGetInt(config, section, "coverWidth",  &offsets->coverWidth);
+    configGetInt(config, section, "coverWidth", &offsets->coverWidth);
     configGetInt(config, section, "coverHeight", &offsets->coverHeight);
-    configGetInt(config, section, "coverX",      &offsets->coverX);
-    configGetInt(config, section, "coverY",      &offsets->coverY);
-    configGetInt(config, section, "coverPitch",  &offsets->coverPitch);
+    configGetInt(config, section, "coverX", &offsets->coverX);
+    configGetInt(config, section, "coverY", &offsets->coverY);
+    configGetInt(config, section, "coverPitch", &offsets->coverPitch);
 
     // Slot text padding & pagination text
-    configGetInt(config, section, "slotTextPadding",  &offsets->slotTextPadding);
-    configGetInt(config, section, "backTextOffsetX",  &offsets->backTextOffsetX);
-    configGetInt(config, section, "moreTextOffsetX",  &offsets->moreTextOffsetX);
+    configGetInt(config, section, "slotTextPadding", &offsets->slotTextPadding);
+    configGetInt(config, section, "backTextOffsetX", &offsets->backTextOffsetX);
+    configGetInt(config, section, "moreTextOffsetX", &offsets->moreTextOffsetX);
 }
 
-void applyConfigToPreferencesOffsets(Config* config, const char* section, PreferencesOffsets* offsets) {
+void applyConfigToPreferencesOffsets(Config* config, const char* section, PreferencesOffsets* offsets)
+{
 
     // Window
     configGetInt(config, section, "width", &offsets->width);
@@ -1476,32 +1481,33 @@ void applyConfigToPreferencesOffsets(Config* config, const char* section, Prefer
     }
 }
 
-void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapOffsets* offsets) {
+void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapOffsets* offsets)
+{
     // Window size
-    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
     configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Viewport
-    configGetInt(config, section, "viewX",      &offsets->viewX);
-    configGetInt(config, section, "viewY",      &offsets->viewY);
-    configGetInt(config, section, "viewWidth",  &offsets->viewWidth);
+    configGetInt(config, section, "viewX", &offsets->viewX);
+    configGetInt(config, section, "viewY", &offsets->viewY);
+    configGetInt(config, section, "viewWidth", &offsets->viewWidth);
     configGetInt(config, section, "viewHeight", &offsets->viewHeight);
 
     // UI elements
-    configGetInt(config, section, "dialX",            &offsets->dialX);
-    configGetInt(config, section, "dialY",            &offsets->dialY);
-    configGetInt(config, section, "scrollUpX",        &offsets->scrollUpX);
-    configGetInt(config, section, "scrollUpY",        &offsets->scrollUpY);
-    configGetInt(config, section, "scrollDownX",      &offsets->scrollDownX);
-    configGetInt(config, section, "scrollDownY",      &offsets->scrollDownY);
-    configGetInt(config, section, "globeOverlayX",    &offsets->globeOverlayX);
-    configGetInt(config, section, "globeOverlayY",    &offsets->globeOverlayY);
-    configGetInt(config, section, "carX",             &offsets->carX);
-    configGetInt(config, section, "carY",             &offsets->carY);
-    configGetInt(config, section, "carOverlayX",      &offsets->carOverlayX);
-    configGetInt(config, section, "carOverlayY",      &offsets->carOverlayY);
-    configGetInt(config, section, "carFuelBarX",      &offsets->carFuelBarX);
-    configGetInt(config, section, "carFuelBarY",      &offsets->carFuelBarY);
+    configGetInt(config, section, "dialX", &offsets->dialX);
+    configGetInt(config, section, "dialY", &offsets->dialY);
+    configGetInt(config, section, "scrollUpX", &offsets->scrollUpX);
+    configGetInt(config, section, "scrollUpY", &offsets->scrollUpY);
+    configGetInt(config, section, "scrollDownX", &offsets->scrollDownX);
+    configGetInt(config, section, "scrollDownY", &offsets->scrollDownY);
+    configGetInt(config, section, "globeOverlayX", &offsets->globeOverlayX);
+    configGetInt(config, section, "globeOverlayY", &offsets->globeOverlayY);
+    configGetInt(config, section, "carX", &offsets->carX);
+    configGetInt(config, section, "carY", &offsets->carY);
+    configGetInt(config, section, "carOverlayX", &offsets->carOverlayX);
+    configGetInt(config, section, "carOverlayY", &offsets->carOverlayY);
+    configGetInt(config, section, "carFuelBarX", &offsets->carFuelBarX);
+    configGetInt(config, section, "carFuelBarY", &offsets->carFuelBarY);
     configGetInt(config, section, "carFuelBarHeight", &offsets->carFuelBarHeight);
     configGetInt(config, section, "townWorldSwitchX", &offsets->townWorldSwitchX);
     configGetInt(config, section, "townWorldSwitchY", &offsets->townWorldSwitchY);
@@ -1511,13 +1517,13 @@ void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapO
     configGetInt(config, section, "scrollAreaY", &offsets->scrollAreaY);
 
     // Destination list
-    configGetInt(config, section, "destListX",       &offsets->destListX);
-    configGetInt(config, section, "destListFirstY",  &offsets->destListFirstY);
+    configGetInt(config, section, "destListX", &offsets->destListX);
+    configGetInt(config, section, "destListFirstY", &offsets->destListFirstY);
     configGetInt(config, section, "destListSpacing", &offsets->destListSpacing);
 
     // Date display
-    configGetInt(config, section, "dateDisplayX",     &offsets->dateDisplayX);
-    configGetInt(config, section, "dateDisplayY",     &offsets->dateDisplayY);
+    configGetInt(config, section, "dateDisplayX", &offsets->dateDisplayX);
+    configGetInt(config, section, "dateDisplayY", &offsets->dateDisplayY);
     configGetInt(config, section, "dateDisplayWidth", &offsets->dateDisplayWidth);
 
     // Viewport boundaries
@@ -1532,16 +1538,16 @@ void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapO
     configGetInt(config, section, "subtileViewportMaxY", &offsets->subtileViewportMaxY);
 
     // Town map positions
-    configGetInt(config, section, "townMapBgX",          &offsets->townMapBgX);
-    configGetInt(config, section, "townMapBgY",          &offsets->townMapBgY);
-    configGetInt(config, section, "townMapImageX",       &offsets->townMapImageX);
-    configGetInt(config, section, "townMapImageY",       &offsets->townMapImageY);
+    configGetInt(config, section, "townMapBgX", &offsets->townMapBgX);
+    configGetInt(config, section, "townMapBgY", &offsets->townMapBgY);
+    configGetInt(config, section, "townMapImageX", &offsets->townMapImageX);
+    configGetInt(config, section, "townMapImageY", &offsets->townMapImageY);
     configGetInt(config, section, "townMapButtonXOffset", &offsets->townMapButtonXOffset);
     configGetInt(config, section, "townMapButtonYOffset", &offsets->townMapButtonYOffset);
-    configGetInt(config, section, "townMapLabelXOffset",  &offsets->townMapLabelXOffset);
-    configGetInt(config, section, "townMapLabelYOffset",  &offsets->townMapLabelYOffset);
+    configGetInt(config, section, "townMapLabelXOffset", &offsets->townMapLabelXOffset);
+    configGetInt(config, section, "townMapLabelYOffset", &offsets->townMapLabelYOffset);
 
-    configGetInt(config, section, "townBackgroundWidth",  &offsets->townBackgroundWidth);
+    configGetInt(config, section, "townBackgroundWidth", &offsets->townBackgroundWidth);
     configGetInt(config, section, "townBackgroundHeight", &offsets->townBackgroundHeight);
 
     // Map center

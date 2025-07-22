@@ -92,8 +92,7 @@ bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
         "mainmenu",
         gMainMenuOffsets640,
         gMainMenuOffsets800,
-        applyConfigToMainMenuOffsets
-    );
+        applyConfigToMainMenuOffsets);
 }
 
 // move to seperate widescreen.cc file later?

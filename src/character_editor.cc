@@ -794,8 +794,7 @@ bool characterEditorLoadOffsetsFromConfig(CharacterEditorOffsets* offsets, bool 
         "character_editor",
         gCharEditorOffsets640,
         gCharEditorOffsets800,
-        applyConfigToCharacterEditorOffsets
-    );
+        applyConfigToCharacterEditorOffsets);
 }
 
 void characterEditorWriteDefaultOffsetsToConfig(bool isWidescreen, const CharacterEditorOffsets* defaults)

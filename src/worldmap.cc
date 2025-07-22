@@ -857,8 +857,7 @@ bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen)
         "worldmap",
         gWorldmapOffsets640,
         gWorldmapOffsets800,
-        applyConfigToWorldmapOffsets
-    );
+        applyConfigToWorldmapOffsets);
 }
 
 void worldmapWriteDefaultOffsetsToConfig(bool isWidescreen, const WorldmapOffsets* defaults)

@@ -411,8 +411,7 @@ bool preferencesLoadOffsetsFromConfig(PreferencesOffsets* offsets, bool isWidesc
         "preferences",
         gPreferencesOffsets640,
         gPreferencesOffsets800,
-        applyConfigToPreferencesOffsets
-    );
+        applyConfigToPreferencesOffsets);
 }
 
 void preferencesWriteDefaultOffsetsToConfig(bool isWidescreen, const PreferencesOffsets* defaults)

@@ -158,8 +158,7 @@ bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, b
         "charselect",
         gCharSelectorOffsets640,
         gCharSelectorOffsets800,
-        applyConfigToCharacterSelectorOffsets
-    );
+        applyConfigToCharacterSelectorOffsets);
 }
 
 void characterSelectorWriteDefaultOffsetsToConfig(bool isWidescreen, const CharacterSelectorOffsets* defaults)
