@@ -118,25 +118,27 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
-static void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* o) {
-    configGetInt(config, section, "copyrightX",        &o->copyrightX);
-    configGetInt(config, section, "copyrightY",        &o->copyrightY);
-    configGetInt(config, section, "versionX",          &o->versionX);
-    configGetInt(config, section, "versionY",          &o->versionY);
-    configGetInt(config, section, "hashX",             &o->hashX);
-    configGetInt(config, section, "hashY",             &o->hashY);
-    configGetInt(config, section, "buildDateX",        &o->buildDateX);
-    configGetInt(config, section, "buildDateY",        &o->buildDateY);
-    configGetInt(config, section, "buttonBaseX",       &o->buttonBaseX);
-    configGetInt(config, section, "buttonBaseY",       &o->buttonBaseY);
+static void applyConfigToMainMenuOffsets(Config* config, const char* section, MainMenuOffsets* o)
+{
+    configGetInt(config, section, "copyrightX", &o->copyrightX);
+    configGetInt(config, section, "copyrightY", &o->copyrightY);
+    configGetInt(config, section, "versionX", &o->versionX);
+    configGetInt(config, section, "versionY", &o->versionY);
+    configGetInt(config, section, "hashX", &o->hashX);
+    configGetInt(config, section, "hashY", &o->hashY);
+    configGetInt(config, section, "buildDateX", &o->buildDateX);
+    configGetInt(config, section, "buildDateY", &o->buildDateY);
+    configGetInt(config, section, "buttonBaseX", &o->buttonBaseX);
+    configGetInt(config, section, "buttonBaseY", &o->buttonBaseY);
     configGetInt(config, section, "buttonTextOffsetX", &o->buttonTextOffsetX);
     configGetInt(config, section, "buttonTextOffsetY", &o->buttonTextOffsetY);
-    configGetInt(config, section, "width",             &o->width);
-    configGetInt(config, section, "height",            &o->height);
+    configGetInt(config, section, "width", &o->width);
+    configGetInt(config, section, "height", &o->height);
 }
 
-bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen) {
-    const char* section  = isWidescreen ? "mainmenu800" : "mainmenu640";
+bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
+{
+    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
     const MainMenuOffsets* fallback = isWidescreen
         ? &gMainMenuOffsets800
         : &gMainMenuOffsets640;

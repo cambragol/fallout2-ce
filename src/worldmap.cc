@@ -1002,32 +1002,33 @@ const WorldmapOffsets gWorldmapOffsets800 = {
     208 // mapcenterY
 };
 
-static void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapOffsets* offsets) {
+static void applyConfigToWorldmapOffsets(Config* config, const char* section, WorldmapOffsets* offsets)
+{
     // Window size
-    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
     configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Viewport
-    configGetInt(config, section, "viewX",      &offsets->viewX);
-    configGetInt(config, section, "viewY",      &offsets->viewY);
-    configGetInt(config, section, "viewWidth",  &offsets->viewWidth);
+    configGetInt(config, section, "viewX", &offsets->viewX);
+    configGetInt(config, section, "viewY", &offsets->viewY);
+    configGetInt(config, section, "viewWidth", &offsets->viewWidth);
     configGetInt(config, section, "viewHeight", &offsets->viewHeight);
 
     // UI elements
-    configGetInt(config, section, "dialX",            &offsets->dialX);
-    configGetInt(config, section, "dialY",            &offsets->dialY);
-    configGetInt(config, section, "scrollUpX",        &offsets->scrollUpX);
-    configGetInt(config, section, "scrollUpY",        &offsets->scrollUpY);
-    configGetInt(config, section, "scrollDownX",      &offsets->scrollDownX);
-    configGetInt(config, section, "scrollDownY",      &offsets->scrollDownY);
-    configGetInt(config, section, "globeOverlayX",    &offsets->globeOverlayX);
-    configGetInt(config, section, "globeOverlayY",    &offsets->globeOverlayY);
-    configGetInt(config, section, "carX",             &offsets->carX);
-    configGetInt(config, section, "carY",             &offsets->carY);
-    configGetInt(config, section, "carOverlayX",      &offsets->carOverlayX);
-    configGetInt(config, section, "carOverlayY",      &offsets->carOverlayY);
-    configGetInt(config, section, "carFuelBarX",      &offsets->carFuelBarX);
-    configGetInt(config, section, "carFuelBarY",      &offsets->carFuelBarY);
+    configGetInt(config, section, "dialX", &offsets->dialX);
+    configGetInt(config, section, "dialY", &offsets->dialY);
+    configGetInt(config, section, "scrollUpX", &offsets->scrollUpX);
+    configGetInt(config, section, "scrollUpY", &offsets->scrollUpY);
+    configGetInt(config, section, "scrollDownX", &offsets->scrollDownX);
+    configGetInt(config, section, "scrollDownY", &offsets->scrollDownY);
+    configGetInt(config, section, "globeOverlayX", &offsets->globeOverlayX);
+    configGetInt(config, section, "globeOverlayY", &offsets->globeOverlayY);
+    configGetInt(config, section, "carX", &offsets->carX);
+    configGetInt(config, section, "carY", &offsets->carY);
+    configGetInt(config, section, "carOverlayX", &offsets->carOverlayX);
+    configGetInt(config, section, "carOverlayY", &offsets->carOverlayY);
+    configGetInt(config, section, "carFuelBarX", &offsets->carFuelBarX);
+    configGetInt(config, section, "carFuelBarY", &offsets->carFuelBarY);
     configGetInt(config, section, "carFuelBarHeight", &offsets->carFuelBarHeight);
     configGetInt(config, section, "townWorldSwitchX", &offsets->townWorldSwitchX);
     configGetInt(config, section, "townWorldSwitchY", &offsets->townWorldSwitchY);
@@ -1037,13 +1038,13 @@ static void applyConfigToWorldmapOffsets(Config* config, const char* section, Wo
     configGetInt(config, section, "scrollAreaY", &offsets->scrollAreaY);
 
     // Destination list
-    configGetInt(config, section, "destListX",       &offsets->destListX);
-    configGetInt(config, section, "destListFirstY",  &offsets->destListFirstY);
+    configGetInt(config, section, "destListX", &offsets->destListX);
+    configGetInt(config, section, "destListFirstY", &offsets->destListFirstY);
     configGetInt(config, section, "destListSpacing", &offsets->destListSpacing);
 
     // Date display
-    configGetInt(config, section, "dateDisplayX",     &offsets->dateDisplayX);
-    configGetInt(config, section, "dateDisplayY",     &offsets->dateDisplayY);
+    configGetInt(config, section, "dateDisplayX", &offsets->dateDisplayX);
+    configGetInt(config, section, "dateDisplayY", &offsets->dateDisplayY);
     configGetInt(config, section, "dateDisplayWidth", &offsets->dateDisplayWidth);
 
     // Viewport boundaries
@@ -1058,16 +1059,16 @@ static void applyConfigToWorldmapOffsets(Config* config, const char* section, Wo
     configGetInt(config, section, "subtileViewportMaxY", &offsets->subtileViewportMaxY);
 
     // Town map positions
-    configGetInt(config, section, "townMapBgX",          &offsets->townMapBgX);
-    configGetInt(config, section, "townMapBgY",          &offsets->townMapBgY);
-    configGetInt(config, section, "townMapImageX",       &offsets->townMapImageX);
-    configGetInt(config, section, "townMapImageY",       &offsets->townMapImageY);
+    configGetInt(config, section, "townMapBgX", &offsets->townMapBgX);
+    configGetInt(config, section, "townMapBgY", &offsets->townMapBgY);
+    configGetInt(config, section, "townMapImageX", &offsets->townMapImageX);
+    configGetInt(config, section, "townMapImageY", &offsets->townMapImageY);
     configGetInt(config, section, "townMapButtonXOffset", &offsets->townMapButtonXOffset);
     configGetInt(config, section, "townMapButtonYOffset", &offsets->townMapButtonYOffset);
-    configGetInt(config, section, "townMapLabelXOffset",  &offsets->townMapLabelXOffset);
-    configGetInt(config, section, "townMapLabelYOffset",  &offsets->townMapLabelYOffset);
+    configGetInt(config, section, "townMapLabelXOffset", &offsets->townMapLabelXOffset);
+    configGetInt(config, section, "townMapLabelYOffset", &offsets->townMapLabelYOffset);
 
-    configGetInt(config, section, "townBackgroundWidth",  &offsets->townBackgroundWidth);
+    configGetInt(config, section, "townBackgroundWidth", &offsets->townBackgroundWidth);
     configGetInt(config, section, "townBackgroundHeight", &offsets->townBackgroundHeight);
 
     // Map center
@@ -1075,7 +1076,8 @@ static void applyConfigToWorldmapOffsets(Config* config, const char* section, Wo
     configGetInt(config, section, "mapcenterY", &offsets->mapcenterY);
 }
 
-bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen) {
+bool worldmapLoadOffsetsFromConfig(WorldmapOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen
         ? "worldmap800"
         : "worldmap640";

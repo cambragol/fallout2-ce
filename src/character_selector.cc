@@ -209,38 +209,39 @@ static FrmImage _previousButtonPressedFrmImage;
 
 static std::vector<PremadeCharacterDescription> gCustomPremadeCharacterDescriptions;
 
-static void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets) {
+static void applyConfigToCharacterSelectorOffsets(Config* config, const char* section, CharacterSelectorOffsets* offsets)
+{
     // Window
-    configGetInt(config, section, "width",  &offsets->width);
+    configGetInt(config, section, "width", &offsets->width);
     configGetInt(config, section, "height", &offsets->height);
 
     // Background
-    configGetInt(config, section, "backgroundX",      &offsets->backgroundX);
-    configGetInt(config, section, "backgroundY",      &offsets->backgroundY);
-    configGetInt(config, section, "backgroundWidth",  &offsets->backgroundWidth);
+    configGetInt(config, section, "backgroundX", &offsets->backgroundX);
+    configGetInt(config, section, "backgroundY", &offsets->backgroundY);
+    configGetInt(config, section, "backgroundWidth", &offsets->backgroundWidth);
     configGetInt(config, section, "backgroundHeight", &offsets->backgroundHeight);
 
     // Buttons
     configGetInt(config, section, "previousButtonX", &offsets->previousButtonX);
     configGetInt(config, section, "previousButtonY", &offsets->previousButtonY);
-    configGetInt(config, section, "nextButtonX",     &offsets->nextButtonX);
-    configGetInt(config, section, "nextButtonY",     &offsets->nextButtonY);
-    configGetInt(config, section, "takeButtonX",     &offsets->takeButtonX);
-    configGetInt(config, section, "takeButtonY",     &offsets->takeButtonY);
-    configGetInt(config, section, "modifyButtonX",   &offsets->modifyButtonX);
-    configGetInt(config, section, "modifyButtonY",   &offsets->modifyButtonY);
-    configGetInt(config, section, "createButtonX",   &offsets->createButtonX);
-    configGetInt(config, section, "createButtonY",   &offsets->createButtonY);
-    configGetInt(config, section, "backButtonX",     &offsets->backButtonX);
-    configGetInt(config, section, "backButtonY",     &offsets->backButtonY);
+    configGetInt(config, section, "nextButtonX", &offsets->nextButtonX);
+    configGetInt(config, section, "nextButtonY", &offsets->nextButtonY);
+    configGetInt(config, section, "takeButtonX", &offsets->takeButtonX);
+    configGetInt(config, section, "takeButtonY", &offsets->takeButtonY);
+    configGetInt(config, section, "modifyButtonX", &offsets->modifyButtonX);
+    configGetInt(config, section, "modifyButtonY", &offsets->modifyButtonY);
+    configGetInt(config, section, "createButtonX", &offsets->createButtonX);
+    configGetInt(config, section, "createButtonY", &offsets->createButtonY);
+    configGetInt(config, section, "backButtonX", &offsets->backButtonX);
+    configGetInt(config, section, "backButtonY", &offsets->backButtonY);
 
     // Text positions
-    configGetInt(config, section, "nameMidX",          &offsets->nameMidX);
-    configGetInt(config, section, "primaryStatMidX",   &offsets->primaryStatMidX);
+    configGetInt(config, section, "nameMidX", &offsets->nameMidX);
+    configGetInt(config, section, "primaryStatMidX", &offsets->primaryStatMidX);
     configGetInt(config, section, "secondaryStatMidX", &offsets->secondaryStatMidX);
-    configGetInt(config, section, "bioX",              &offsets->bioX);
-    configGetInt(config, section, "textBaseY",         &offsets->textBaseY);
-    configGetInt(config, section, "faceY",             &offsets->faceY);
+    configGetInt(config, section, "bioX", &offsets->bioX);
+    configGetInt(config, section, "textBaseY", &offsets->textBaseY);
+    configGetInt(config, section, "faceY", &offsets->faceY);
 
     // Face position
     configGetInt(config, section, "faceX", &offsets->faceX);
@@ -249,7 +250,8 @@ static void applyConfigToCharacterSelectorOffsets(Config* config, const char* se
     configGetInt(config, section, "bioMaxY", &offsets->bioMaxY);
 }
 
-bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen) {
+bool characterSelectorLoadOffsetsFromConfig(CharacterSelectorOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen
         ? "charselect800"
         : "charselect640";

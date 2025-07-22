@@ -524,94 +524,96 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     194 // moreTextOffsetX
 };
 
-static void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveOffsets* offsets) {
+static void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveOffsets* offsets)
+{
     // Window
-    configGetInt(config, section, "windowWidth",  &offsets->windowWidth);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
     configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Preview pane
-    configGetInt(config, section, "previewWidth",  &offsets->previewWidth);
+    configGetInt(config, section, "previewWidth", &offsets->previewWidth);
     configGetInt(config, section, "previewHeight", &offsets->previewHeight);
-    configGetInt(config, section, "previewX",      &offsets->previewX);
-    configGetInt(config, section, "previewY",      &offsets->previewY);
+    configGetInt(config, section, "previewX", &offsets->previewX);
+    configGetInt(config, section, "previewY", &offsets->previewY);
     configGetInt(config, section, "previewCoverX", &offsets->previewCoverX);
     configGetInt(config, section, "previewCoverY", &offsets->previewCoverY);
 
     // Title & text labels
-    configGetInt(config, section, "titleTextX",   &offsets->titleTextX);
-    configGetInt(config, section, "titleTextY",   &offsets->titleTextY);
-    configGetInt(config, section, "doneLabelX",   &offsets->doneLabelX);
-    configGetInt(config, section, "doneLabelY",   &offsets->doneLabelY);
+    configGetInt(config, section, "titleTextX", &offsets->titleTextX);
+    configGetInt(config, section, "titleTextY", &offsets->titleTextY);
+    configGetInt(config, section, "doneLabelX", &offsets->doneLabelX);
+    configGetInt(config, section, "doneLabelY", &offsets->doneLabelY);
     configGetInt(config, section, "cancelLabelX", &offsets->cancelLabelX);
     configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
 
     // Buttons
-    configGetInt(config, section, "doneButtonX",   &offsets->doneButtonX);
-    configGetInt(config, section, "doneButtonY",   &offsets->doneButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
     configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
     configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
-    configGetInt(config, section, "arrowUpX",      &offsets->arrowUpX);
-    configGetInt(config, section, "arrowUpY",      &offsets->arrowUpY);
-    configGetInt(config, section, "arrowDownX",    &offsets->arrowDownX);
-    configGetInt(config, section, "arrowDownY",    &offsets->arrowDownY);
+    configGetInt(config, section, "arrowUpX", &offsets->arrowUpX);
+    configGetInt(config, section, "arrowUpY", &offsets->arrowUpY);
+    configGetInt(config, section, "arrowDownX", &offsets->arrowDownX);
+    configGetInt(config, section, "arrowDownY", &offsets->arrowDownY);
 
     // Slot list region
-    configGetInt(config, section, "slotListAreaX",       &offsets->slotListAreaX);
-    configGetInt(config, section, "slotListAreaY",       &offsets->slotListAreaY);
-    configGetInt(config, section, "slotListAreaWidth",   &offsets->slotListAreaWidth);
-    configGetInt(config, section, "slotListAreaHeight",  &offsets->slotListAreaHeight);
+    configGetInt(config, section, "slotListAreaX", &offsets->slotListAreaX);
+    configGetInt(config, section, "slotListAreaY", &offsets->slotListAreaY);
+    configGetInt(config, section, "slotListAreaWidth", &offsets->slotListAreaWidth);
+    configGetInt(config, section, "slotListAreaHeight", &offsets->slotListAreaHeight);
 
     // Comment window
     configGetInt(config, section, "commentWindowX", &offsets->commentWindowX);
     configGetInt(config, section, "commentWindowY", &offsets->commentWindowY);
 
     // Slot list itself
-    configGetInt(config, section, "slotListX",            &offsets->slotListX);
-    configGetInt(config, section, "slotListY",            &offsets->slotListY);
-    configGetInt(config, section, "slotListWidth",        &offsets->slotListWidth);
+    configGetInt(config, section, "slotListX", &offsets->slotListX);
+    configGetInt(config, section, "slotListY", &offsets->slotListY);
+    configGetInt(config, section, "slotListWidth", &offsets->slotListWidth);
     configGetInt(config, section, "slotListBottomOffset", &offsets->slotListBottomOffset);
 
     // Info box
-    configGetInt(config, section, "infoBoxX",      &offsets->infoBoxX);
-    configGetInt(config, section, "infoBoxY",      &offsets->infoBoxY);
-    configGetInt(config, section, "infoBoxWidth",  &offsets->infoBoxWidth);
+    configGetInt(config, section, "infoBoxX", &offsets->infoBoxX);
+    configGetInt(config, section, "infoBoxY", &offsets->infoBoxY);
+    configGetInt(config, section, "infoBoxWidth", &offsets->infoBoxWidth);
     configGetInt(config, section, "infoBoxHeight", &offsets->infoBoxHeight);
 
     // Info text positions
     configGetInt(config, section, "characterNameX", &offsets->characterNameX);
     configGetInt(config, section, "characterNameY", &offsets->characterNameY);
-    configGetInt(config, section, "gameDateX",      &offsets->gameDateX);
-    configGetInt(config, section, "gameDateY",      &offsets->gameDateY);
-    configGetInt(config, section, "locationX",      &offsets->locationX);
-    configGetInt(config, section, "locationY",      &offsets->locationY);
+    configGetInt(config, section, "gameDateX", &offsets->gameDateX);
+    configGetInt(config, section, "gameDateY", &offsets->gameDateY);
+    configGetInt(config, section, "locationX", &offsets->locationX);
+    configGetInt(config, section, "locationY", &offsets->locationY);
 
     // Page nav buttons
-    configGetInt(config, section, "nextPageButtonX",      &offsets->nextPageButtonX);
-    configGetInt(config, section, "nextPageButtonY",      &offsets->nextPageButtonY);
-    configGetInt(config, section, "nextPageButtonWidth",  &offsets->nextPageButtonWidth);
+    configGetInt(config, section, "nextPageButtonX", &offsets->nextPageButtonX);
+    configGetInt(config, section, "nextPageButtonY", &offsets->nextPageButtonY);
+    configGetInt(config, section, "nextPageButtonWidth", &offsets->nextPageButtonWidth);
     configGetInt(config, section, "nextPageButtonHeight", &offsets->nextPageButtonHeight);
-    configGetInt(config, section, "prevPageButtonX",      &offsets->prevPageButtonX);
-    configGetInt(config, section, "prevPageButtonY",      &offsets->prevPageButtonY);
-    configGetInt(config, section, "prevPageButtonWidth",  &offsets->prevPageButtonWidth);
+    configGetInt(config, section, "prevPageButtonX", &offsets->prevPageButtonX);
+    configGetInt(config, section, "prevPageButtonY", &offsets->prevPageButtonY);
+    configGetInt(config, section, "prevPageButtonWidth", &offsets->prevPageButtonWidth);
     configGetInt(config, section, "prevPageButtonHeight", &offsets->prevPageButtonHeight);
 
     // Info‐box text block
     configGetInt(config, section, "infoBoxTextBlockY", &offsets->infoBoxTextBlockY);
 
     // Cover image parameters
-    configGetInt(config, section, "coverWidth",  &offsets->coverWidth);
+    configGetInt(config, section, "coverWidth", &offsets->coverWidth);
     configGetInt(config, section, "coverHeight", &offsets->coverHeight);
-    configGetInt(config, section, "coverX",      &offsets->coverX);
-    configGetInt(config, section, "coverY",      &offsets->coverY);
-    configGetInt(config, section, "coverPitch",  &offsets->coverPitch);
+    configGetInt(config, section, "coverX", &offsets->coverX);
+    configGetInt(config, section, "coverY", &offsets->coverY);
+    configGetInt(config, section, "coverPitch", &offsets->coverPitch);
 
     // Slot text padding & pagination text
-    configGetInt(config, section, "slotTextPadding",  &offsets->slotTextPadding);
-    configGetInt(config, section, "backTextOffsetX",  &offsets->backTextOffsetX);
-    configGetInt(config, section, "moreTextOffsetX",  &offsets->moreTextOffsetX);
+    configGetInt(config, section, "slotTextPadding", &offsets->slotTextPadding);
+    configGetInt(config, section, "backTextOffsetX", &offsets->backTextOffsetX);
+    configGetInt(config, section, "moreTextOffsetX", &offsets->moreTextOffsetX);
 }
 
-bool loadSaveLoadOffsetsFromConfig(LoadSaveOffsets* offsets, bool isWidescreen) {
+bool loadSaveLoadOffsetsFromConfig(LoadSaveOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen
         ? "loadsave800"
         : "loadsave640";

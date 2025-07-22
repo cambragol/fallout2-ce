@@ -663,7 +663,8 @@ static FrmImage _preferencesFrmImages[PREFERENCES_WINDOW_FRM_COUNT];
 static int _oldFont;
 
 // Helper function to apply config settings to offsets
-static void applyConfigToOffsets(Config* config, const char* section, PreferencesOffsets* offsets) {
+static void applyConfigToOffsets(Config* config, const char* section, PreferencesOffsets* offsets)
+{
 
     // Window
     configGetInt(config, section, "width", &offsets->width);
@@ -771,7 +772,8 @@ static void applyConfigToOffsets(Config* config, const char* section, Preference
     }
 }
 
-bool preferencesLoadOffsetsFromConfig(PreferencesOffsets* offsets, bool isWidescreen) {
+bool preferencesLoadOffsetsFromConfig(PreferencesOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen ? "preferences800" : "preferences640";
     const PreferencesOffsets* fallback = isWidescreen ? &gPreferencesOffsets800 : &gPreferencesOffsets640;
     char message[256];

@@ -1220,107 +1220,109 @@ const CharacterEditorOffsets gCharEditorOffsets800 = {
 
 };
 
-static void applyConfigToCharacterEditorOffsets(Config* config, const char* section, CharacterEditorOffsets* offsets) {
+static void applyConfigToCharacterEditorOffsets(Config* config, const char* section, CharacterEditorOffsets* offsets)
+{
     // Window dimensions
-    configGetInt(config, section, "windowWidth",                     &offsets->windowWidth);
-    configGetInt(config, section, "windowHeight",                    &offsets->windowHeight);
+    configGetInt(config, section, "windowWidth", &offsets->windowWidth);
+    configGetInt(config, section, "windowHeight", &offsets->windowHeight);
 
     // Buttons
-    configGetInt(config, section, "nameButtonX",                     &offsets->nameButtonX);
-    configGetInt(config, section, "nameButtonY",                     &offsets->nameButtonY);
-    configGetInt(config, section, "tagSkillsButtonX",                &offsets->tagSkillsButtonX);
-    configGetInt(config, section, "tagSkillsButtonY",                &offsets->tagSkillsButtonY);
-    configGetInt(config, section, "printButtonX",                    &offsets->printButtonX);
-    configGetInt(config, section, "printButtonY",                    &offsets->printButtonY);
-    configGetInt(config, section, "doneButtonX",                     &offsets->doneButtonX);
-    configGetInt(config, section, "doneButtonY",                     &offsets->doneButtonY);
-    configGetInt(config, section, "cancelButtonX",                   &offsets->cancelButtonX);
-    configGetInt(config, section, "cancelButtonY",                   &offsets->cancelButtonY);
-    configGetInt(config, section, "optionalTraitsLeftButtonX",       &offsets->optionalTraitsLeftButtonX);
-    configGetInt(config, section, "optionalTraitsRightButtonX",      &offsets->optionalTraitsRightButtonX);
-    configGetInt(config, section, "optionalTraitsButtonY",           &offsets->optionalTraitsButtonY);
-    configGetInt(config, section, "specialStatsButtonX",             &offsets->specialStatsButtonX);
+    configGetInt(config, section, "nameButtonX", &offsets->nameButtonX);
+    configGetInt(config, section, "nameButtonY", &offsets->nameButtonY);
+    configGetInt(config, section, "tagSkillsButtonX", &offsets->tagSkillsButtonX);
+    configGetInt(config, section, "tagSkillsButtonY", &offsets->tagSkillsButtonY);
+    configGetInt(config, section, "printButtonX", &offsets->printButtonX);
+    configGetInt(config, section, "printButtonY", &offsets->printButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
+    configGetInt(config, section, "optionalTraitsLeftButtonX", &offsets->optionalTraitsLeftButtonX);
+    configGetInt(config, section, "optionalTraitsRightButtonX", &offsets->optionalTraitsRightButtonX);
+    configGetInt(config, section, "optionalTraitsButtonY", &offsets->optionalTraitsButtonY);
+    configGetInt(config, section, "specialStatsButtonX", &offsets->specialStatsButtonX);
 
     // Primary stat Y (array of 7)
-    configGetIntArray(config, section, "primaryStatY",   offsets->primaryStatY,   7);
+    configGetIntArray(config, section, "primaryStatY", offsets->primaryStatY, 7);
 
     // Skill‐adjustment slider
     configGetInt(config, section, "skillValueAdjustmentSliderY", &offsets->skillValueAdjustmentSliderY);
 
     // Folder view
-    configGetInt(config, section, "folderViewOffsetY",  &offsets->folderViewOffsetY);
+    configGetInt(config, section, "folderViewOffsetY", &offsets->folderViewOffsetY);
     configGetInt(config, section, "karmaFolderTopLine", &offsets->karmaFolderTopLine);
 
     // Text positions
-    configGetInt(config, section, "charPointsTextX",     &offsets->charPointsTextX);
-    configGetInt(config, section, "charPointsTextY",     &offsets->charPointsTextY);
-    configGetInt(config, section, "charPointsValueX",    &offsets->charPointsValueX);
-    configGetInt(config, section, "charPointsValueY",    &offsets->charPointsValueY);
+    configGetInt(config, section, "charPointsTextX", &offsets->charPointsTextX);
+    configGetInt(config, section, "charPointsTextY", &offsets->charPointsTextY);
+    configGetInt(config, section, "charPointsValueX", &offsets->charPointsValueX);
+    configGetInt(config, section, "charPointsValueY", &offsets->charPointsValueY);
     configGetInt(config, section, "optionalTraitsTextX", &offsets->optionalTraitsTextX);
     configGetInt(config, section, "optionalTraitsTextY", &offsets->optionalTraitsTextY);
-    configGetInt(config, section, "tagSkillsTextX",      &offsets->tagSkillsTextX);
-    configGetInt(config, section, "tagSkillsTextY",      &offsets->tagSkillsTextY);
+    configGetInt(config, section, "tagSkillsTextX", &offsets->tagSkillsTextX);
+    configGetInt(config, section, "tagSkillsTextY", &offsets->tagSkillsTextY);
 
     // Slider & folder buttons
-    configGetInt(config, section, "sliderPlusX",   &offsets->sliderPlusX);
-    configGetInt(config, section, "sliderPlusY",   &offsets->sliderPlusY);
+    configGetInt(config, section, "sliderPlusX", &offsets->sliderPlusX);
+    configGetInt(config, section, "sliderPlusY", &offsets->sliderPlusY);
     configGetInt(config, section, "folderButtonX", &offsets->folderButtonX);
     configGetInt(config, section, "folderButtonY", &offsets->folderButtonY);
-    configGetInt(config, section, "optionsButtonX",&offsets->optionsButtonX);
-    configGetInt(config, section, "optionsButtonY",&offsets->optionsButtonY);
-    configGetInt(config, section, "doneButtonGraphicX",   &offsets->doneButtonGraphicX);
-    configGetInt(config, section, "doneButtonGraphicY",   &offsets->doneButtonGraphicY);
+    configGetInt(config, section, "optionsButtonX", &offsets->optionsButtonX);
+    configGetInt(config, section, "optionsButtonY", &offsets->optionsButtonY);
+    configGetInt(config, section, "doneButtonGraphicX", &offsets->doneButtonGraphicX);
+    configGetInt(config, section, "doneButtonGraphicY", &offsets->doneButtonGraphicY);
     configGetInt(config, section, "cancelButtonGraphicX", &offsets->cancelButtonGraphicX);
     configGetInt(config, section, "cancelButtonGraphicY", &offsets->cancelButtonGraphicY);
 
     // Folder view decorations
-    configGetInt(config, section, "folderBackgroundX",      &offsets->folderBackgroundX);
-    configGetInt(config, section, "folderBackgroundY",      &offsets->folderBackgroundY);
-    configGetInt(config, section, "folderBackgroundWidth",  &offsets->folderBackgroundWidth);
+    configGetInt(config, section, "folderBackgroundX", &offsets->folderBackgroundX);
+    configGetInt(config, section, "folderBackgroundY", &offsets->folderBackgroundY);
+    configGetInt(config, section, "folderBackgroundWidth", &offsets->folderBackgroundWidth);
     configGetInt(config, section, "folderBackgroundHeight", &offsets->folderBackgroundHeight);
-    configGetInt(config, section, "folderSelectedX",        &offsets->folderSelectedX);
-    configGetInt(config, section, "folderSelectedY",        &offsets->folderSelectedY);
+    configGetInt(config, section, "folderSelectedX", &offsets->folderSelectedX);
+    configGetInt(config, section, "folderSelectedY", &offsets->folderSelectedY);
 
     // PC stats panel
-    configGetInt(config, section, "pcStatsX",               &offsets->pcStatsX);
-    configGetInt(config, section, "pcStatsY",               &offsets->pcStatsY);
-    configGetInt(config, section, "pcStatsWidth",           &offsets->pcStatsWidth);
-    configGetInt(config, section, "pcStatsHeight",          &offsets->pcStatsHeight);
+    configGetInt(config, section, "pcStatsX", &offsets->pcStatsX);
+    configGetInt(config, section, "pcStatsY", &offsets->pcStatsY);
+    configGetInt(config, section, "pcStatsWidth", &offsets->pcStatsWidth);
+    configGetInt(config, section, "pcStatsHeight", &offsets->pcStatsHeight);
 
     // Primary stats labels
-    configGetInt(config, section, "primaryStatBigNumberX",  &offsets->primaryStatBigNumberX);
-    configGetInt(config, section, "primaryStatDescriptionX",&offsets->primaryStatDescriptionX);
+    configGetInt(config, section, "primaryStatBigNumberX", &offsets->primaryStatBigNumberX);
+    configGetInt(config, section, "primaryStatDescriptionX", &offsets->primaryStatDescriptionX);
 
     // Derived stats panel
-    configGetInt(config, section, "derivedStatsTopX",       &offsets->derivedStatsTopX);
-    configGetInt(config, section, "derivedStatsTopY",       &offsets->derivedStatsTopY);
-    configGetInt(config, section, "derivedStatsTopWidth",   &offsets->derivedStatsTopWidth);
-    configGetInt(config, section, "derivedStatsTopHeight",  &offsets->derivedStatsTopHeight);
-    configGetInt(config, section, "derivedStatsBottomX",    &offsets->derivedStatsBottomX);
-    configGetInt(config, section, "derivedStatsBottomY",    &offsets->derivedStatsBottomY);
-    configGetInt(config, section, "derivedStatsBottomWidth",&offsets->derivedStatsBottomWidth);
-    configGetInt(config, section, "derivedStatsBottomHeight",&offsets->derivedStatsBottomHeight);
-    configGetInt(config, section, "derivedStatsLabelX",     &offsets->derivedStatsLabelX);
-    configGetInt(config, section, "derivedStatsValueX",     &offsets->derivedStatsValueX);
+    configGetInt(config, section, "derivedStatsTopX", &offsets->derivedStatsTopX);
+    configGetInt(config, section, "derivedStatsTopY", &offsets->derivedStatsTopY);
+    configGetInt(config, section, "derivedStatsTopWidth", &offsets->derivedStatsTopWidth);
+    configGetInt(config, section, "derivedStatsTopHeight", &offsets->derivedStatsTopHeight);
+    configGetInt(config, section, "derivedStatsBottomX", &offsets->derivedStatsBottomX);
+    configGetInt(config, section, "derivedStatsBottomY", &offsets->derivedStatsBottomY);
+    configGetInt(config, section, "derivedStatsBottomWidth", &offsets->derivedStatsBottomWidth);
+    configGetInt(config, section, "derivedStatsBottomHeight", &offsets->derivedStatsBottomHeight);
+    configGetInt(config, section, "derivedStatsLabelX", &offsets->derivedStatsLabelX);
+    configGetInt(config, section, "derivedStatsValueX", &offsets->derivedStatsValueX);
 
     // New folder scroll buttons & text
-    configGetInt(config, section, "folderScrollUpButtonX",   &offsets->folderScrollUpButtonX);
-    configGetInt(config, section, "folderScrollUpButtonY",   &offsets->folderScrollUpButtonY);
+    configGetInt(config, section, "folderScrollUpButtonX", &offsets->folderScrollUpButtonX);
+    configGetInt(config, section, "folderScrollUpButtonY", &offsets->folderScrollUpButtonY);
     configGetInt(config, section, "folderScrollDownButtonX", &offsets->folderScrollDownButtonX);
     configGetInt(config, section, "folderScrollDownButtonY", &offsets->folderScrollDownButtonY);
-    configGetInt(config, section, "folderTextX",             &offsets->folderTextX);
-    configGetInt(config, section, "folderKillsNumberX",      &offsets->folderKillsNumberX);
-    configGetInt(config, section, "folderViewStartY",        &offsets->folderViewStartY);
+    configGetInt(config, section, "folderTextX", &offsets->folderTextX);
+    configGetInt(config, section, "folderKillsNumberX", &offsets->folderKillsNumberX);
+    configGetInt(config, section, "folderViewStartY", &offsets->folderViewStartY);
 
     // Misc offsets
     configGetInt(config, section, "infoButtonOffsetY", &offsets->infoButtonOffsetY);
-    configGetInt(config, section, "sliderOffsetY",     &offsets->sliderOffsetY);
-    configGetInt(config, section, "perksTitleX",       &offsets->perksTitleX);
-    configGetInt(config, section, "karmaTitleX",       &offsets->karmaTitleX);
-    configGetInt(config, section, "killsTitleX",       &offsets->killsTitleX);
+    configGetInt(config, section, "sliderOffsetY", &offsets->sliderOffsetY);
+    configGetInt(config, section, "perksTitleX", &offsets->perksTitleX);
+    configGetInt(config, section, "karmaTitleX", &offsets->karmaTitleX);
+    configGetInt(config, section, "killsTitleX", &offsets->killsTitleX);
 }
 
-bool characterEditorLoadOffsetsFromConfig(CharacterEditorOffsets* offsets, bool isWidescreen) {
+bool characterEditorLoadOffsetsFromConfig(CharacterEditorOffsets* offsets, bool isWidescreen)
+{
     const char* section = isWidescreen
         ? "character_editor800"
         : "character_editor640";
