@@ -32,7 +32,10 @@ jobs:
   code-format:
     name: Code Formatting
     runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      (github.event_name != 'push' || github.event.head_commit.message != 'chore: auto-format with clang-format') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,25 +90,9 @@ jobs:
             git commit -m "chore: auto-format with clang-format"
             git push
             echo "Formatting changes pushed"
-            
-            # Set flag indicating changes were pushed
-            echo "changes_pushed=true" >> $GITHUB_ENV
           else
             echo "No formatting changes after auto-format"
           fi
-          
-      - name: Re-run workflow on new commit
-        if: env.changes_pushed == 'true'
-        run: |
-          echo "Formatting changes pushed, workflow will restart"
-          exit 1  # Will cause job to fail but trigger new workflow
-          
-      - name: Check formatting after push
-        if: env.format_needed == 'true' && env.skip-formatting != 'true' && github.event_name != 'pull_request'
-        run: |
-          # This step should only run if no changes were pushed
-          echo "::error::Code formatting issues detected that couldn't be auto-fixed"
-          exit 1
           
   android:
     name: Android
