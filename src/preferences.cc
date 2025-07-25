@@ -230,6 +230,7 @@ static const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
     247, // prfsldon.frm - options screen
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
+    172 // autoup.frm - toggle switch up
 };
 
 // 0x6637E8
@@ -370,6 +371,21 @@ static int gPreferencesGameDifficulty1;
 // 0x6639C0
 static int gPreferencesCombatLooks1;
 
+static int gPreferencesFullscreen1;
+static int gPreferencesFullscreen2;
+
+static int gPreferencesHighQuality1;
+static int gPreferencesHighQuality2;
+
+static int gPreferencesPreserveAspect1;
+static int gPreferencesPreserveAspect2;
+
+static int gPreferencesSquarePixels1;
+static int gPreferencesSquarePixels2;
+
+static int gPreferencesStretchEnabled1;
+static int gPreferencesStretchEnabled2;
+
 static int gPreferencesWidescreen1;
 static int gPreferencesWidescreen2;
 
@@ -390,6 +406,12 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 2, 0, 299, 271, 0, 0, { 209, 219, 0, 0 }, 0, GAME_CONFIG_RUNNING_KEY, 0, 0, &gPreferencesRunning1 },
     { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_SUBTITLES_KEY, 0, 0, &gPreferencesSubtitles1 },
     { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &gPreferencesItemHighlight1 },
+    { 2, 0, 299, 74, 0, 0, { 211, 212, 0, 0 }, 0, GAME_CONFIG_FULLSCREEN, 0, 0, &gPreferencesFullscreen1 },
+    { 2, 0, 299, 141, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_HIGH_QUALITY, 0, 0, &gPreferencesHighQuality1 },
+    { 2, 0, 299, 207, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_PRESERVE_ASPECT, 0, 0, &gPreferencesPreserveAspect1 },
+    { 2, 0, 299, 271, 0, 0, { 209, 219, 0, 0 }, 0, GAME_CONFIG_SQUARE_PIXELS, 0, 0, &gPreferencesSquarePixels1 },
+    { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_STRETCH_ENABLED, 0, 0, &gPreferencesStretchEnabled1 },
+    { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_WIDESCREEN, 0, 0, &gPreferencesWidescreen1 },
     { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &gPreferencesCombatSpeed1 },
     { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, nullptr },
     { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
@@ -561,9 +583,6 @@ int preferencesInit()
         configSetInt(&gGameConfig, "debug", "write_offsets", 0);
         gameConfigSave();
     }
-
-    // Set widescreen - must be wider in both axis and set to widescreen
-    const bool isWidescreen = gameIsWidescreen();
 
     // Load preferences from config
     if (!preferencesLoadOffsetsFromConfig(&gOffsets, gameIsWidescreen())) {
@@ -737,6 +756,13 @@ static void _JustUpdate_()
     // applyWidescreenPreference(gPreferencesWidescreen1);
 }
 
+void fillRectWithColor(unsigned char* buffer, int pitch, int x, int y, int width, int height, unsigned char color)
+{
+    for (int j = 0; j < height; j++) {
+        memset(buffer + pitch * (y + j) + x, color, width);
+    }
+}
+
 // 0x491A68
 static void _UpdateThing(int index)
 {
@@ -834,7 +860,7 @@ static void _UpdateThing(int index)
             if (value) {
                 // Use knobX from offsets instead of meta->knobX
                 x = knobX + gOffsets.secondaryOptionXOffsets[value];
-                meta->maxX = x;
+                meta->maxX = x + fontGetStringWidth(text);
             } else {
                 // Use knobX from offsets instead of meta->knobX
                 x = knobX + gOffsets.secondaryOptionXOffsets[value] - fontGetStringWidth(text);
@@ -851,6 +877,87 @@ static void _UpdateThing(int index)
         // Use knobX/Y from offsets instead of meta
         blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_SECONDARY_SWITCH].getData() + (22 * 25) * value,
             22, 25, 22,
+            gPreferencesWindowBuffer + pitch * knobY + knobX,
+            pitch);
+    } else if (index >= FIRST_TERTIARY_PREF && index <= LAST_TERTIARY_PREF) {
+        int tertiaryOptionIndex = index - FIRST_TERTIARY_PREF;
+
+        int localOffsets[TERTIARY_PREF_COUNT];
+        memcpy(localOffsets, gOffsets.tertiaryLabelYValues, sizeof(localOffsets));
+
+
+
+
+
+// Use this to match the original blit area
+int x = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
+int y = localOffsets[tertiaryOptionIndex];
+int width = gOffsets.tertiaryBlitWidth;
+int height = gOffsets.tertiaryBlitHeight;
+unsigned char color = 231; // Bright test color, adjust as needed
+
+fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
+
+
+
+
+
+        /*blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * localOffsets[tertiaryOptionIndex] + gOffsets.tertiaryLabelX[0],
+            gOffsets.tertiaryBlitWidth,
+            gOffsets.tertiaryBlitHeight,
+            pitch,
+            gPreferencesWindowBuffer + pitch * localOffsets[tertiaryOptionIndex] + gOffsets.tertiaryLabelX[0],
+            pitch);*/
+
+        // Tertiary options are booleans, so it's index is also it's value.
+        for (int value = 0; value < 2; value++) {
+            const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[value]);
+
+            int x;
+            if (value) {
+                // Use knobX from offsets instead of meta->knobX
+                x = knobX + 23;
+                meta->maxX = x + fontGetStringWidth(text);
+            } else {
+                // Use knobX from offsets instead of meta->knobX
+                x = knobX - 23;
+                meta->minX = x;
+            }
+
+            // Compute text width
+int textWidth = fontGetStringWidth(text);
+
+// Get left X and total width of the area where you want the text centered
+int centerAreaX = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
+int centerAreaWidth = gOffsets.tertiaryBlitWidth;
+
+// Calculate centered X
+int centeredX = centerAreaX + (centerAreaWidth - textWidth) / 2 + 4; // added + 4 nudge to right because button graphic is off center
+
+// Compute the vertical offset as before
+int y = knobY - gOffsets.tertiaryOptionYOffsets[value]; // used x values here, because we are dealing with a vertical offset of the text, not horizontal. Could rename.
+
+// Draw text centered horizontally
+fontDrawText(
+    gPreferencesWindowBuffer + pitch * y + centeredX,
+    text,
+    pitch,
+    pitch,
+    _colorTable[18979]);
+
+            // Use knobY from offsets instead of meta->knobY
+            /*fontDrawText(gPreferencesWindowBuffer + pitch * (knobY - gOffsets.tertiaryOptionXOffsets[value]) + x, text, pitch, pitch, _colorTable[18979]);*/
+        }
+
+        int value = *(meta->valuePtr);
+        if (index == PREF_WINDOWED) {
+            value ^= 1;
+        }
+        // Use switchX/Y from offsets instead of meta
+        blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getData() + (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth() * (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight()/2)) * value,
+            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth(),
+            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight()/2,
+            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth(),
             gPreferencesWindowBuffer + pitch * knobY + knobX,
             pitch);
     } else if (index >= FIRST_RANGE_PREF && index <= LAST_RANGE_PREF) {
@@ -1224,14 +1331,12 @@ static int preferencesWindowInit()
     int width;
     int height;
     int messageItemId;
+    int messageItemIdNew;
     int btn;
 
     if (!messageListInit(&gPreferencesMessageList)) {
         return -1;
     }
-
-    // Determine screen mode and load offsets
-    const bool isWidescreen = gameIsWidescreen();
 
     char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", asc_5186C8, "options.msg");
@@ -1245,7 +1350,7 @@ static int preferencesWindowInit()
 
     for (i = 0; i < PREFERENCES_WINDOW_FRM_COUNT; i++) {
         // Use widescreen variants when available
-        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], "_800", isWidescreen);
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], "_800", gameIsWidescreen());
 
         if (!_preferencesFrmImages[i].lock(fid)) {
             fid = buildFid(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], 0, 0, 0);
@@ -1288,17 +1393,29 @@ static int preferencesWindowInit()
     fontSetCurrent(103);
 
     messageItemId = 101;
+    // Primary Prefs Main lables
     for (i = 0; i < PRIMARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
         x = gOffsets.primLabelColX - fontGetStringWidth(messageItemText) / 2;
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row1Ytab[i] + x, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
+    // Secondary Prefs Main lables
     for (i = 0; i < SECONDARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2Ytab[i] + gOffsets.secLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
+    // NEW: Draw tertiary preference main labels
+    messageItemIdNew = 124;
+    for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
+        messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
+        x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2;
+        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x, 
+                    messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
+    }
+
+    // Range Prefs Main labels
     for (i = 0; i < RANGE_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row3Ytab[i] + gOffsets.rangLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
@@ -1346,12 +1463,22 @@ static int preferencesWindowInit()
             mouseExitEventCode = 526;
             mouseDownEventCode = 505 + i;
             mouseUpEventCode = 526;
+        } else if (i >= FIRST_TERTIARY_PREF) {
+            // NEW: Tertiary preferences button creation
+            x = gPreferenceDescriptions[i].minX;
+            y = knobY + gOffsets.tertiaryButtonOffsetY;
+            width = gPreferenceDescriptions[i].maxX - x;
+            height = 85;
+            mouseEnterEventCode = -1;
+            mouseExitEventCode = -1;
+            mouseDownEventCode = -1;
+            mouseUpEventCode = 505 + i;
         } else if (i >= FIRST_SECONDARY_PREF) {
             // Secondary preferences (toggle buttons)
             // Use offset-based values instead of gPreferenceDescriptions
-            x = knobX + gOffsets.secondaryOptionXOffsets[0];
+            x = gPreferenceDescriptions[i].minX;
             y = knobY + gOffsets.secondaryButtonOffsetY;
-            width = (knobX + gOffsets.secondaryOptionXOffsets[1]) - x;
+            width = gPreferenceDescriptions[i].maxX - x;
             height = 28;
             mouseEnterEventCode = -1;
             mouseExitEventCode = -1;
@@ -1360,9 +1487,9 @@ static int preferencesWindowInit()
         } else {
             // Primary preferences (multi-option knobs)
             // Use offset-based values instead of gPreferenceDescriptions
-            x = knobX + gOffsets.optionXOffsets[0];
+            x = gPreferenceDescriptions[i].minX;
             y = knobY + gOffsets.primaryButtonOffsetY;
-            width = (knobX + gOffsets.optionXOffsets[3]) - x;
+            width = gPreferenceDescriptions[i].maxX - x;
             height = 48;
             mouseEnterEventCode = -1;
             mouseExitEventCode = -1;
@@ -1672,7 +1799,7 @@ static void _DoThing(int eventCode)
                 }
             }
         } else {
-            *valuePtr ^= 1;
+            *valuePtr ^= 1; // Toggle value directly
             valueChanged = true;
         }
 
@@ -1680,6 +1807,43 @@ static void _DoThing(int eventCode)
             soundPlayFile("ib2p1xx1");
             inputBlockForTocks(70);
             soundPlayFile("ib2lu1x1");
+            _UpdateThing(preferenceIndex);
+            windowRefresh(gPreferencesWindow);
+            _changed = true;
+            return;
+        }
+    } else if (preferenceIndex >= FIRST_TERTIARY_PREF && preferenceIndex <= LAST_TERTIARY_PREF) {
+        PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
+        Point pos = gOffsets.preferencePositions[preferenceIndex]; // Get position directly
+        int* valuePtr = meta->valuePtr;
+        int value = *valuePtr;
+        bool valueChanged = false;
+
+        // Use hit detection offsets from struct with direct position
+        int v1 = pos.x + gOffsets.tertiaryKnobHitX;
+        int v2 = pos.y + gOffsets.tertiaryKnobHitY;
+
+        if (sqrt(pow((double)x - (double)v1, 2) + pow((double)y - (double)v2, 2)) > 20.0) {
+            int labelY0 = pos.y - gOffsets.tertiaryOptionYOffsets[0]; // Top label
+            int labelY1 = pos.y - gOffsets.tertiaryOptionYOffsets[1]; // Bottom label
+
+            int labelHeight = fontGetLineHeight() + 2;
+
+            if (y >= labelY0 && y <= labelY0 + labelHeight) {
+                *valuePtr = (preferenceIndex == PREF_WINDOWED) ? 1 : 0;
+                valueChanged = true;
+            } else if (y >= labelY1 && y <= labelY1 + labelHeight) {
+                *valuePtr = (preferenceIndex == PREF_WINDOWED) ? 0 : 1;
+                valueChanged = true;
+            }
+        } else {
+            *valuePtr ^= 1; // Toggle value directly
+            valueChanged = true;
+        }
+
+        if (valueChanged) {
+            soundPlayFile("toggle");
+            inputBlockForTocks(70);
             _UpdateThing(preferenceIndex);
             windowRefresh(gPreferencesWindow);
             _changed = true;
