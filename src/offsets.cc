@@ -888,8 +888,8 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     { 71, 139, 209, 277, 347, 415 }, // tertiaryLabelY[6]
 
     // Range preferences (right column)
-    374, // rangeColumnX
-    374, // rangeKnobX
+    535, // rangeColumnX
+    535, // rangeKnobX
     { 20, 99, 172, 225, 279, 332, 384, 437 }, // rangeKnobY[8]
 
     // Label positions
@@ -902,10 +902,10 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     { 385, 460, 385, 460, 385, 460 }, // tertiaryLabelX[6]
 
     // Range control parameters
-    546, // rangeStartX
-    274, // rangeWidth
+    545, // rangeStartX
+    219, // rangeWidth
     21, // knobWidth
-    { 546, 630, 705, 780, 555 }, // rangeLabelX[5]
+    { 546, 655, 715, 780, 595 }, // rangeLabelX[5]
 
     // Blit dimensions
     160, // primaryBlitWidth
@@ -918,24 +918,24 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     24, // rangeBlitHeight
 
     // Title and buttons
-    110, // titleTextX
+    150, // titleTextX
     10, // titleTextY
-    54, // defaultLabelX
+    113, // defaultLabelX
     468, // defaultLabelY
-    211, // doneLabelX
+    239, // doneLabelX
     468, // doneLabelY
-    354, // cancelLabelX
+    353, // cancelLabelX
     468, // cancelLabelY
     72, // speedLabelX
-    506, // speedLabelY
+    570, // speedLabelY
 
     // Button positions
-    29, // defaultButtonX
-    469, // defaultButtonY
-    185, // doneButtonX
-    469, // doneButtonY
-    329, // cancelButtonX
-    469, // cancelButtonY
+    93, // defaultButtonX
+    468, // defaultButtonY
+    218, // doneButtonX
+    468, // doneButtonY
+    333, // cancelButtonX
+    468, // cancelButtonY
 
     // Checkbox position
     545, // playerSpeedCheckboxX
@@ -950,8 +950,8 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     20, // tertiaryKnobHitY
 
     // Range slider parameters
-    546, // rangeSliderMinX
-    754, // rangeSliderMaxX
+    545, // rangeSliderMinX
+    764, // rangeSliderMaxX
     219, // rangeSliderWidth
 
     // Button hitbox offsets
@@ -961,14 +961,14 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     -12, // rangeButtonOffsetY
 
     // Text delay and range label positions
-    54.8, // textBaseDelayScale (double)
+    43.8, // textBaseDelayScale (double)
     555, // rangeLabel4Option1X
     705, // rangeLabel4Option2X
 
     // Position arrays
     { 50, 131, 211, 299, 380 }, // row1Ytab[5]
     { 50, 119, 187, 256, 325, 395 }, // row2Ytab[6]
-    { 50, 153, 258, 359, 470, 470 }, // row2bYtab[6]
+    { 50, 152, 257, 361, 470, 470 }, // row2bYtab[6]
     { 20, 99, 172, 225, 279, 332, 384, 437 }, // row3Ytab[8]
     { 2, 25, 46, 46 }, // optionXOffsets[4] -big knobs labels x
     { 10, -4, 10, 31 }, // optionYOffsets[4] -big knobs labels y
@@ -976,7 +976,7 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     { 10, -44 }, // tertiaryOptionYOffsets[2] - must serve as Y offset
     { 70, 151, 234, 320, 402 }, // primaryLabelYValues[5]
     { 71, 139, 209, 277, 347, 415 }, // secondaryLabelYValues[6]
-    { 80, 80, 183, 183, 288, 288 }, // tertiaryLabelYValues[6]
+    { 80, 80, 183, 183, 288, 288 }, // tertiaryLabelYValues[6] - used for orienting background blit
 
     // Preference positions
     {
@@ -992,11 +992,11 @@ const PreferencesOffsets gPreferencesOffsets800 = {
         Point { 299, 354 }, // PREF_SUBTITLES
         Point { 299, 423 }, // PREF_ITEM_HIGHLIGHT
         Point { 385, 80 }, // PREF_WINDOWED
-        Point { 460, 80 }, // PREF_QUALITY
-        Point { 385, 183 }, // PREF_ASPECT
-        Point { 460, 183 }, // PREF_SQUARE_PIXELS
-        Point { 385, 288 }, // PREF_STRETCHING
-        Point { 460, 288 }, // PREF_WIDESCREEN
+        Point { 460, 80 }, // REF_WIDESCREEN
+        Point { 385, 183 }, // PREF_STRETCHING
+        Point { 460, 183 }, // PREF_ASPECT
+        Point { 385, 288 }, // PREF_QUALITY
+        Point { 460, 288 }, // PREF_SQUARE_PIXELS
         Point { 468, 53 }, // PREF_COMBAT_SPEED
         Point { 468, 131 }, // PREF_TEXT_BASE_DELAY
         Point { 468, 205 }, // PREF_MASTER_VOLUME

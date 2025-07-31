@@ -398,7 +398,6 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 3, 0, 76, 149, 0, 0, { 206, 204, 208, 0 }, 0, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, 0, 0, &gPreferencesCombatDifficulty1 },
     { 4, 0, 76, 226, 0, 0, { 214, 215, 204, 216 }, 0, GAME_CONFIG_VIOLENCE_LEVEL_KEY, 0, 0, &gPreferencesViolenceLevel1 },
     { 3, 0, 76, 309, 0, 0, { 202, 201, 213, 0 }, 0, GAME_CONFIG_TARGET_HIGHLIGHT_KEY, 0, 0, &gPreferencesTargetHighlight1 },
-    //{ 2, 0, 76, 387, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_WIDESCREEN, 0, 0, &gPreferencesWidescreen1 },
     { 2, 0, 76, 387, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_COMBAT_LOOKS_KEY, 0, 0, &gPreferencesCombatLooks1 },
     { 2, 0, 299, 74, 0, 0, { 211, 212, 0, 0 }, 0, GAME_CONFIG_COMBAT_MESSAGES_KEY, 0, 0, &gPreferencesCombatMessages1 },
     { 2, 0, 299, 141, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_COMBAT_TAUNTS_KEY, 0, 0, &gPreferencesCombatTaunts1 },
@@ -406,12 +405,12 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 2, 0, 299, 271, 0, 0, { 209, 219, 0, 0 }, 0, GAME_CONFIG_RUNNING_KEY, 0, 0, &gPreferencesRunning1 },
     { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_SUBTITLES_KEY, 0, 0, &gPreferencesSubtitles1 },
     { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_ITEM_HIGHLIGHT_KEY, 0, 0, &gPreferencesItemHighlight1 },
-    { 2, 0, 299, 74, 0, 0, { 211, 212, 0, 0 }, 0, GAME_CONFIG_FULLSCREEN, 0, 0, &gPreferencesFullscreen1 },
-    { 2, 0, 299, 141, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_HIGH_QUALITY, 0, 0, &gPreferencesHighQuality1 },
-    { 2, 0, 299, 207, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_PRESERVE_ASPECT, 0, 0, &gPreferencesPreserveAspect1 },
-    { 2, 0, 299, 271, 0, 0, { 209, 219, 0, 0 }, 0, GAME_CONFIG_SQUARE_PIXELS, 0, 0, &gPreferencesSquarePixels1 },
-    { 2, 0, 299, 338, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_STRETCH_ENABLED, 0, 0, &gPreferencesStretchEnabled1 },
-    { 2, 0, 299, 404, 0, 0, { 202, 201, 0, 0 }, 0, GAME_CONFIG_WIDESCREEN, 0, 0, &gPreferencesWidescreen1 },
+    { 2, 0, 299, 74, 0, 0, { 225, 226, 0, 0 }, 0, GAME_CONFIG_FULLSCREEN, 0, 0, &gPreferencesFullscreen1 },
+    { 2, 0, 299, 404, 0, 0, { 227, 228, 0, 0 }, 0, GAME_CONFIG_WIDESCREEN, 0, 0, &gPreferencesWidescreen1 },
+    { 2, 0, 299, 338, 0, 0, { 229, 230, 0, 0 }, 0, GAME_CONFIG_STRETCH_ENABLED, 0, 0, &gPreferencesStretchEnabled1 },
+    { 2, 0, 299, 207, 0, 0, { 231, 232, 0, 0 }, 0, GAME_CONFIG_PRESERVE_ASPECT, 0, 0, &gPreferencesPreserveAspect1 },
+    { 2, 0, 299, 141, 0, 0, { 233, 234, 0, 0 }, 0, GAME_CONFIG_HIGH_QUALITY, 0, 0, &gPreferencesHighQuality1 },
+    { 2, 0, 299, 271, 0, 0, { 235, 236, 0, 0 }, 0, GAME_CONFIG_SQUARE_PIXELS, 0, 0, &gPreferencesSquarePixels1 },
     { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &gPreferencesCombatSpeed1 },
     { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, nullptr },
     { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
@@ -879,35 +878,26 @@ static void _UpdateThing(int index)
             22, 25, 22,
             gPreferencesWindowBuffer + pitch * knobY + knobX,
             pitch);
-    } else if (index >= FIRST_TERTIARY_PREF && index <= LAST_TERTIARY_PREF) {
+    } else if ((index >= FIRST_TERTIARY_PREF && index <= LAST_TERTIARY_PREF) && gameIsWidescreen()) {
         int tertiaryOptionIndex = index - FIRST_TERTIARY_PREF;
-
         int localOffsets[TERTIARY_PREF_COUNT];
         memcpy(localOffsets, gOffsets.tertiaryLabelYValues, sizeof(localOffsets));
 
-
-
-
-
-// Use this to match the original blit area
-int x = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
-int y = localOffsets[tertiaryOptionIndex];
+        // Use this to match the original blit area
+/*int x = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
+int y = knobY; //localOffsets[tertiaryOptionIndex]; // this could use KnobY - to lock the background blit to the button
 int width = gOffsets.tertiaryBlitWidth;
 int height = gOffsets.tertiaryBlitHeight;
 unsigned char color = 231; // Bright test color, adjust as needed
 
-fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
+fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);*/
 
-
-
-
-
-        /*blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * localOffsets[tertiaryOptionIndex] + gOffsets.tertiaryLabelX[0],
+       blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * knobY /*localOffsets[tertiaryOptionIndex]*/ + gOffsets.tertiaryLabelX[tertiaryOptionIndex],
             gOffsets.tertiaryBlitWidth,
             gOffsets.tertiaryBlitHeight,
             pitch,
-            gPreferencesWindowBuffer + pitch * localOffsets[tertiaryOptionIndex] + gOffsets.tertiaryLabelX[0],
-            pitch);*/
+            gPreferencesWindowBuffer + pitch * knobY /*localOffsets[tertiaryOptionIndex]*/ + gOffsets.tertiaryLabelX[tertiaryOptionIndex],
+            pitch);
 
         // Tertiary options are booleans, so it's index is also it's value.
         for (int value = 0; value < 2; value++) {
@@ -1406,13 +1396,15 @@ static int preferencesWindowInit()
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2Ytab[i] + gOffsets.secLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
-    // NEW: Draw tertiary preference main labels
-    messageItemIdNew = 124;
-    for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
-        messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
-        x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2;
-        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x, 
-                    messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
+    if (gameIsWidescreen()){
+        // NEW: Draw tertiary preference main labels
+        messageItemIdNew = 124;
+        for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
+            messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
+            x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2;
+            fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x, 
+                        messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
+        }
     }
 
     // Range Prefs Main labels
@@ -1455,53 +1447,57 @@ static int preferencesWindowInit()
 
         if (i >= FIRST_RANGE_PREF) {
             // Range preferences (sliders)
-            x = gOffsets.rangeStartX;
-            y = knobY + gOffsets.rangeButtonOffsetY;
-            width = gOffsets.rangeBlitWidth;
-            height = 23;
-            mouseEnterEventCode = 526;
-            mouseExitEventCode = 526;
-            mouseDownEventCode = 505 + i;
-            mouseUpEventCode = 526;
+            int x = gOffsets.rangeStartX;
+            int y = knobY + gOffsets.rangeButtonOffsetY;
+            int width = gOffsets.rangeBlitWidth;
+            int height = 23;
+            gPreferenceDescriptions[i].btn = buttonCreate(
+                gPreferencesWindow,
+                x, y, width, height,
+                531, 531, 505 + i, 531,
+                nullptr, nullptr, nullptr, 32
+            );
         } else if (i >= FIRST_TERTIARY_PREF) {
-            // NEW: Tertiary preferences button creation
-            x = gPreferenceDescriptions[i].minX;
-            y = knobY + gOffsets.tertiaryButtonOffsetY;
-            width = gPreferenceDescriptions[i].maxX - x;
-            height = 85;
-            mouseEnterEventCode = -1;
-            mouseExitEventCode = -1;
-            mouseDownEventCode = -1;
-            mouseUpEventCode = 505 + i;
+            // Only create tertiary buttons in widescreen mode
+            if (gameIsWidescreen()) {
+                int x = gPreferenceDescriptions[i].minX;
+                int y = knobY + gOffsets.tertiaryButtonOffsetY;
+                int width = gPreferenceDescriptions[i].maxX - x;
+                int height = 85;
+                gPreferenceDescriptions[i].btn = buttonCreate(
+                    gPreferencesWindow,
+                    x, y, width, height,
+                    -1, -1, -1, 505 + i,
+                    nullptr, nullptr, nullptr, 32
+                );
+            } else {
+                gPreferenceDescriptions[i].btn = -1;  // Mark as invalid button
+            }
         } else if (i >= FIRST_SECONDARY_PREF) {
             // Secondary preferences (toggle buttons)
-            // Use offset-based values instead of gPreferenceDescriptions
-            x = gPreferenceDescriptions[i].minX;
-            y = knobY + gOffsets.secondaryButtonOffsetY;
-            width = gPreferenceDescriptions[i].maxX - x;
-            height = 28;
-            mouseEnterEventCode = -1;
-            mouseExitEventCode = -1;
-            mouseDownEventCode = -1;
-            mouseUpEventCode = 505 + i;
+            int x = gPreferenceDescriptions[i].minX;
+            int y = knobY + gOffsets.secondaryButtonOffsetY;
+            int width = gPreferenceDescriptions[i].maxX - x;
+            int height = 28;
+            gPreferenceDescriptions[i].btn = buttonCreate(
+                gPreferencesWindow,
+                x, y, width, height,
+                -1, -1, -1, 505 + i,
+                nullptr, nullptr, nullptr, 32
+            );
         } else {
             // Primary preferences (multi-option knobs)
-            // Use offset-based values instead of gPreferenceDescriptions
-            x = gPreferenceDescriptions[i].minX;
-            y = knobY + gOffsets.primaryButtonOffsetY;
-            width = gPreferenceDescriptions[i].maxX - x;
-            height = 48;
-            mouseEnterEventCode = -1;
-            mouseExitEventCode = -1;
-            mouseDownEventCode = -1;
-            mouseUpEventCode = 505 + i;
+            int x = gPreferenceDescriptions[i].minX;
+            int y = knobY + gOffsets.primaryButtonOffsetY;
+            int width = gPreferenceDescriptions[i].maxX - x;
+            int height = 48;
+            gPreferenceDescriptions[i].btn = buttonCreate(
+                gPreferencesWindow,
+                x, y, width, height,
+                -1, -1, -1, 505 + i,
+                nullptr, nullptr, nullptr, 32
+            );
         }
-
-        gPreferenceDescriptions[i].btn = buttonCreate(gPreferencesWindow,
-            x, y, width, height,
-            mouseEnterEventCode, mouseExitEventCode,
-            mouseDownEventCode, mouseUpEventCode,
-            nullptr, nullptr, nullptr, 32);
     }
 
     // Player Speed Checkbox
@@ -1512,8 +1508,8 @@ static int preferencesWindowInit()
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getHeight(),
         -1,
         -1,
-        524,
-        524,
+        530,
+        530,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_OFF].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getData(),
         nullptr,
@@ -1532,7 +1528,7 @@ static int preferencesWindowInit()
         -1,
         -1,
         -1,
-        527,
+        532,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
         nullptr,
@@ -1568,7 +1564,7 @@ static int preferencesWindowInit()
         -1,
         -1,
         -1,
-        528,
+        533,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
         nullptr,
@@ -1659,14 +1655,14 @@ int doPreferences(bool animated)
         case KEY_F12:
             takeScreenshot();
             break;
-        case 527:
+        case 532:
             preferencesSetDefaults(true);
             break;
         default:
-            if (eventCode == KEY_ESCAPE || eventCode == 528 || _game_user_wants_to_quit != 0) {
+            if (eventCode == KEY_ESCAPE || eventCode == 533 || _game_user_wants_to_quit != 0) {
                 _RestoreSettings();
                 rc = 0;
-            } else if (eventCode >= 505 && eventCode <= 524) {
+            } else if (eventCode >= 505 && eventCode <= 530) {
                 _DoThing(eventCode);
             }
             break;
@@ -1812,7 +1808,7 @@ static void _DoThing(int eventCode)
             _changed = true;
             return;
         }
-    } else if (preferenceIndex >= FIRST_TERTIARY_PREF && preferenceIndex <= LAST_TERTIARY_PREF) {
+    } else if ((preferenceIndex >= FIRST_TERTIARY_PREF && preferenceIndex <= LAST_TERTIARY_PREF) && gameIsWidescreen()) {
         PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
         Point pos = gOffsets.preferencePositions[preferenceIndex]; // Get position directly
         int* valuePtr = meta->valuePtr;
@@ -2060,7 +2056,7 @@ static void _DoThing(int eventCode)
             renderPresent();
             sharedFpsLimiter.throttle();
         }
-    } else if (preferenceIndex == 19) {
+    } else if (preferenceIndex == 25) {
         gPreferencesPlayerSpeedup1 ^= 1;
     }
 

@@ -25,11 +25,12 @@ typedef enum Preference {
 
     // Tertiary preferences (6)
     PREF_WINDOWED,
-    PREF_QUALITY,
-    PREF_ASPECT,
-    PREF_SQUARE_PIXELS,
-    PREF_STRETCHING,
     PREF_WIDESCREEN,
+    PREF_STRETCHING,
+    PREF_ASPECT,
+    PREF_QUALITY,
+    PREF_SQUARE_PIXELS,
+    
 
     // Range preferences (8)
     PREF_COMBAT_SPEED,
@@ -42,7 +43,7 @@ typedef enum Preference {
     PREF_MOUSE_SENSITIVIY,
     PREF_COUNT,
     // Special cases
-    PREF_PLAYER_SPEEDUP = 19 // Checkbox; not part of PREF_COUNT
+    PREF_PLAYER_SPEEDUP // Checkbox; not part of PREF_COUNT
 
 } Preference;
 
@@ -60,7 +61,7 @@ enum {
     LAST_SECONDARY_PREF = PREF_ITEM_HIGHLIGHT,
 
     FIRST_TERTIARY_PREF = PREF_WINDOWED,
-    LAST_TERTIARY_PREF = PREF_WIDESCREEN,
+    LAST_TERTIARY_PREF = PREF_SQUARE_PIXELS,
 
     FIRST_RANGE_PREF = PREF_COMBAT_SPEED,
     LAST_RANGE_PREF = PREF_MOUSE_SENSITIVIY,
