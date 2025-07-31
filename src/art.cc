@@ -1363,7 +1363,7 @@ int _art_get_code(int animation, int weaponType, char* a3, char* a4)
 char* artBuildFilePath(int fid)
 {
     // Step 1: Unpack FID components
-    int rotation = (fid & 0x70000000) >> 28;
+    int rotation = FID_ROTATION(fid);
     int aliasedFid = artAliasFid(fid);
     if (aliasedFid != -1) {
         fid = aliasedFid;
