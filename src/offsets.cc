@@ -508,7 +508,7 @@ const CharacterSelectorOffsets gCharSelectorOffsets800 = {
     800, 500,
 
     // Background
-    40, 30, 820, 300,
+    40, 30, 800, 300,
 
     // Buttons
     374, 330, // Previous
@@ -527,7 +527,7 @@ const CharacterSelectorOffsets gCharSelectorOffsets800 = {
     33, // faceY
 
     // Face position
-    67, // faceX
+    47, // faceX
 
     // Bio rendering
     260, // bioMaxY (same as 640)
