@@ -146,75 +146,6 @@ int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool us
     return buildFid(objectType, baseId, 0, 0, 0);
 }
 
-// Collect all File* streams for a given relative path using VFS fileOpen
-static int collectAllCopies(const char* relativePath, File*** outStreams)
-{
-    File** streams = NULL;
-    int count = 0;
-    File* f = fileOpen(relativePath, "rt");
-    if (f) {
-        streams = (File**)internal_realloc(streams, sizeof(File*) * (count + 1));
-        streams[count++] = f;
-    }
-    *outStreams = streams;
-    return count;
-}
-
-// Read a single .lst stream into flat FILENAME_LENGTH-byte entries
-static int readListFromStream(File* stream, char** outNames)
-{
-    char buffer[256];
-    char* names = nullptr;
-    int count = 0;
-
-    while (fileReadString(buffer, sizeof(buffer), stream)) {
-        char* end = strpbrk(buffer, " ,;\r\t\n");
-        if (end)
-            *end = '\0';
-
-        names = (char*)internal_realloc(names, (count + 1) * FILENAME_LENGTH);
-        strncpy(names + count * FILENAME_LENGTH, buffer, FILENAME_LENGTH - 1);
-        names[count * FILENAME_LENGTH + FILENAME_LENGTH - 1] = '\0';
-        count++;
-    }
-
-    *outNames = names;
-    return count;
-}
-
-// Merge multiple layers of flat‑name lists by highest‑priority last
-static void mergeArtLayers(char** outNames, int* outCount, char* layerNames[], int layerCounts[], int layers)
-{
-    int maxLen = 0;
-    for (int i = 0; i < layers; i++) {
-        if (layerCounts[i] > maxLen)
-            maxLen = layerCounts[i];
-    }
-
-    char* merged = (char*)internal_malloc(maxLen * FILENAME_LENGTH);
-    int mCount = maxLen;
-
-    for (int idx = 0; idx < maxLen; idx++) {
-        char* slot = merged + idx * FILENAME_LENGTH;
-        slot[0] = '\0'; // Initialize as empty
-
-        // Highest priority last (override order)
-        for (int lyr = layers - 1; lyr >= 0; lyr--) {
-            if (idx < layerCounts[lyr]) {
-                char* entry = layerNames[lyr] + idx * FILENAME_LENGTH;
-                if (entry[0] != '\0') {
-                    strncpy(slot, entry, FILENAME_LENGTH - 1);
-                    slot[FILENAME_LENGTH - 1] = '\0';
-                    break;
-                }
-            }
-        }
-    }
-
-    *outNames = merged;
-    *outCount = mCount;
-}
-
 int artFindVariant(int objectType, int baseIndex, const char* suffix)
 {
     if (objectType < 0 || objectType >= OBJ_TYPE_COUNT)
@@ -263,101 +194,34 @@ int artInit()
     File* stream;
     char string[200];
 
-    // Initialize art cache
     int cacheSize = settings.system.art_cache_size;
-    if (!cacheInit(&gArtCache,
-            artCacheGetFileSizeImpl,
-            artCacheReadDataImpl,
-            artCacheFreeImpl,
-            cacheSize << 20)) {
+    if (!cacheInit(&gArtCache, artCacheGetFileSizeImpl, artCacheReadDataImpl, artCacheFreeImpl, cacheSize << 20)) {
         debugPrint("cache_init failed in art_init\n");
         return -1;
     }
 
-    // Language override
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, ENGLISH) != 0) {
         strcpy(gArtLanguage, language);
         gArtLanguageInitialized = true;
     }
 
-    // Process each object type
+    bool critterDbSelected = false;
     for (int objectType = 0; objectType < OBJ_TYPE_COUNT; objectType++) {
         ArtListDescription* desc = &gArtListDescriptions[objectType];
         desc->flags = 0;
+        snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[objectType].name, gArtListDescriptions[objectType].name);
 
-        // Build the .lst path: "art/<name>/<name>.lst"
-        snprintf(path, sizeof(path),
-            "art%c%s%c%s.lst",
-            DIR_SEPARATOR,
-            desc->name,
-            DIR_SEPARATOR,
-            desc->name);
-
-        // Collect VFS .lst streams
-        File** streams = NULL;
-        int layerCount = collectAllCopies(path, &streams);
-
-        if (layerCount <= 1) {
-            // Single or no layer: direct load fallback
-            if (artReadList(path,
-                    &desc->fileNames,
-                    &desc->fileNamesLength)
-                != 0) {
-                debugPrint("art_read_lst fallback failed for %s\n", path);
-                // Cleanup and return failure
-                if (streams) {
-                    if (layerCount == 1)
-                        fileClose(streams[0]);
-                    internal_free(streams);
-                }
-                cacheFree(&gArtCache);
-                return -1;
-            }
-            gArtOriginalCount[objectType] = desc->fileNamesLength;
-
-            if (streams) {
-                if (layerCount == 1)
-                    fileClose(streams[0]);
-                internal_free(streams);
-            }
-        } else {
-            // Multiple layers: read each, then merge
-            if (layerCount <= 0) {
-                debugPrint("art_read_lst failed: no layers for %s\n", path);
-                internal_free(streams);
-                cacheFree(&gArtCache);
-                return -1;
-            }
-
-            int useCount = layerCount > 16 ? 16 : layerCount;
-            char* layerNames[16];
-            int layerCounts[16];
-
-            for (int i = 0; i < useCount; i++) {
-                layerCounts[i] = readListFromStream(streams[i], &layerNames[i]);
-                fileClose(streams[i]);
-            }
-            internal_free(streams);
-
-            char* mergedNames = NULL;
-            int mergedCount = 0;
-            mergeArtLayers(&mergedNames, &mergedCount, layerNames, layerCounts, useCount);
-
-            gArtOriginalCount[objectType] = mergedCount;
-            desc->fileNames = mergedNames;
-            desc->fileNamesLength = mergedCount;
-
-            for (int i = 0; i < useCount; i++) {
-                internal_free(layerNames[i]);
-            }
+        if (artReadList(path, &(gArtListDescriptions[objectType].fileNames), &(gArtListDescriptions[objectType].fileNamesLength)) != 0) {
+            debugPrint("art_read_lst failed in art_init\n");
+            cacheFree(&gArtCache);
+            return -1;
         }
-
-        // Append *_800.frm variants
+        
         const char* suffix = "_800.frm";
         size_t suffixLen = strlen(suffix);
 
-        // Build the VFS pattern
+        // Build search pattern: "art/<name>/*.frm"
         char pattern[COMPAT_MAX_PATH];
         snprintf(pattern, sizeof(pattern),
             "art%c%s%c*.frm",
@@ -365,53 +229,74 @@ int artInit()
             desc->name,
             DIR_SEPARATOR);
 
-        char** vfsFiles = NULL;
-        int vfsCount = fileNameListInit(pattern, &vfsFiles, 0, 0);
+        char** foundFiles = NULL;
+        int fileCount = fileNameListInit(pattern, &foundFiles, 0, 0);
 
-        if (vfsCount > 0) {
-            int origCount = gArtOriginalCount[objectType];
+        if (fileCount > 0) {
+            int origCount = desc->fileNamesLength; // Current entry count
             int newCount = origCount;
             char* names = desc->fileNames;
             int currentSize = desc->fileNamesLength;
 
-            for (int vi = 0; vi < vfsCount; vi++) {
-                const char* fn = vfsFiles[vi];
-                size_t len = strlen(fn);
+            for (int i = 0; i < fileCount; i++) {
+                const char* filename = foundFiles[i];
+                size_t len = strlen(filename);
 
                 // Check if file matches variant pattern
-                if (len <= suffixLen || compat_stricmp(fn + len - suffixLen, suffix) != 0) {
+                if (len <= suffixLen || compat_stricmp(filename + len - suffixLen, suffix) != 0) {
                     continue;
                 }
 
-                // Extract base name
-                char base[FILENAME_LENGTH] = { 0 };
-                size_t baseLen = len - suffixLen;
-                if (baseLen >= FILENAME_LENGTH)
-                    baseLen = FILENAME_LENGTH - 1;
-                strncpy(base, fn, baseLen);
-                base[baseLen] = '\0';
+                // Extract just the filename without path
+                const char* baseName = strrchr(filename, DIR_SEPARATOR);
+                if (!baseName) baseName = filename;
+                else baseName++;
+                
+                // Create base variant name by removing "_800.frm"
+                char variantBase[FILENAME_LENGTH] = {0};
+                size_t baseLen = strlen(baseName) - suffixLen;
+                if (baseLen >= FILENAME_LENGTH) baseLen = FILENAME_LENGTH - 1;
+                strncpy(variantBase, baseName, baseLen);
+                variantBase[baseLen] = '\0';
 
-                // Find matching base entry
-                for (int i = 0; i < origCount; i++) {
-                    const char* slot = names + i * FILENAME_LENGTH;
-                    if (compat_strnicmp(slot, base, baseLen) == 0) {
-                        // Resize array if needed
-                        if (newCount >= currentSize) {
-                            currentSize += 10;
-                            char* newNames = (char*)internal_realloc(names, currentSize * FILENAME_LENGTH);
-                            if (!newNames)
-                                break;
-                            names = newNames;
-                        }
-
-                        // Add variant
-                        char* dest = names + newCount * FILENAME_LENGTH;
-                        strncpy(dest, fn, FILENAME_LENGTH - 1);
-                        dest[FILENAME_LENGTH - 1] = '\0';
-                        newCount++;
+                // Find matching base entry by comparing filenames only
+                bool matchFound = false;
+                for (int j = 0; j < origCount; j++) {
+                    const char* slot = names + j * FILENAME_LENGTH;
+                    
+                    // Compare only the filename portion
+                    const char* slotName = strrchr(slot, DIR_SEPARATOR);
+                    if (!slotName) slotName = slot;
+                    else slotName++;
+                    
+                    // Remove extension for comparison
+                    char slotBase[FILENAME_LENGTH];
+                    strncpy(slotBase, slotName, FILENAME_LENGTH);
+                    char* ext = strrchr(slotBase, '.');
+                    if (ext) *ext = '\0';
+                    
+                    // Compare base names
+                    if (compat_stricmp(slotBase, variantBase) == 0) {
+                        matchFound = true;
                         break;
                     }
                 }
+
+                if (!matchFound) continue;
+
+                // Resize array if needed
+                if (newCount >= currentSize) {
+                    currentSize += 10;
+                    char* newNames = (char*)internal_realloc(names, currentSize * FILENAME_LENGTH);
+                    if (!newNames) break;
+                    names = newNames;
+                }
+
+                // Add variant (using just the filename without path)
+                char* dest = names + newCount * FILENAME_LENGTH;
+                strncpy(dest, baseName, FILENAME_LENGTH - 1);
+                dest[FILENAME_LENGTH - 1] = '\0';
+                newCount++;
             }
 
             // Update if we added variants
@@ -420,7 +305,7 @@ int artInit()
                 desc->fileNamesLength = newCount;
             }
 
-            fileNameListFree(&vfsFiles, vfsCount);
+            fileNameListFree(&foundFiles, fileCount);
         }
     }
 
