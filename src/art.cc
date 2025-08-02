@@ -217,7 +217,7 @@ int artInit()
             cacheFree(&gArtCache);
             return -1;
         }
-        
+
         const char* suffix = "_800.frm";
         size_t suffixLen = strlen(suffix);
 
@@ -249,13 +249,16 @@ int artInit()
 
                 // Extract just the filename without path
                 const char* baseName = strrchr(filename, DIR_SEPARATOR);
-                if (!baseName) baseName = filename;
-                else baseName++;
-                
+                if (!baseName)
+                    baseName = filename;
+                else
+                    baseName++;
+
                 // Create base variant name by removing "_800.frm"
-                char variantBase[FILENAME_LENGTH] = {0};
+                char variantBase[FILENAME_LENGTH] = { 0 };
                 size_t baseLen = strlen(baseName) - suffixLen;
-                if (baseLen >= FILENAME_LENGTH) baseLen = FILENAME_LENGTH - 1;
+                if (baseLen >= FILENAME_LENGTH)
+                    baseLen = FILENAME_LENGTH - 1;
                 strncpy(variantBase, baseName, baseLen);
                 variantBase[baseLen] = '\0';
 
@@ -263,18 +266,21 @@ int artInit()
                 bool matchFound = false;
                 for (int j = 0; j < origCount; j++) {
                     const char* slot = names + j * FILENAME_LENGTH;
-                    
+
                     // Compare only the filename portion
                     const char* slotName = strrchr(slot, DIR_SEPARATOR);
-                    if (!slotName) slotName = slot;
-                    else slotName++;
-                    
+                    if (!slotName)
+                        slotName = slot;
+                    else
+                        slotName++;
+
                     // Remove extension for comparison
                     char slotBase[FILENAME_LENGTH];
                     strncpy(slotBase, slotName, FILENAME_LENGTH);
                     char* ext = strrchr(slotBase, '.');
-                    if (ext) *ext = '\0';
-                    
+                    if (ext)
+                        *ext = '\0';
+
                     // Compare base names
                     if (compat_stricmp(slotBase, variantBase) == 0) {
                         matchFound = true;
@@ -282,13 +288,15 @@ int artInit()
                     }
                 }
 
-                if (!matchFound) continue;
+                if (!matchFound)
+                    continue;
 
                 // Resize array if needed
                 if (newCount >= currentSize) {
                     currentSize += 10;
                     char* newNames = (char*)internal_realloc(names, currentSize * FILENAME_LENGTH);
-                    if (!newNames) break;
+                    if (!newNames)
+                        break;
                     names = newNames;
                 }
 
