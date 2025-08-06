@@ -30,10 +30,12 @@ typedef struct ArtListDescription {
     char* fileNames;          // Combined: vanilla + variants + mods
     int fileNamesLength;      // Total entries
     
-    // Add these three counters
     int vanillaCount;         // Original vanilla entries
     int variantCount;         // Added variants
     int modCount;             // Added mod entries
+
+    bool usedIndices[4096];   // Tracks occupied indices
+    char* conflictNames[4096]; // Filenames by index for errors
 } ArtListDescription;
 
 typedef struct HeadDescription {
@@ -142,6 +144,105 @@ static int* gArtCritterFidShoudRunData;
 // Number of “core” entries per objectType, before we append variants
 static int gArtOriginalCount[OBJ_TYPE_COUNT] = { 0 };
 
+// Error message for mod naming conflicts
+void showFatalError(const char* message) {
+    debugPrint("FATAL ART ERROR: %s", message);
+    showMesageBox(message);  // Corrected spelling
+    exit(1);
+}
+
+// Helper to extract base filename without extension
+static void getBaseNameWithoutExtension(char* dest, const char* path, size_t size)
+{
+    // Find last separator
+    const char* base = strrchr(path, '/');
+    if (!base) base = strrchr(path, '\\');
+    base = base ? base + 1 : path;
+    
+    // Copy base name
+    strncpy(dest, base, size - 1);
+    dest[size - 1] = '\0';
+    
+    // Remove extension
+    char* dot = strrchr(dest, '.');
+    if (dot) *dot = '\0';
+}
+
+/**
+ * Generates a stable index for mod assets based on filename
+ * 
+ * Provides deterministic index assignment to ensure:
+ * - Consistent asset placement across game sessions
+ * - Predictable FID generation for save compatibility
+ * - No conflicts with vanilla/variant assets
+ */
+static int artGetStableIndex(const char* filename, int vanillaCount, int variantCount)
+{
+    // Step 1: Filename normalization
+    // ------------------------------
+    // Create a standardized representation by:
+    // - Removing paths and extensions
+    // - Converting to lowercase
+    // - Keeping only alphanumeric characters and underscores
+    // Example: "Items/Plasma_Rifle.PRO" → "plasma_rifle"
+    char normalized[64] = {0};
+    char* dest = normalized;
+    
+    // Process each character in input filename
+    for (const char* src = filename; *src && dest < normalized + sizeof(normalized) - 1; src++) {
+        char c = *src;
+        
+        // Preserve digits (0-9)
+        if (c >= '0' && c <= '9') *dest++ = c;
+        
+        // Preserve lowercase letters (a-z)
+        else if (c >= 'a' && c <= 'z') *dest++ = c;
+        
+        // Convert uppercase to lowercase (A-Z → a-z)
+        else if (c >= 'A' && c <= 'Z') *dest++ = tolower(c);
+        
+        // Preserve underscores as word separators
+        else if (c == '_') *dest++ = c;
+        
+        // Omit all other characters (paths, extensions, special chars)
+    }
+    *dest = '\0';  // Null-terminate the normalized string
+
+    // Step 2: Hash generation via base-36 conversion
+    // ----------------------------------------------
+    // Create a numeric fingerprint of the normalized name by
+    // interpreting it as a base-36 number (digits + letters)
+    uint64_t hashValue = 0;
+    
+    // Process each character in normalized name
+    for (char* ptr = normalized; *ptr; ptr++) {
+        // Convert character to its base-36 value:
+        // - '0'-'9' → 0-9
+        // - 'a'-'z' → 10-35
+        int digitValue = (*ptr >= '0' && *ptr <= '9') ? *ptr - '0' : *ptr - 'a' + 10;
+        
+        // Accumulate hash: shift existing value and add new digit
+        hashValue = hashValue * 36 + digitValue;
+    }
+    
+    // Step 3: Index space calculation
+    // -------------------------------
+    // Determine available space for mod assets after vanilla and variants
+    int baseIndex = vanillaCount + variantCount;
+    int availableSlots = 4096 - baseIndex;
+    
+    // Validate available capacity
+    if (availableSlots <= 0) {
+        return -1;  // Error: category at maximum capacity
+    }
+    
+    // Step 4: Final index assignment
+    // ------------------------------
+    // Map hash value to available mod index range using modulo operation
+    // Ensures indices stay within [baseIndex, 4095] range
+    return baseIndex + (hashValue % availableSlots);
+}
+
 int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool useVariant)
 {
     if (useVariant) {
@@ -159,7 +260,7 @@ int artFindVariant(int objectType, int baseIndex, const char* filename) {
 
     ArtListDescription* desc = &gArtListDescriptions[objectType];
     
-    // NEW: Filename search mode for mod assets
+    // Filename search mode for mod assets
     if (baseIndex == -1) {
         for (int i = 0; i < desc->fileNamesLength; i++) {
             char* candidate = desc->fileNames + (i * FILENAME_LENGTH);
@@ -170,7 +271,6 @@ int artFindVariant(int objectType, int baseIndex, const char* filename) {
         return -1;
     }
     
-    // EXISTING VARIANT LOGIC (unchanged)
     if (baseIndex < 0 || baseIndex >= desc->fileNamesLength)
         return -1;
 
@@ -239,10 +339,13 @@ int artInit()
         }
         desc->vanillaCount = desc->fileNamesLength;  // Store vanilla count
 
-        // 2. Process VARIANTS (original code)
-        const char* suffix = "_800.frm";
+        // 2. Process Variant Assets
+        // -------------------------
+        // Variants are higher-resolution versions of existing assets (e.g., "_800.frm" for 800x600)
+        const char* suffix = "_800.frm";  // Standard suffix for resolution variants
         size_t suffixLen = strlen(suffix);
 
+        // Build search pattern for variant files: "art/<category>/*.frm"
         char pattern[COMPAT_MAX_PATH];
         snprintf(pattern, sizeof(pattern),
             "art%c%s%c*.frm",
@@ -250,148 +353,227 @@ int artInit()
             desc->name,
             DIR_SEPARATOR);
 
+        // Find all matching variant files in this category
         char** foundFiles = NULL;
         int fileCount = fileNameListInit(pattern, &foundFiles, 0, 0);
 
         if (fileCount > 0) {
-            int origCount = desc->fileNamesLength;
-            int newCount = origCount;
+            // Prepare to extend existing asset list
+            int originalCount = desc->fileNamesLength;
+            int newCount = originalCount;
             char* names = desc->fileNames;
-            int currentSize = desc->fileNamesLength;
+            int currentSize = desc->fileNamesLength;  // Current array capacity
 
+            // Process each found variant file
             for (int i = 0; i < fileCount; i++) {
                 const char* filename = foundFiles[i];
                 size_t len = strlen(filename);
 
+                // Skip files without the variant suffix
                 if (len <= suffixLen || compat_stricmp(filename + len - suffixLen, suffix) != 0) {
                     continue;
                 }
 
+                // Extract base filename without path
                 const char* baseName = strrchr(filename, DIR_SEPARATOR);
-                if (!baseName)
-                    baseName = filename;
-                else
-                    baseName++;
+                if (!baseName) baseName = filename;
+                else baseName++;  // Skip separator
 
-                char variantBase[FILENAME_LENGTH] = { 0 };
+                // Create variant base name by removing resolution suffix
+                // Example: "button_ok_800.frm" → "button_ok"
+                char variantBase[FILENAME_LENGTH] = {0};
                 size_t baseLen = strlen(baseName) - suffixLen;
-                if (baseLen >= FILENAME_LENGTH)
-                    baseLen = FILENAME_LENGTH - 1;
+                if (baseLen >= FILENAME_LENGTH) baseLen = FILENAME_LENGTH - 1;
                 strncpy(variantBase, baseName, baseLen);
                 variantBase[baseLen] = '\0';
 
+                // Check if this variant matches any existing vanilla asset
                 bool matchFound = false;
-                for (int j = 0; j < origCount; j++) {
+                for (int j = 0; j < originalCount; j++) {
                     const char* slot = names + j * FILENAME_LENGTH;
-
+                    
+                    // Extract base name of existing asset
                     const char* slotName = strrchr(slot, DIR_SEPARATOR);
-                    if (!slotName)
-                        slotName = slot;
-                    else
-                        slotName++;
-
+                    if (!slotName) slotName = slot;
+                    else slotName++;
+                    
+                    // Remove extension from existing asset
                     char slotBase[FILENAME_LENGTH];
                     strncpy(slotBase, slotName, FILENAME_LENGTH);
                     char* ext = strrchr(slotBase, '.');
-                    if (ext)
-                        *ext = '\0';
-
+                    if (ext) *ext = '\0';
+                    
+                    // Compare base names (case-insensitive)
                     if (compat_stricmp(slotBase, variantBase) == 0) {
                         matchFound = true;
                         break;
                     }
                 }
 
-                if (!matchFound)
-                    continue;
+                // Skip variants without matching base asset
+                if (!matchFound) continue;
 
+                // Expand array if needed (grow in chunks of 10)
                 if (newCount >= currentSize) {
                     currentSize += 10;
                     char* newNames = (char*)internal_realloc(names, currentSize * FILENAME_LENGTH);
-                    if (!newNames)
-                        break;
+                    if (!newNames) break;  // Abort if realloc fails
                     names = newNames;
                 }
 
+                // Add variant to asset list
                 char* dest = names + newCount * FILENAME_LENGTH;
                 strncpy(dest, baseName, FILENAME_LENGTH - 1);
                 dest[FILENAME_LENGTH - 1] = '\0';
                 newCount++;
             }
 
-            if (newCount > origCount) {
+            // Update asset list if we added variants
+            if (newCount > originalCount) {
                 desc->fileNames = names;
                 desc->fileNamesLength = newCount;
             }
 
+            // Cleanup file list
             fileNameListFree(&foundFiles, fileCount);
         }
-        desc->variantCount = desc->fileNamesLength - desc->vanillaCount;  // Store variant count
-        
-        // 3. Load MODS (NEW CODE)
-// In the mod loading section of artInit()
-char searchPattern[COMPAT_MAX_PATH];
-snprintf(searchPattern, sizeof(searchPattern), 
-         "%sart%c%s%cmod_*.lst",  // Corrected pattern
-         _cd_path_base,            // Base game directory
-         DIR_SEPARATOR,            // Directory separator (/ or \)
-         desc->name,               // Object type name (e.g., "intrface")
-         DIR_SEPARATOR);
 
-char** foundModFiles = nullptr;
-int modFileCount = fileNameListInit(searchPattern, &foundModFiles, 0, 0);
+        // Store variant count after processing
+        // (Total assets now = vanilla + variants)
+        desc->variantCount = desc->fileNamesLength - desc->vanillaCount;
+        
+        // 3. Load MOD Assets
+        // ------------------
+        // Search for mod list files in this art category using pattern:
+        // <game_dir>/art/<category>/mod_*.lst
+        char searchPattern[COMPAT_MAX_PATH];
+        snprintf(searchPattern, sizeof(searchPattern), 
+                "%sart%c%s%cmod_*.lst",
+                _cd_path_base,
+                DIR_SEPARATOR,
+                desc->name,
+                DIR_SEPARATOR);
+
+        // Find all matching mod list files
+        char** foundModFiles = nullptr;
+        int modFileCount = fileNameListInit(searchPattern, &foundModFiles, 0, 0);
+
+        // Initialize mod tracking
         desc->modCount = 0;
-        
-if (modFileCount > 0) {
-    // Build base directory path for mod files
-    char baseDir[COMPAT_MAX_PATH];
-    snprintf(baseDir, sizeof(baseDir), "%sart%c%s%c",
-             _cd_path_base,
-             DIR_SEPARATOR,
-             desc->name,
-             DIR_SEPARATOR);
-    
-    for (int i = 0; i < modFileCount; i++) {
-        // Extract the base filename (e.g., "mod_test1.lst")
-        const char* baseName = foundModFiles[i];
-        
-        // Construct the full path MANUALLY
-        char fullPath[COMPAT_MAX_PATH];
-        snprintf(fullPath, sizeof(fullPath), "%s%s", baseDir, baseName);
-        
-        char* modEntries = nullptr;
-        int modEntryCount = 0;
-        
-        // Use our manually constructed full path
-        debugPrint("Loading mod LST: %s", fullPath);
-        if (artReadList(fullPath, &modEntries, &modEntryCount) == 0) {
-            // Append mod entries to main list
-            int newLength = desc->fileNamesLength + modEntryCount;
-            char* newNames = (char*)internal_realloc(desc->fileNames, newLength * FILENAME_LENGTH);
-            
-            if (newNames) {
-                // Copy existing entries
-                memcpy(newNames, desc->fileNames, desc->fileNamesLength * FILENAME_LENGTH);
-                // Append mod entries
-                memcpy(newNames + (desc->fileNamesLength * FILENAME_LENGTH), 
-                       modEntries, 
-                       modEntryCount * FILENAME_LENGTH);
-                
-                desc->fileNames = newNames;
-                desc->fileNamesLength = newLength;
-                desc->modCount += modEntryCount;
-                
-                debugPrint("  Added %d entries from mod", modEntryCount);
-            }
-            
-            internal_free(modEntries);
-        } else {
-            debugPrint("  Failed to read mod file: %s", fullPath);
-        }
-    }
-    fileNameListFree(&foundModFiles, modFileCount);
-}
 
+        // Prepare index usage tracking array
+        memset(desc->usedIndices, 0, sizeof(desc->usedIndices));
+
+        // Mark existing vanilla and variant indices as occupied
+        for (int i = 0; i < desc->fileNamesLength; i++) {
+            desc->usedIndices[i] = true;
+        }
+
+        if (modFileCount > 0) {
+            // Build base directory path for this art category
+            char baseDir[COMPAT_MAX_PATH];
+            snprintf(baseDir, sizeof(baseDir), "%sart%c%s%c",
+                    _cd_path_base,
+                    DIR_SEPARATOR,
+                    desc->name,
+                    DIR_SEPARATOR);
+            
+            // Process each found mod list file
+            for (int i = 0; i < modFileCount; i++) {
+                // Construct full path to mod list
+                char fullPath[COMPAT_MAX_PATH];
+                snprintf(fullPath, sizeof(fullPath), "%s%s", baseDir, foundModFiles[i]);
+                
+                char* modEntries = nullptr;
+                int modEntryCount = 0;
+                
+                // Load assets from mod list file
+                if (artReadList(fullPath, &modEntries, &modEntryCount) == 0) {
+                    // Process each asset in the mod list
+                    for (int j = 0; j < modEntryCount; j++) {
+                        const char* modAssetName = modEntries + j * FILENAME_LENGTH;
+                        char baseName[FILENAME_LENGTH];
+                        
+                        // Extract clean filename without path or extension
+                        getBaseNameWithoutExtension(baseName, modAssetName, sizeof(baseName));
+                        
+                        // Calculate stable index position for this mod asset
+                        int index = artGetStableIndex(
+                            baseName,
+                            desc->vanillaCount,
+                            desc->variantCount
+                        );
+                        
+                        // Handle category capacity overflow
+                        if (index == -1) {
+                            char errorMsg[256];
+                            snprintf(errorMsg, sizeof(errorMsg),
+                                "Art category capacity exceeded\n\n"
+                                "Category: %s\n"
+                                "Vanilla assets: %d\n"
+                                "Variant assets: %d\n"
+                                "Total used: %d/4096\n\n"
+                                "Cannot add mod asset: %s\n\n"
+                                "No available index slots remain.",
+                                desc->name,
+                                desc->vanillaCount,
+                                desc->variantCount,
+                                desc->vanillaCount + desc->variantCount,
+                                modAssetName);
+                            showFatalError(errorMsg);
+                            continue;
+                        }
+                        
+                        // Check for index collision with existing assets
+                        if (desc->usedIndices[index]) {
+                            const char* existing = "(unidentified asset)";
+                            if (index < desc->fileNamesLength) {
+                                existing = desc->fileNames + index * FILENAME_LENGTH;
+                            }
+                            
+                            char errorMsg[512];
+                            snprintf(errorMsg, sizeof(errorMsg),
+                                "Art index collision detected\n\n"
+                                "Category: %s\n"
+                                "Index: %d\n\n"
+                                "Existing asset: %s\n"
+                                "Conflicting asset: %s\n\n"
+                                "Resolution: Rename one of these assets to prevent conflict.",
+                                desc->name, index, existing, modAssetName);
+                            
+                            showFatalError(errorMsg);
+                        }
+                        
+                        // Expand asset array if needed
+                        if (index >= desc->fileNamesLength) {
+                            int newLength = index + 1;
+                            char* newNames = (char*)internal_realloc(desc->fileNames, newLength * FILENAME_LENGTH);
+                            if (newNames) {
+                                // Initialize new slots as empty
+                                for (int k = desc->fileNamesLength; k < newLength; k++) {
+                                    char* slot = newNames + k * FILENAME_LENGTH;
+                                    *slot = '\0';
+                                }
+                                desc->fileNames = newNames;
+                                desc->fileNamesLength = newLength;
+                            }
+                        }
+                        
+                        // Store asset at calculated index
+                        char* slot = desc->fileNames + index * FILENAME_LENGTH;
+                        strncpy(slot, modAssetName, FILENAME_LENGTH - 1);
+                        slot[FILENAME_LENGTH - 1] = '\0';
+                        
+                        // Update tracking information
+                        desc->usedIndices[index] = true;
+                        desc->conflictNames[index] = slot;
+                        desc->modCount++;
+                    }
+                    internal_free(modEntries);
+                }
+            }
+            fileNameListFree(&foundModFiles, modFileCount);
+        }
     }
 
     _anon_alias = (int*)internal_malloc(sizeof(*_anon_alias) * gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength);
@@ -999,14 +1181,9 @@ char* artBuildFilePath(int fid)
 // art_read_lst
 // 0x419664
 static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
-{
-    // 1. Show path being read
-    showMesageBox("artReadList() reading:");
-    showMesageBox(path);
-    
+{   
     File* stream = fileOpen(path, "rt");
     if (stream == nullptr) {
-        showMesageBox("artReadList: fileOpen failed");
         return -1;
     }
 
@@ -1014,10 +1191,6 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
     fileSeek(stream, 0, SEEK_END);
     long size = fileTell(stream);
     fileSeek(stream, 0, SEEK_SET);
-    
-    char sizeMsg[256];
-    snprintf(sizeMsg, sizeof(sizeMsg), "File size: %ld bytes", size);
-    showMesageBox(sizeMsg);
     
     // 3. First pass: count non-empty lines
     int count = 0;
@@ -1028,12 +1201,9 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
         while (*p && isspace((unsigned char)*p)) p++;
         if (*p != '\0') count++;
     }
-    
-    snprintf(sizeMsg, sizeof(sizeMsg), "Non-empty lines: %d", count);
-    showMesageBox(sizeMsg);
+
     
     if (count == 0) {
-        showMesageBox("artReadList: No valid entries");
         fileClose(stream);
         return -1;
     }
@@ -1054,7 +1224,6 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
     while (fileReadString(string, sizeof(string), stream)) {
         // Show raw line
         char rawMsg[256];
-
         
         // Trim whitespace
         char* start = string;
@@ -1065,7 +1234,6 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
         *(end + 1) = '\0';
         
         if (*start == '\0') {
-            showMesageBox("Skipping empty line");
             continue;
         }
         
@@ -1077,20 +1245,16 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
         
         // Validate filename
         if (strlen(start) == 0) {
-            showMesageBox("Skipping empty filename");
             continue;
         }
         
         if (strlen(start) >= FILENAME_LENGTH) {
-
             continue;
         }
         
         // Copy to artList
         strncpy(artList, start, FILENAME_LENGTH - 1);
         artList[FILENAME_LENGTH - 1] = '\0';
-        
-
         
         artList += FILENAME_LENGTH;
         index++;
@@ -1099,7 +1263,6 @@ static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
     // 6. Final count adjustment
     *artListSizePtr = index;
 
-    
     fileClose(stream);
     return 0;
 }
