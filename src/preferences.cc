@@ -884,15 +884,15 @@ static void _UpdateThing(int index)
         memcpy(localOffsets, gOffsets.tertiaryLabelYValues, sizeof(localOffsets));
 
         // Use this to match the original blit area
-/*int x = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
-int y = knobY; //localOffsets[tertiaryOptionIndex]; // this could use KnobY - to lock the background blit to the button
-int width = gOffsets.tertiaryBlitWidth;
-int height = gOffsets.tertiaryBlitHeight;
-unsigned char color = 231; // Bright test color, adjust as needed
+        /*int x = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
+        int y = knobY; //localOffsets[tertiaryOptionIndex]; // this could use KnobY - to lock the background blit to the button
+        int width = gOffsets.tertiaryBlitWidth;
+        int height = gOffsets.tertiaryBlitHeight;
+        unsigned char color = 231; // Bright test color, adjust as needed
 
-fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);*/
+        fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);*/
 
-       blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * knobY /*localOffsets[tertiaryOptionIndex]*/ + gOffsets.tertiaryLabelX[tertiaryOptionIndex],
+        blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * knobY /*localOffsets[tertiaryOptionIndex]*/ + gOffsets.tertiaryLabelX[tertiaryOptionIndex],
             gOffsets.tertiaryBlitWidth,
             gOffsets.tertiaryBlitHeight,
             pitch,
@@ -915,25 +915,25 @@ fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);*
             }
 
             // Compute text width
-int textWidth = fontGetStringWidth(text);
+            int textWidth = fontGetStringWidth(text);
 
-// Get left X and total width of the area where you want the text centered
-int centerAreaX = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
-int centerAreaWidth = gOffsets.tertiaryBlitWidth;
+            // Get left X and total width of the area where you want the text centered
+            int centerAreaX = gOffsets.tertiaryLabelX[tertiaryOptionIndex];
+            int centerAreaWidth = gOffsets.tertiaryBlitWidth;
 
-// Calculate centered X
-int centeredX = centerAreaX + (centerAreaWidth - textWidth) / 2 + 4; // added + 4 nudge to right because button graphic is off center
+            // Calculate centered X
+            int centeredX = centerAreaX + (centerAreaWidth - textWidth) / 2 + 4; // added + 4 nudge to right because button graphic is off center
 
-// Compute the vertical offset as before
-int y = knobY - gOffsets.tertiaryOptionYOffsets[value]; // used x values here, because we are dealing with a vertical offset of the text, not horizontal. Could rename.
+            // Compute the vertical offset as before
+            int y = knobY - gOffsets.tertiaryOptionYOffsets[value]; // used x values here, because we are dealing with a vertical offset of the text, not horizontal. Could rename.
 
-// Draw text centered horizontally
-fontDrawText(
-    gPreferencesWindowBuffer + pitch * y + centeredX,
-    text,
-    pitch,
-    pitch,
-    _colorTable[18979]);
+            // Draw text centered horizontally
+            fontDrawText(
+                gPreferencesWindowBuffer + pitch * y + centeredX,
+                text,
+                pitch,
+                pitch,
+                _colorTable[18979]);
 
             // Use knobY from offsets instead of meta->knobY
             /*fontDrawText(gPreferencesWindowBuffer + pitch * (knobY - gOffsets.tertiaryOptionXOffsets[value]) + x, text, pitch, pitch, _colorTable[18979]);*/
@@ -944,9 +944,9 @@ fontDrawText(
             value ^= 1;
         }
         // Use switchX/Y from offsets instead of meta
-        blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getData() + (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth() * (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight()/2)) * value,
+        blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getData() + (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth() * (_preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight() / 2)) * value,
             _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth(),
-            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight()/2,
+            _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getHeight() / 2,
             _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth(),
             gPreferencesWindowBuffer + pitch * knobY + knobX,
             pitch);
@@ -1396,14 +1396,14 @@ static int preferencesWindowInit()
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2Ytab[i] + gOffsets.secLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
-    if (gameIsWidescreen()){
+    if (gameIsWidescreen()) {
         // NEW: Draw tertiary preference main labels
         messageItemIdNew = 124;
         for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
             messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
             x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2;
-            fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x, 
-                        messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
+            fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x,
+                messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
         }
     }
 
@@ -1455,8 +1455,7 @@ static int preferencesWindowInit()
                 gPreferencesWindow,
                 x, y, width, height,
                 531, 531, 505 + i, 531,
-                nullptr, nullptr, nullptr, 32
-            );
+                nullptr, nullptr, nullptr, 32);
         } else if (i >= FIRST_TERTIARY_PREF) {
             // Only create tertiary buttons in widescreen mode
             if (gameIsWidescreen()) {
@@ -1468,10 +1467,9 @@ static int preferencesWindowInit()
                     gPreferencesWindow,
                     x, y, width, height,
                     -1, -1, -1, 505 + i,
-                    nullptr, nullptr, nullptr, 32
-                );
+                    nullptr, nullptr, nullptr, 32);
             } else {
-                gPreferenceDescriptions[i].btn = -1;  // Mark as invalid button
+                gPreferenceDescriptions[i].btn = -1; // Mark as invalid button
             }
         } else if (i >= FIRST_SECONDARY_PREF) {
             // Secondary preferences (toggle buttons)
@@ -1483,8 +1481,7 @@ static int preferencesWindowInit()
                 gPreferencesWindow,
                 x, y, width, height,
                 -1, -1, -1, 505 + i,
-                nullptr, nullptr, nullptr, 32
-            );
+                nullptr, nullptr, nullptr, 32);
         } else {
             // Primary preferences (multi-option knobs)
             int x = gPreferenceDescriptions[i].minX;
@@ -1495,8 +1492,7 @@ static int preferencesWindowInit()
                 gPreferencesWindow,
                 x, y, width, height,
                 -1, -1, -1, 505 + i,
-                nullptr, nullptr, nullptr, 32
-            );
+                nullptr, nullptr, nullptr, 32);
         }
     }
 

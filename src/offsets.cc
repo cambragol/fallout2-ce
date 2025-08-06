@@ -1421,122 +1421,122 @@ void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveO
 void applyConfigToPreferencesOffsets(Config* config, char const* section, PreferencesOffsets* offsets)
 {
     // Window
-    configGetInt(config, section, "width",  &offsets->width);
+    configGetInt(config, section, "width", &offsets->width);
     configGetInt(config, section, "height", &offsets->height);
 
     // Primary preferences (left column)
-    configGetInt(config, section, "primaryColumnX",              &offsets->primaryColumnX);
-    configGetInt(config, section, "primaryKnobX",                &offsets->primaryKnobX);
-    configGetIntArray(config, section, "primaryKnobY",    offsets->primaryKnobY,   PRIMARY_PREF_COUNT);
-    configGetIntArray(config, section, "primaryLabelY",  offsets->primaryLabelY,   PRIMARY_PREF_COUNT);
+    configGetInt(config, section, "primaryColumnX", &offsets->primaryColumnX);
+    configGetInt(config, section, "primaryKnobX", &offsets->primaryKnobX);
+    configGetIntArray(config, section, "primaryKnobY", offsets->primaryKnobY, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "primaryLabelY", offsets->primaryLabelY, PRIMARY_PREF_COUNT);
 
     // Secondary preferences (middle column)
-    configGetInt(config, section, "secondaryColumnX",            &offsets->secondaryColumnX);
-    configGetInt(config, section, "secondaryKnobX",              &offsets->secondaryKnobX);
-    configGetIntArray(config, section, "secondaryKnobY",  offsets->secondaryKnobY, SECONDARY_PREF_COUNT);
-    configGetIntArray(config, section, "secondaryLabelY",offsets->secondaryLabelY, SECONDARY_PREF_COUNT);
+    configGetInt(config, section, "secondaryColumnX", &offsets->secondaryColumnX);
+    configGetInt(config, section, "secondaryKnobX", &offsets->secondaryKnobX);
+    configGetIntArray(config, section, "secondaryKnobY", offsets->secondaryKnobY, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "secondaryLabelY", offsets->secondaryLabelY, SECONDARY_PREF_COUNT);
 
     // ─── NEW: Tertiary preferences (middle‑right column) ───
-    configGetInt(config, section, "tertiaryColumnX",             &offsets->tertiaryColumnX);
-    configGetInt(config, section, "tertiaryKnobX",               &offsets->tertiaryKnobX);
-    configGetIntArray(config, section, "tertiaryKnobY",   offsets->tertiaryKnobY,   TERTIARY_PREF_COUNT);
-    configGetIntArray(config, section, "tertiaryLabelY",offsets->tertiaryLabelY,   TERTIARY_PREF_COUNT);
+    configGetInt(config, section, "tertiaryColumnX", &offsets->tertiaryColumnX);
+    configGetInt(config, section, "tertiaryKnobX", &offsets->tertiaryKnobX);
+    configGetIntArray(config, section, "tertiaryKnobY", offsets->tertiaryKnobY, TERTIARY_PREF_COUNT);
+    configGetIntArray(config, section, "tertiaryLabelY", offsets->tertiaryLabelY, TERTIARY_PREF_COUNT);
 
     // Range preferences (right column)
-    configGetInt(config, section, "rangeColumnX",                &offsets->rangeColumnX);
-    configGetInt(config, section, "rangeKnobX",                  &offsets->rangeKnobX);
-    configGetIntArray(config, section, "rangeKnobY",      offsets->rangeKnobY,      RANGE_PREF_COUNT);
+    configGetInt(config, section, "rangeColumnX", &offsets->rangeColumnX);
+    configGetInt(config, section, "rangeKnobX", &offsets->rangeKnobX);
+    configGetIntArray(config, section, "rangeKnobY", offsets->rangeKnobY, RANGE_PREF_COUNT);
 
     // Label columns
-    configGetInt(config, section, "primLabelColX",               &offsets->primLabelColX);
-    configGetInt(config, section, "secLabelColX",                &offsets->secLabelColX);
-    configGetInt(config, section, "terLabelColX",                &offsets->terLabelColX);      // <— tertiary
-    configGetInt(config, section, "rangLabelColX",               &offsets->rangLabelColX);
+    configGetInt(config, section, "primLabelColX", &offsets->primLabelColX);
+    configGetInt(config, section, "secLabelColX", &offsets->secLabelColX);
+    configGetInt(config, section, "terLabelColX", &offsets->terLabelColX); // <— tertiary
+    configGetInt(config, section, "rangLabelColX", &offsets->rangLabelColX);
 
     // Label X‑arrays
-    configGetIntArray(config, section, "labelX",           offsets->labelX,           PRIMARY_PREF_COUNT);
-    configGetIntArray(config, section, "secondaryLabelX",  offsets->secondaryLabelX,  SECONDARY_PREF_COUNT);
-    configGetIntArray(config, section, "tertiaryLabelX",   offsets->tertiaryLabelX,   TERTIARY_PREF_COUNT); // <— tertiary
+    configGetIntArray(config, section, "labelX", offsets->labelX, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "secondaryLabelX", offsets->secondaryLabelX, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "tertiaryLabelX", offsets->tertiaryLabelX, TERTIARY_PREF_COUNT); // <— tertiary
 
     // Range control
-    configGetInt(config, section, "rangeStartX",                &offsets->rangeStartX);
-    configGetInt(config, section, "rangeWidth",                 &offsets->rangeWidth);
-    configGetInt(config, section, "knobWidth",                  &offsets->knobWidth);
-    configGetIntArray(config, section, "rangeLabelX",     offsets->rangeLabelX,     RANGE_PREF_COUNT);
+    configGetInt(config, section, "rangeStartX", &offsets->rangeStartX);
+    configGetInt(config, section, "rangeWidth", &offsets->rangeWidth);
+    configGetInt(config, section, "knobWidth", &offsets->knobWidth);
+    configGetIntArray(config, section, "rangeLabelX", offsets->rangeLabelX, RANGE_PREF_COUNT);
 
     // Blit dimensions
-    configGetInt(config, section, "primaryBlitWidth",           &offsets->primaryBlitWidth);
-    configGetInt(config, section, "primaryBlitHeight",          &offsets->primaryBlitHeight);
-    configGetInt(config, section, "secondaryBlitWidth",         &offsets->secondaryBlitWidth);
-    configGetInt(config, section, "secondaryBlitHeight",        &offsets->secondaryBlitHeight);
-    configGetInt(config, section, "tertiaryBlitWidth",          &offsets->tertiaryBlitWidth);   // <— tertiary
-    configGetInt(config, section, "tertiaryBlitHeight",         &offsets->tertiaryBlitHeight);  // <— tertiary
-    configGetInt(config, section, "rangeBlitWidth",             &offsets->rangeBlitWidth);
-    configGetInt(config, section, "rangeBlitHeight",            &offsets->rangeBlitHeight);
+    configGetInt(config, section, "primaryBlitWidth", &offsets->primaryBlitWidth);
+    configGetInt(config, section, "primaryBlitHeight", &offsets->primaryBlitHeight);
+    configGetInt(config, section, "secondaryBlitWidth", &offsets->secondaryBlitWidth);
+    configGetInt(config, section, "secondaryBlitHeight", &offsets->secondaryBlitHeight);
+    configGetInt(config, section, "tertiaryBlitWidth", &offsets->tertiaryBlitWidth); // <— tertiary
+    configGetInt(config, section, "tertiaryBlitHeight", &offsets->tertiaryBlitHeight); // <— tertiary
+    configGetInt(config, section, "rangeBlitWidth", &offsets->rangeBlitWidth);
+    configGetInt(config, section, "rangeBlitHeight", &offsets->rangeBlitHeight);
 
     // Title & button labels
-    configGetInt(config, section, "titleTextX",                  &offsets->titleTextX);
-    configGetInt(config, section, "titleTextY",                  &offsets->titleTextY);
-    configGetInt(config, section, "defaultLabelX",               &offsets->defaultLabelX);
-    configGetInt(config, section, "defaultLabelY",               &offsets->defaultLabelY);
-    configGetInt(config, section, "doneLabelX",                  &offsets->doneLabelX);
-    configGetInt(config, section, "doneLabelY",                  &offsets->doneLabelY);
-    configGetInt(config, section, "cancelLabelX",                &offsets->cancelLabelX);
-    configGetInt(config, section, "cancelLabelY",                &offsets->cancelLabelY);
-    configGetInt(config, section, "speedLabelX",                 &offsets->speedLabelX);
-    configGetInt(config, section, "speedLabelY",                 &offsets->speedLabelY);
+    configGetInt(config, section, "titleTextX", &offsets->titleTextX);
+    configGetInt(config, section, "titleTextY", &offsets->titleTextY);
+    configGetInt(config, section, "defaultLabelX", &offsets->defaultLabelX);
+    configGetInt(config, section, "defaultLabelY", &offsets->defaultLabelY);
+    configGetInt(config, section, "doneLabelX", &offsets->doneLabelX);
+    configGetInt(config, section, "doneLabelY", &offsets->doneLabelY);
+    configGetInt(config, section, "cancelLabelX", &offsets->cancelLabelX);
+    configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
+    configGetInt(config, section, "speedLabelX", &offsets->speedLabelX);
+    configGetInt(config, section, "speedLabelY", &offsets->speedLabelY);
 
     // Button positions
-    configGetInt(config, section, "defaultButtonX",              &offsets->defaultButtonX);
-    configGetInt(config, section, "defaultButtonY",              &offsets->defaultButtonY);
-    configGetInt(config, section, "doneButtonX",                 &offsets->doneButtonX);
-    configGetInt(config, section, "doneButtonY",                 &offsets->doneButtonY);
-    configGetInt(config, section, "cancelButtonX",               &offsets->cancelButtonX);
-    configGetInt(config, section, "cancelButtonY",               &offsets->cancelButtonY);
+    configGetInt(config, section, "defaultButtonX", &offsets->defaultButtonX);
+    configGetInt(config, section, "defaultButtonY", &offsets->defaultButtonY);
+    configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
+    configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
+    configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
+    configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
 
     // Checkbox
-    configGetInt(config, section, "playerSpeedCheckboxX",        &offsets->playerSpeedCheckboxX);
-    configGetInt(config, section, "playerSpeedCheckboxY",        &offsets->playerSpeedCheckboxY);
+    configGetInt(config, section, "playerSpeedCheckboxX", &offsets->playerSpeedCheckboxX);
+    configGetInt(config, section, "playerSpeedCheckboxY", &offsets->playerSpeedCheckboxY);
 
     // ─── Hit‑area offsets ───
-    configGetInt(config, section, "primaryKnobHitX",             &offsets->primaryKnobHitX);
-    configGetInt(config, section, "primaryKnobHitY",             &offsets->primaryKnobHitY);
-    configGetInt(config, section, "secondaryKnobHitX",           &offsets->secondaryKnobHitX);
-    configGetInt(config, section, "secondaryKnobHitY",           &offsets->secondaryKnobHitY);
-    configGetInt(config, section, "tertiaryKnobHitX",            &offsets->tertiaryKnobHitX);   // <— tertiary
-    configGetInt(config, section, "tertiaryKnobHitY",            &offsets->tertiaryKnobHitY);   // <— tertiary
+    configGetInt(config, section, "primaryKnobHitX", &offsets->primaryKnobHitX);
+    configGetInt(config, section, "primaryKnobHitY", &offsets->primaryKnobHitY);
+    configGetInt(config, section, "secondaryKnobHitX", &offsets->secondaryKnobHitX);
+    configGetInt(config, section, "secondaryKnobHitY", &offsets->secondaryKnobHitY);
+    configGetInt(config, section, "tertiaryKnobHitX", &offsets->tertiaryKnobHitX); // <— tertiary
+    configGetInt(config, section, "tertiaryKnobHitY", &offsets->tertiaryKnobHitY); // <— tertiary
 
     // Range slider parameters
-    configGetInt(config, section, "rangeSliderMinX",             &offsets->rangeSliderMinX);
-    configGetInt(config, section, "rangeSliderMaxX",             &offsets->rangeSliderMaxX);
-    configGetInt(config, section, "rangeSliderWidth",            &offsets->rangeSliderWidth);
+    configGetInt(config, section, "rangeSliderMinX", &offsets->rangeSliderMinX);
+    configGetInt(config, section, "rangeSliderMaxX", &offsets->rangeSliderMaxX);
+    configGetInt(config, section, "rangeSliderWidth", &offsets->rangeSliderWidth);
 
     // Button hitbox offsets
-    configGetInt(config, section, "primaryButtonOffsetY",        &offsets->primaryButtonOffsetY);
-    configGetInt(config, section, "secondaryButtonOffsetY",      &offsets->secondaryButtonOffsetY);
-    configGetInt(config, section, "tertiaryButtonOffsetY",       &offsets->tertiaryButtonOffsetY);  // <— tertiary
-    configGetInt(config, section, "rangeButtonOffsetY",          &offsets->rangeButtonOffsetY);
+    configGetInt(config, section, "primaryButtonOffsetY", &offsets->primaryButtonOffsetY);
+    configGetInt(config, section, "secondaryButtonOffsetY", &offsets->secondaryButtonOffsetY);
+    configGetInt(config, section, "tertiaryButtonOffsetY", &offsets->tertiaryButtonOffsetY); // <— tertiary
+    configGetInt(config, section, "rangeButtonOffsetY", &offsets->rangeButtonOffsetY);
 
     // Text delay & extra labels
-    configGetDouble(config, section, "textBaseDelayScale",        &offsets->textBaseDelayScale);
-    configGetInt(config, section, "rangeLabel4Option1X",         &offsets->rangeLabel4Option1X);
-    configGetInt(config, section, "rangeLabel4Option2X",         &offsets->rangeLabel4Option2X);
+    configGetDouble(config, section, "textBaseDelayScale", &offsets->textBaseDelayScale);
+    configGetInt(config, section, "rangeLabel4Option1X", &offsets->rangeLabel4Option1X);
+    configGetInt(config, section, "rangeLabel4Option2X", &offsets->rangeLabel4Option2X);
 
     // Position arrays
-    configGetIntArray(config, section, "row1Ytab",        offsets->row1Ytab,        PRIMARY_PREF_COUNT);
-    configGetIntArray(config, section, "row2Ytab",        offsets->row2Ytab,        SECONDARY_PREF_COUNT);
-    configGetIntArray(config, section, "row2bYtab",       offsets->row2bYtab,       TERTIARY_PREF_COUNT);   // <— tertiary
-    configGetIntArray(config, section, "row3Ytab",        offsets->row3Ytab,        RANGE_PREF_COUNT);
+    configGetIntArray(config, section, "row1Ytab", offsets->row1Ytab, PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "row2Ytab", offsets->row2Ytab, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "row2bYtab", offsets->row2bYtab, TERTIARY_PREF_COUNT); // <— tertiary
+    configGetIntArray(config, section, "row3Ytab", offsets->row3Ytab, RANGE_PREF_COUNT);
 
-    configGetIntArray(config, section, "optionXOffsets",  offsets->optionXOffsets,  PRIMARY_OPTION_VALUE_COUNT);
-    configGetIntArray(config, section, "optionYOffsets",  offsets->optionYOffsets,  PRIMARY_OPTION_VALUE_COUNT);
+    configGetIntArray(config, section, "optionXOffsets", offsets->optionXOffsets, PRIMARY_OPTION_VALUE_COUNT);
+    configGetIntArray(config, section, "optionYOffsets", offsets->optionYOffsets, PRIMARY_OPTION_VALUE_COUNT);
     configGetIntArray(config, section, "secondaryOptionXOffsets", offsets->secondaryOptionXOffsets, SECONDARY_OPTION_VALUE_COUNT);
-    configGetIntArray(config, section, "tertiaryOptionYOffsets",  offsets->tertiaryOptionYOffsets,  TERTIARY_OPTION_VALUE_COUNT); // <— tertiary
+    configGetIntArray(config, section, "tertiaryOptionYOffsets", offsets->tertiaryOptionYOffsets, TERTIARY_OPTION_VALUE_COUNT); // <— tertiary
 
     // Label‑value arrays
-    configGetIntArray(config, section, "primaryLabelYValues",   offsets->primaryLabelYValues,   PRIMARY_PREF_COUNT);
+    configGetIntArray(config, section, "primaryLabelYValues", offsets->primaryLabelYValues, PRIMARY_PREF_COUNT);
     configGetIntArray(config, section, "secondaryLabelYValues", offsets->secondaryLabelYValues, SECONDARY_PREF_COUNT);
-    configGetIntArray(config, section, "tertiaryLabelYValues",  offsets->tertiaryLabelYValues,  TERTIARY_PREF_COUNT);  // <— tertiary
+    configGetIntArray(config, section, "tertiaryLabelYValues", offsets->tertiaryLabelYValues, TERTIARY_PREF_COUNT); // <— tertiary
 
     // Preference‑position [x,y] pairs
     for (int i = 0; i < PREF_COUNT; i++) {

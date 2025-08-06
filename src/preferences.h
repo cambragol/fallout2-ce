@@ -30,7 +30,6 @@ typedef enum Preference {
     PREF_ASPECT,
     PREF_QUALITY,
     PREF_SQUARE_PIXELS,
-    
 
     // Range preferences (8)
     PREF_COMBAT_SPEED,
@@ -134,7 +133,6 @@ extern const int dword_48FC30[SECONDARY_PREF_COUNT];
 
 extern const short switch_labels[TERTIARY_OPTION_VALUE_COUNT];
 extern const int switch_titles[TERTIARY_PREF_COUNT];
-
 
 } // namespace fallout
 
