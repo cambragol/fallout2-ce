@@ -18,15 +18,22 @@
 #include "proto.h"
 #include "settings.h"
 #include "sfall_config.h"
+#include "window_manager.h"
+
 
 namespace fallout {
 
 typedef struct ArtListDescription {
     int flags;
     char name[16];
-    char* fileNames; // dynamic array of null terminated strings FILENAME_LENGTH bytes long each
     void* field_18;
-    int fileNamesLength; // number of entries in list
+    char* fileNames;          // Combined: vanilla + variants + mods
+    int fileNamesLength;      // Total entries
+    
+    // Add these three counters
+    int vanillaCount;         // Original vanilla entries
+    int variantCount;         // Added variants
+    int modCount;             // Added mod entries
 } ArtListDescription;
 
 typedef struct HeadDescription {
@@ -146,12 +153,24 @@ int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool us
     return buildFid(objectType, baseId, 0, 0, 0);
 }
 
-int artFindVariant(int objectType, int baseIndex, const char* suffix)
-{
+int artFindVariant(int objectType, int baseIndex, const char* filename) {
     if (objectType < 0 || objectType >= OBJ_TYPE_COUNT)
         return -1;
 
     ArtListDescription* desc = &gArtListDescriptions[objectType];
+    
+    // NEW: Filename search mode for mod assets
+    if (baseIndex == -1) {
+        for (int i = 0; i < desc->fileNamesLength; i++) {
+            char* candidate = desc->fileNames + (i * FILENAME_LENGTH);
+            if (compat_stricmp(candidate, filename) == 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    // EXISTING VARIANT LOGIC (unchanged)
     if (baseIndex < 0 || baseIndex >= desc->fileNamesLength)
         return -1;
 
@@ -170,14 +189,14 @@ int artFindVariant(int objectType, int baseIndex, const char* suffix)
 
     // Build expected variant name
     char expected[FILENAME_LENGTH];
-    int len = snprintf(expected, sizeof(expected), "%s%s.frm", base, suffix);
+    int len = snprintf(expected, sizeof(expected), "%s%s.frm", base, filename);
     if (len >= FILENAME_LENGTH) {
-        debugPrint("Variant name too long: %s%s", base, suffix);
+        debugPrint("Variant name too long: %s%s", base, filename);
         return -1;
     }
 
     // Search variant section
-    for (int i = gArtOriginalCount[objectType]; i < desc->fileNamesLength; i++) {
+    for (int i = desc->vanillaCount; i < desc->vanillaCount + desc->variantCount; i++) {
         const char* candidate = desc->fileNames + i * FILENAME_LENGTH;
         if (compat_stricmp(candidate, expected) == 0) {
             return i;
@@ -212,16 +231,18 @@ int artInit()
         desc->flags = 0;
         snprintf(path, sizeof(path), "%s%s%s\\%s.lst", _cd_path_base, "art\\", gArtListDescriptions[objectType].name, gArtListDescriptions[objectType].name);
 
-        if (artReadList(path, &(gArtListDescriptions[objectType].fileNames), &(gArtListDescriptions[objectType].fileNamesLength)) != 0) {
+        // 1. Load VANILLA assets
+        if (artReadList(path, &(desc->fileNames), &(desc->fileNamesLength)) != 0) {
             debugPrint("art_read_lst failed in art_init\n");
             cacheFree(&gArtCache);
             return -1;
         }
+        desc->vanillaCount = desc->fileNamesLength;  // Store vanilla count
 
+        // 2. Process VARIANTS (original code)
         const char* suffix = "_800.frm";
         size_t suffixLen = strlen(suffix);
 
-        // Build search pattern: "art/<name>/*.frm"
         char pattern[COMPAT_MAX_PATH];
         snprintf(pattern, sizeof(pattern),
             "art%c%s%c*.frm",
@@ -233,7 +254,7 @@ int artInit()
         int fileCount = fileNameListInit(pattern, &foundFiles, 0, 0);
 
         if (fileCount > 0) {
-            int origCount = desc->fileNamesLength; // Current entry count
+            int origCount = desc->fileNamesLength;
             int newCount = origCount;
             char* names = desc->fileNames;
             int currentSize = desc->fileNamesLength;
@@ -242,19 +263,16 @@ int artInit()
                 const char* filename = foundFiles[i];
                 size_t len = strlen(filename);
 
-                // Check if file matches variant pattern
                 if (len <= suffixLen || compat_stricmp(filename + len - suffixLen, suffix) != 0) {
                     continue;
                 }
 
-                // Extract just the filename without path
                 const char* baseName = strrchr(filename, DIR_SEPARATOR);
                 if (!baseName)
                     baseName = filename;
                 else
                     baseName++;
 
-                // Create base variant name by removing "_800.frm"
                 char variantBase[FILENAME_LENGTH] = { 0 };
                 size_t baseLen = strlen(baseName) - suffixLen;
                 if (baseLen >= FILENAME_LENGTH)
@@ -262,26 +280,22 @@ int artInit()
                 strncpy(variantBase, baseName, baseLen);
                 variantBase[baseLen] = '\0';
 
-                // Find matching base entry by comparing filenames only
                 bool matchFound = false;
                 for (int j = 0; j < origCount; j++) {
                     const char* slot = names + j * FILENAME_LENGTH;
 
-                    // Compare only the filename portion
                     const char* slotName = strrchr(slot, DIR_SEPARATOR);
                     if (!slotName)
                         slotName = slot;
                     else
                         slotName++;
 
-                    // Remove extension for comparison
                     char slotBase[FILENAME_LENGTH];
                     strncpy(slotBase, slotName, FILENAME_LENGTH);
                     char* ext = strrchr(slotBase, '.');
                     if (ext)
                         *ext = '\0';
 
-                    // Compare base names
                     if (compat_stricmp(slotBase, variantBase) == 0) {
                         matchFound = true;
                         break;
@@ -291,7 +305,6 @@ int artInit()
                 if (!matchFound)
                     continue;
 
-                // Resize array if needed
                 if (newCount >= currentSize) {
                     currentSize += 10;
                     char* newNames = (char*)internal_realloc(names, currentSize * FILENAME_LENGTH);
@@ -300,14 +313,12 @@ int artInit()
                     names = newNames;
                 }
 
-                // Add variant (using just the filename without path)
                 char* dest = names + newCount * FILENAME_LENGTH;
                 strncpy(dest, baseName, FILENAME_LENGTH - 1);
                 dest[FILENAME_LENGTH - 1] = '\0';
                 newCount++;
             }
 
-            // Update if we added variants
             if (newCount > origCount) {
                 desc->fileNames = names;
                 desc->fileNamesLength = newCount;
@@ -315,6 +326,72 @@ int artInit()
 
             fileNameListFree(&foundFiles, fileCount);
         }
+        desc->variantCount = desc->fileNamesLength - desc->vanillaCount;  // Store variant count
+        
+        // 3. Load MODS (NEW CODE)
+// In the mod loading section of artInit()
+char searchPattern[COMPAT_MAX_PATH];
+snprintf(searchPattern, sizeof(searchPattern), 
+         "%sart%c%s%cmod_*.lst",  // Corrected pattern
+         _cd_path_base,            // Base game directory
+         DIR_SEPARATOR,            // Directory separator (/ or \)
+         desc->name,               // Object type name (e.g., "intrface")
+         DIR_SEPARATOR);
+
+char** foundModFiles = nullptr;
+int modFileCount = fileNameListInit(searchPattern, &foundModFiles, 0, 0);
+        desc->modCount = 0;
+        
+if (modFileCount > 0) {
+    // Build base directory path for mod files
+    char baseDir[COMPAT_MAX_PATH];
+    snprintf(baseDir, sizeof(baseDir), "%sart%c%s%c",
+             _cd_path_base,
+             DIR_SEPARATOR,
+             desc->name,
+             DIR_SEPARATOR);
+    
+    for (int i = 0; i < modFileCount; i++) {
+        // Extract the base filename (e.g., "mod_test1.lst")
+        const char* baseName = foundModFiles[i];
+        
+        // Construct the full path MANUALLY
+        char fullPath[COMPAT_MAX_PATH];
+        snprintf(fullPath, sizeof(fullPath), "%s%s", baseDir, baseName);
+        
+        char* modEntries = nullptr;
+        int modEntryCount = 0;
+        
+        // Use our manually constructed full path
+        debugPrint("Loading mod LST: %s", fullPath);
+        if (artReadList(fullPath, &modEntries, &modEntryCount) == 0) {
+            // Append mod entries to main list
+            int newLength = desc->fileNamesLength + modEntryCount;
+            char* newNames = (char*)internal_realloc(desc->fileNames, newLength * FILENAME_LENGTH);
+            
+            if (newNames) {
+                // Copy existing entries
+                memcpy(newNames, desc->fileNames, desc->fileNamesLength * FILENAME_LENGTH);
+                // Append mod entries
+                memcpy(newNames + (desc->fileNamesLength * FILENAME_LENGTH), 
+                       modEntries, 
+                       modEntryCount * FILENAME_LENGTH);
+                
+                desc->fileNames = newNames;
+                desc->fileNamesLength = newLength;
+                desc->modCount += modEntryCount;
+                
+                debugPrint("  Added %d entries from mod", modEntryCount);
+            }
+            
+            internal_free(modEntries);
+        } else {
+            debugPrint("  Failed to read mod file: %s", fullPath);
+        }
+    }
+    fileNameListFree(&foundModFiles, modFileCount);
+}
+
     }
 
     _anon_alias = (int*)internal_malloc(sizeof(*_anon_alias) * gArtListDescriptions[OBJ_TYPE_CRITTER].fileNamesLength);
@@ -476,6 +553,35 @@ int artInit()
     }
 
     fileClose(stream);
+
+    File* artListFile = fileOpen("art_list.txt", "wt");
+    if (artListFile) {
+        for (int objectType = 0; objectType < OBJ_TYPE_COUNT; objectType++) {
+            ArtListDescription* desc = &gArtListDescriptions[objectType];
+            
+            // Write category header
+            char header[256];
+            snprintf(header, sizeof(header), "[%s] (%d assets)\n", desc->name, desc->fileNamesLength);
+            fileWrite(header, strlen(header), 1, artListFile);
+            
+            // Write entries with slot numbers
+            char* names = desc->fileNames;
+            for (int i = 0; i < desc->fileNamesLength; i++) {
+                char* current = names + (i * FILENAME_LENGTH);
+                
+                // Skip empty slots
+                if (current[0] == '\0') continue;
+                
+                char line[256];
+                snprintf(line, sizeof(line), "%5d = %s\n", i, current);
+                fileWrite(line, strlen(line), 1, artListFile);
+            }
+            
+            // Add category separator
+            fileWrite("\n", 1, 1, artListFile);
+        }
+        fileClose(artListFile);
+    }
 
     return 0;
 }
@@ -817,7 +923,7 @@ char* artBuildFilePath(int fid)
                 gArtListDescriptions[objectType].fileNames + nameOffset,
                 animCode,
                 weaponCodeChar,
-                rotation + '0'); // Convert to ASCII digit
+                rotation + '0');
         } else {
             snprintf(_art_name, sizeof(_art_name),
                 "%sart\\%s\\%s%c%c.frm",
@@ -836,7 +942,7 @@ char* artBuildFilePath(int fid)
                 gArtListDescriptions[objectType].name,
                 gArtListDescriptions[objectType].fileNames + nameOffset,
                 _head1[animType],
-                'f', // Hardcode female identifier
+                'f',
                 weaponCode);
         } else {
             snprintf(_art_name, sizeof(_art_name),
@@ -851,30 +957,42 @@ char* artBuildFilePath(int fid)
         const char* fileName = gArtListDescriptions[objectType].fileNames + nameOffset;
         char basePath[COMPAT_MAX_PATH];
 
-        // Build base path
-        snprintf(basePath, sizeof(basePath),
-            "%sart\\%s\\%s",
-            _cd_path_base,
-            gArtListDescriptions[objectType].name,
-            fileName);
+        // MOD FIX: Handle paths with subdirectories
+        if (strchr(fileName, '/') || strchr(fileName, '\\')) {
+            // File is in a subdirectory - use direct path
+            snprintf(basePath, sizeof(basePath),
+                "%sart\\%s\\%s",
+                _cd_path_base,
+                gArtListDescriptions[objectType].name,
+                fileName);
+        } else {
+            // Standard file - append .frm if needed
+            snprintf(basePath, sizeof(basePath),
+                "%sart\\%s\\%s",
+                _cd_path_base,
+                gArtListDescriptions[objectType].name,
+                fileName);
 
-        // Ensure .frm extension
-        size_t len = strlen(basePath);
-        if (len < 4 || compat_stricmp(basePath + len - 4, ".frm") != 0) {
-            // Safe concatenation
-            if (len < sizeof(basePath) - 5) { // Check space for ".frm" + null
-                strcat(basePath, ".frm");
-            } else {
-                debugPrint("Path too long: %s", basePath);
-                return nullptr;
+            size_t len = strlen(basePath);
+            if (len < 4 || compat_stricmp(basePath + len - 4, ".frm") != 0) {
+                if (len < sizeof(basePath) - 5) {
+                    strcat(basePath, ".frm");
+                } else {
+                    debugPrint("Path too long: %s", basePath);
+                    return nullptr;
+                }
             }
         }
 
         // Copy to global buffer
         strncpy(_art_name, basePath, sizeof(_art_name));
-        _art_name[sizeof(_art_name) - 1] = '\0'; // Ensure termination
-    }
+        _art_name[sizeof(_art_name) - 1] = '\0';
 
+        // Normalize path separators (cross-platform fix)
+        for (char* p = _art_name; *p; p++) {
+            if (*p == '\\') *p = '/';
+        }
+    }
     return _art_name;
 }
 
@@ -882,42 +1000,107 @@ char* artBuildFilePath(int fid)
 // 0x419664
 static int artReadList(const char* path, char** artListPtr, int* artListSizePtr)
 {
+    // 1. Show path being read
+    showMesageBox("artReadList() reading:");
+    showMesageBox(path);
+    
     File* stream = fileOpen(path, "rt");
     if (stream == nullptr) {
+        showMesageBox("artReadList: fileOpen failed");
         return -1;
     }
 
+    // 2. Get file size
+    fileSeek(stream, 0, SEEK_END);
+    long size = fileTell(stream);
+    fileSeek(stream, 0, SEEK_SET);
+    
+    char sizeMsg[256];
+    snprintf(sizeMsg, sizeof(sizeMsg), "File size: %ld bytes", size);
+    showMesageBox(sizeMsg);
+    
+    // 3. First pass: count non-empty lines
     int count = 0;
     char string[200];
     while (fileReadString(string, sizeof(string), stream)) {
-        count++;
+        // Trim whitespace and skip empty lines
+        char* p = string;
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (*p != '\0') count++;
+    }
+    
+    snprintf(sizeMsg, sizeof(sizeMsg), "Non-empty lines: %d", count);
+    showMesageBox(sizeMsg);
+    
+    if (count == 0) {
+        showMesageBox("artReadList: No valid entries");
+        fileClose(stream);
+        return -1;
     }
 
+    // 4. Allocate memory
     fileSeek(stream, 0, SEEK_SET);
-
     *artListSizePtr = count;
-
     char* artList = (char*)internal_malloc(FILENAME_LENGTH * count);
     *artListPtr = artList;
+    
     if (artList == nullptr) {
         fileClose(stream);
         return -1;
     }
 
+    // 5. Second pass: process lines
+    int index = 0;
     while (fileReadString(string, sizeof(string), stream)) {
-        char* brk = strpbrk(string, " ,;\r\t\n");
+        // Show raw line
+        char rawMsg[256];
+
+        
+        // Trim whitespace
+        char* start = string;
+        while (*start && isspace((unsigned char)*start)) start++;
+        
+        char* end = start + strlen(start) - 1;
+        while (end > start && isspace((unsigned char)*end)) end--;
+        *(end + 1) = '\0';
+        
+        if (*start == '\0') {
+            showMesageBox("Skipping empty line");
+            continue;
+        }
+        
+        // Trim at first delimiter
+        char* brk = strpbrk(start, " ,;\r\t\n");
         if (brk != nullptr) {
             *brk = '\0';
         }
+        
+        // Validate filename
+        if (strlen(start) == 0) {
+            showMesageBox("Skipping empty filename");
+            continue;
+        }
+        
+        if (strlen(start) >= FILENAME_LENGTH) {
 
-        strncpy(artList, string, FILENAME_LENGTH - 1);
+            continue;
+        }
+        
+        // Copy to artList
+        strncpy(artList, start, FILENAME_LENGTH - 1);
         artList[FILENAME_LENGTH - 1] = '\0';
+        
 
+        
         artList += FILENAME_LENGTH;
+        index++;
     }
+    
+    // 6. Final count adjustment
+    *artListSizePtr = index;
 
+    
     fileClose(stream);
-
     return 0;
 }
 
