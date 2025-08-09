@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctime>
 
 #include "animation.h"
 #include "debug.h"
