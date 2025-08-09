@@ -41,7 +41,7 @@ typedef struct ArtListDescription {
     bool collisionOccurred; // True if any collisions in this category
     char collisionDetails[4096][128]; // Collision messages per index
 
-    bool categoryFull; // New: Set when no mod slots available
+    bool categoryFull; // Set when no mod slots available
 } ArtListDescription;
 
 typedef struct HeadDescription {
@@ -147,9 +147,6 @@ static int* _anon_alias;
 // 0x56CAF0
 static int* gArtCritterFidShoudRunData;
 
-// Number of “core” entries per objectType, before we append variants
-static int gArtOriginalCount[OBJ_TYPE_COUNT] = { 0 };
-
 // Error message for mod naming conflicts
 void showFatalError(const char* message)
 {
@@ -181,8 +178,8 @@ static void getBaseNameWithoutExtension(char* dest, const char* path, size_t siz
  * Generates a stable index for mod assets based on filename
  *
  * Provides deterministic index assignment to ensure:
- * - Consistent asset placement across game sessions
- * - Predictable FID generation for save compatibility
+ * - Consistent asset placement
+ * - Predictable FID generation
  * - No conflicts with vanilla/variant assets
  */
 static int artGetStableIndex(const char* filename, int vanillaCount, int variantCount)
@@ -362,9 +359,10 @@ int artInit()
         // 2. Process Variant Assets
         // -------------------------
         // Variants are higher-resolution versions of existing assets (e.g., "_800.frm" for 800x600)
+        // Variant suffix can be set in fallout2.cfg
         char suffix[32];
         snprintf(suffix, sizeof(suffix), "%s.frm", 
-                settings.graphics.widescreen_variant_suffix.c_str());  // Use c_str()
+                settings.graphics.widescreen_variant_suffix.c_str());
         size_t suffixLen = strlen(suffix);
 
         // Build search pattern for variant files: "art/<category>/*.frm"
