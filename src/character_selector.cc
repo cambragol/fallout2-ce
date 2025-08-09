@@ -351,7 +351,7 @@ static bool characterSelectorWindowInit()
     }
 
     FrmImage backgroundFrmImage;
-    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 174, "_800", gameIsWidescreen());
+    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 174, gameIsWidescreen());
     if (!backgroundFrmImage.lock(backgroundFid)) {
         return characterSelectorWindowFatalError(false);
     }
@@ -672,7 +672,7 @@ static bool characterSelectorWindowRenderFace()
     bool success = false;
 
     FrmImage faceFrmImage;
-    int faceFid = buildFid(OBJ_TYPE_INTERFACE, gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].face, 0, 0, 0);
+    int faceFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gCustomPremadeCharacterDescriptions[gCurrentPremadeCharacter].face, gameIsWidescreen());
     if (faceFrmImage.lock(faceFid)) {
         unsigned char* data = faceFrmImage.getData();
         if (data != nullptr) {

@@ -1692,7 +1692,7 @@ static int lsgWindowInit(int windowType)
     // Load interface images
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
         // Use widescreen variants when available
-        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], "_800", isWidescreen);
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], isWidescreen);
 
         if (!_loadsaveFrmImages[index].lock(fid)) {
             // Fallback to base FID if variant fails

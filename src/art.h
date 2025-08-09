@@ -194,7 +194,7 @@ int artFindVariant(int objectType, int baseIndex, const char* suffix);
  * @param useVariant Whether to attempt variant lookup
  * @return int The final FID
  */
-int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool useVariant);
+int artGetFidWithVariant(int objectType, int baseId, bool useVariant);
 
 } // namespace fallout
 
