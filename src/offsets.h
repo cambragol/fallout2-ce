@@ -392,6 +392,12 @@ struct PreferencesOffsets {
     int secondaryKnobY[6]; // For each secondary preference
     int secondaryLabelY[6]; // Y positions for labels
 
+    // Tertiary preferences column (middle-right)
+    int tertiaryColumnX;
+    int tertiaryKnobX;
+    int tertiaryKnobY[6]; // For each secondary preference
+    int tertiaryLabelY[6]; // Y positions for labels
+
     // Range preferences column (right)
     int rangeColumnX;
     int rangeKnobX;
@@ -400,9 +406,11 @@ struct PreferencesOffsets {
     // Label positions
     int primLabelColX;
     int secLabelColX;
+    int terLabelColX;
     int rangLabelColX;
     int labelX[PRIMARY_PREF_COUNT];
     int secondaryLabelX[SECONDARY_PREF_COUNT];
+    int tertiaryLabelX[TERTIARY_PREF_COUNT];
 
     // Range control
     int rangeStartX;
@@ -415,6 +423,8 @@ struct PreferencesOffsets {
     int primaryBlitHeight;
     int secondaryBlitWidth;
     int secondaryBlitHeight;
+    int tertiaryBlitWidth;
+    int tertiaryBlitHeight;
     int rangeBlitWidth;
     int rangeBlitHeight;
 
@@ -449,6 +459,8 @@ struct PreferencesOffsets {
     int primaryKnobHitY; // +21 from knobY for primary prefs
     int secondaryKnobHitX; // +11 from knobX for secondary prefs
     int secondaryKnobHitY; // +12 from knobY for secondary prefs
+    int tertiaryKnobHitX; // +11 from knobX for secondary prefs
+    int tertiaryKnobHitY; // +12 from knobY for secondary prefs
 
     // Range slider parameters
     int rangeSliderMinX; // 384 (640) / 480 (800)
@@ -458,6 +470,7 @@ struct PreferencesOffsets {
     // Button hitbox offsets
     int primaryButtonOffsetY; // -4 from knobY
     int secondaryButtonOffsetY; // -5 from knobY
+    int tertiaryButtonOffsetY; // -5 from knobY
     int rangeButtonOffsetY; // -12 from knobY
 
     double textBaseDelayScale; // 43.8 for 640, 54.8 for 800
@@ -467,12 +480,15 @@ struct PreferencesOffsets {
     // Position arrays
     int row1Ytab[PRIMARY_PREF_COUNT]; // Primary knob Y positions
     int row2Ytab[SECONDARY_PREF_COUNT]; // Secondary knob Y positions
+    int row2bYtab[TERTIARY_PREF_COUNT]; // Secondary knob Y positions
     int row3Ytab[RANGE_PREF_COUNT]; // Range knob Y positions
     int optionXOffsets[PRIMARY_OPTION_VALUE_COUNT]; // Primary option X offsets
     int optionYOffsets[PRIMARY_OPTION_VALUE_COUNT]; // Primary option Y offsets
     int secondaryOptionXOffsets[SECONDARY_OPTION_VALUE_COUNT]; // Secondary option X offsets
+    int tertiaryOptionYOffsets[TERTIARY_OPTION_VALUE_COUNT]; // tertiary option Y offsets  because text labels are vertically arranged
     int primaryLabelYValues[PRIMARY_PREF_COUNT]; // Primary label Y positions
     int secondaryLabelYValues[SECONDARY_PREF_COUNT]; // Secondary label Y positions
+    int tertiaryLabelYValues[TERTIARY_PREF_COUNT]; // Secondary label Y positions
 
     Point preferencePositions[PREF_COUNT]; // ONLY x/y pairs
 
@@ -480,6 +496,7 @@ struct PreferencesOffsets {
     int primaryButtonMinXOffset; // 9
     int primaryButtonMaxXOffset; // 37
     int secondaryButtonXOffset; // 22
+    int tertiaryButtonXOffset; // 22
     int rangeThumbLeftOffset; // 6
     int rangeThumbRightOffset; // 14
     double rangeSliderScale; // 219.0 or 274.0
