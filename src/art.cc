@@ -6,9 +6,9 @@
 #include "xfile.h" // for File type
 #define DIR_SEPARATOR '/'
 
+#include <ctime>
 #include <stdlib.h>
 #include <string.h>
-#include <ctime>
 
 #include "animation.h"
 #include "debug.h"
