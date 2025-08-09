@@ -333,7 +333,7 @@ int interfaceInit()
         return intface_fatal_error(-1);
     }
 
-    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 16, "_800", gInterfaceBarIsWide);
+    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 16, gInterfaceBarIsWide);
     if (!backgroundFrmImage.lock(backgroundFid)) {
         return intface_fatal_error(-1);
     }

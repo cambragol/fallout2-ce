@@ -257,10 +257,9 @@ static int artGetStableIndex(const char* filename, int vanillaCount, int variant
     return baseIndex + (hashValue % availableSlots);
 }
 
-int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool useVariant)
-{
-    if (useVariant) {
-        int variantId = artFindVariant(objectType, baseId, suffix);
+int artGetFidWithVariant(int objectType, int baseId, bool useVariant) {
+    if (useVariant && objectType == OBJ_TYPE_INTERFACE) {
+        int variantId = artFindVariant(objectType, baseId, settings.graphics.widescreen_variant_suffix.c_str());
         if (variantId >= 0) {
             return buildFid(objectType, variantId, 0, 0, 0);
         }
@@ -268,7 +267,7 @@ int artGetFidWithVariant(int objectType, int baseId, const char* suffix, bool us
     return buildFid(objectType, baseId, 0, 0, 0);
 }
 
-int artFindVariant(int objectType, int baseIndex, const char* filename)
+int artFindVariant(int objectType, int baseIndex, const char* suffix)
 {
     if (objectType < 0 || objectType >= OBJ_TYPE_COUNT)
         return -1;
@@ -279,7 +278,7 @@ int artFindVariant(int objectType, int baseIndex, const char* filename)
     if (baseIndex == -1) {
         for (int i = 0; i < desc->fileNamesLength; i++) {
             char* candidate = desc->fileNames + (i * FILENAME_LENGTH);
-            if (compat_stricmp(candidate, filename) == 0) {
+            if (compat_stricmp(candidate, suffix) == 0) {
                 return i;
             }
         }
@@ -304,9 +303,9 @@ int artFindVariant(int objectType, int baseIndex, const char* filename)
 
     // Build expected variant name
     char expected[FILENAME_LENGTH];
-    int len = snprintf(expected, sizeof(expected), "%s%s.frm", base, filename);
-    if (len >= FILENAME_LENGTH) {
-        debugPrint("Variant name too long: %s%s", base, filename);
+    int len = snprintf(expected, sizeof(expected), "%s%s.frm", base, suffix);
+    if (len >= static_cast<int>(sizeof(expected))) {
+        debugPrint("Variant name too long: %s%s", base, suffix);
         return -1;
     }
 
@@ -363,7 +362,9 @@ int artInit()
         // 2. Process Variant Assets
         // -------------------------
         // Variants are higher-resolution versions of existing assets (e.g., "_800.frm" for 800x600)
-        const char* suffix = "_800.frm"; // Standard suffix for resolution variants
+        char suffix[32];
+        snprintf(suffix, sizeof(suffix), "%s.frm", 
+                settings.graphics.widescreen_variant_suffix.c_str());  // Use c_str()
         size_t suffixLen = strlen(suffix);
 
         // Build search pattern for variant files: "art/<category>/*.frm"

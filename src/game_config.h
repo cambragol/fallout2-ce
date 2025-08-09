@@ -41,6 +41,7 @@ namespace fallout {
 #define GAME_CONFIG_ENABLE_HIRES_STENCIL "highres_stencil"
 #define GAME_CONFIG_WIDESCREEN "widescreen"
 #define GAME_CONFIG_SQUARE_PIXELS "square_pixels"
+#define GAME_CONFIG_VARIANT_SUFFIX "widescreen_variant_suffix"
 #define GAME_CONFIG_TIMES_RUN_KEY "times_run"
 #define GAME_CONFIG_GAME_DIFFICULTY_KEY "game_difficulty"
 #define GAME_CONFIG_RUNNING_BURNING_GUY_KEY "running_burning_guy"

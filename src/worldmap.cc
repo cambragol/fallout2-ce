@@ -4696,7 +4696,7 @@ static int wmInterfaceInit()
     }
 
     fid = gameIsWidescreen()
-        ? artGetFidWithVariant(OBJ_TYPE_INTERFACE, 136, "_800", true)
+        ? artGetFidWithVariant(OBJ_TYPE_INTERFACE, 136, true)
         : buildFid(OBJ_TYPE_INTERFACE, 136, 0, 0, 0);
 
     if (!_backgroundFrmImage.lock(fid)) {
@@ -6308,7 +6308,7 @@ static int wmTownMapInit()
         return -1;
     }
 
-    int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 167, "_800", gameIsWidescreen());
+    int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 167, gameIsWidescreen());
     if (!_townBackgroundFrmImage.lock(fid)) {
         return -1;
     }

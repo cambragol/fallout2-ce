@@ -1245,7 +1245,7 @@ static int preferencesWindowInit()
 
     for (i = 0; i < PREFERENCES_WINDOW_FRM_COUNT; i++) {
         // Use widescreen variants when available
-        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], "_800", isWidescreen);
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], isWidescreen);
 
         if (!_preferencesFrmImages[i].lock(fid)) {
             fid = buildFid(OBJ_TYPE_INTERFACE, gPreferencesWindowFrmIds[i], 0, 0, 0);
