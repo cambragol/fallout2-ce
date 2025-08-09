@@ -254,7 +254,8 @@ static int artGetStableIndex(const char* filename, int vanillaCount, int variant
     return baseIndex + (hashValue % availableSlots);
 }
 
-int artGetFidWithVariant(int objectType, int baseId, bool useVariant) {
+int artGetFidWithVariant(int objectType, int baseId, bool useVariant)
+{
     if (useVariant && objectType == OBJ_TYPE_INTERFACE) {
         int variantId = artFindVariant(objectType, baseId, settings.graphics.widescreen_variant_suffix.c_str());
         if (variantId >= 0) {
@@ -361,8 +362,8 @@ int artInit()
         // Variants are higher-resolution versions of existing assets (e.g., "_800.frm" for 800x600)
         // Variant suffix can be set in fallout2.cfg
         char suffix[32];
-        snprintf(suffix, sizeof(suffix), "%s.frm", 
-                settings.graphics.widescreen_variant_suffix.c_str());
+        snprintf(suffix, sizeof(suffix), "%s.frm",
+            settings.graphics.widescreen_variant_suffix.c_str());
         size_t suffixLen = strlen(suffix);
 
         // Build search pattern for variant files: "art/<category>/*.frm"
