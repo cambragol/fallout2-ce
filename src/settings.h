@@ -103,6 +103,7 @@ struct GraphicSettings {
     bool highres_stencil = true;
     bool widescreen = false;
     bool square_pixels = false;
+    int play_area = 0;
     std::string widescreen_variant_suffix = "_800";
 };
 

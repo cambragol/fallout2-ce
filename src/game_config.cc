@@ -127,6 +127,7 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_ENABLE_HIRES_STENCIL, true);
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_WIDESCREEN, false);
     configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SQUARE_PIXELS, false);
+    configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_PLAY_AREA, 0);
     configSetString(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_VARIANT_SUFFIX, "_800");
 
     if (isMapper) {

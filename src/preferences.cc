@@ -230,7 +230,8 @@ static const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
     247, // prfsldon.frm - options screen
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
-    172 // autoup.frm - toggle switch up
+    172, // autoup.frm - toggle switch up
+    1775 // prfdial.frm - large dial
 };
 
 // 0x6637E8
@@ -389,6 +390,9 @@ static int gPreferencesStretchEnabled2;
 static int gPreferencesWidescreen1;
 static int gPreferencesWidescreen2;
 
+static int gPreferencesPlayArea1;
+static int gPreferencesPlayArea2;
+
 // Added for offsets handling
 static PreferencesOffsets gOffsets;
 
@@ -411,6 +415,7 @@ static PreferenceDescription gPreferenceDescriptions[PREF_COUNT] = {
     { 2, 0, 299, 207, 0, 0, { 231, 232, 0, 0 }, 0, GAME_CONFIG_PRESERVE_ASPECT, 0, 0, &gPreferencesPreserveAspect1 },
     { 2, 0, 299, 141, 0, 0, { 233, 234, 0, 0 }, 0, GAME_CONFIG_HIGH_QUALITY, 0, 0, &gPreferencesHighQuality1 },
     { 2, 0, 299, 271, 0, 0, { 235, 236, 0, 0 }, 0, GAME_CONFIG_SQUARE_PIXELS, 0, 0, &gPreferencesSquarePixels1 },
+    { 4, 0, 299, 271, 0, 0, { 237, 238, 239, 240 }, 0, GAME_CONFIG_PLAY_AREA, 0, 0, &gPreferencesPlayArea1 },
     { 2, 0, 374, 50, 0, 0, { 207, 210, 0, 0 }, 0, GAME_CONFIG_COMBAT_SPEED_KEY, 0.0, 50.0, &gPreferencesCombatSpeed1 },
     { 3, 0, 374, 125, 0, 0, { 217, 209, 218, 0 }, 0, GAME_CONFIG_TEXT_BASE_DELAY_KEY, 1.0, 6.0, nullptr },
     { 4, 0, 374, 196, 0, 0, { 202, 221, 209, 222 }, 0, GAME_CONFIG_MASTER_VOLUME_KEY, 0, 32767.0, &gPreferencesMasterVolume1 },
@@ -755,6 +760,7 @@ static void _JustUpdate_()
     // applyWidescreenPreference(gPreferencesWidescreen1);
 }
 
+// for testing background blitting location
 void fillRectWithColor(unsigned char* buffer, int pitch, int x, int y, int width, int height, unsigned char color)
 {
     for (int j = 0; j < height; j++) {
@@ -950,6 +956,80 @@ static void _UpdateThing(int index)
             _preferencesFrmImages[PREFERENCES_WINDOW_FRM_TOGGLE_BUTTON_UP].getWidth(),
             gPreferencesWindowBuffer + pitch * knobY + knobX,
             pitch);
+
+    } else if (index == PREF_PLAY_AREA && gameIsWidescreen()){ // Single Play Area Dial - background blit and button blit
+        int quaternaryOptionIndex = index - FIRST_QUATERNARY_PREF;
+
+        int localOffsets[QUATERNARY_PREF_COUNT];
+        memcpy(localOffsets, gOffsets.quaternaryLabelYValues, sizeof(localOffsets));
+
+        // Use this to match the original blit area
+        /*int x = gOffsets.quaternarylabelX[0];
+        int y = knobY; //localOffsets[tertiaryOptionIndex]; // this could use KnobY - to lock the background blit to the button
+        int width = gOffsets.quaternaryBlitWidth;
+        int height = gOffsets.quaternaryBlitHeight;
+        unsigned char color = 231; // Bright test color, adjust as needed*/
+
+        blitBufferToBuffer(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_BACKGROUND].getData() + pitch * knobY /*localOffsets[quaternaryOptionIndex]*/ + gOffsets.quaternarylabelX[0],
+            gOffsets.quaternaryBlitWidth,
+            gOffsets.quaternaryBlitHeight,
+            pitch,
+            gPreferencesWindowBuffer + pitch * knobY /*localOffsets[quaternaryOptionIndex]*/ + gOffsets.quaternarylabelX[0],
+            pitch);
+
+        //fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
+
+
+        for (int valueIndex = 0; valueIndex < meta->valuesCount; valueIndex++) {
+            const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[valueIndex]);
+
+            char copy[100]; // TODO: Size is probably wrong.
+            strcpy(copy, text);
+
+            // Use knobX from offsets instead of meta->knobX
+            int x = knobX + gOffsets.quaternaryXOffsets[valueIndex];
+            int len = fontGetStringWidth(copy);
+            switch (valueIndex) {
+            case 0:
+                x -= fontGetStringWidth(copy);
+                meta->minX = x;
+                break;
+            case 1:
+                x -= len / 2;
+                meta->maxX = x + len;
+                break;
+            case 2:
+            case 3:
+                meta->maxX = x + len;
+                break;
+            }
+
+            char* p = copy;
+            while (*p != '\0' && *p != ' ') {
+                p++;
+            }
+
+            // Use knobY from offsets instead of meta->knobY
+            int y = knobY + gOffsets.quaternaryYOffsets[valueIndex];
+            const char* s;
+            if (*p != '\0') {
+                *p = '\0';
+                fontDrawText(gPreferencesWindowBuffer + pitch * y + x, copy, pitch, pitch, _colorTable[18979]);
+                s = p + 1;
+                y += fontGetLineHeight();
+            } else {
+                s = copy;
+            }
+
+            fontDrawText(gPreferencesWindowBuffer + pitch * y + x, s, pitch, pitch, _colorTable[18979]);
+        }
+
+        int value = *(meta->valuePtr);
+        // Use knobX/Y from offsets instead of meta
+        blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_DIAL].getData() + (54 * 56) * value,
+            54, 56, 54,
+            gPreferencesWindowBuffer + pitch * knobY + knobX,
+            pitch);        
     } else if (index >= FIRST_RANGE_PREF && index <= LAST_RANGE_PREF) {
         // Use knobY from offsets instead of meta->knobY
         int yPos = knobY + gOffsets.rangeButtonOffsetY;
@@ -1384,21 +1464,21 @@ static int preferencesWindowInit()
     fontSetCurrent(103);
 
     messageItemId = 101;
-    // Primary Prefs Main lables
+    // Primary Prefs Main labels
     for (i = 0; i < PRIMARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
         x = gOffsets.primLabelColX - fontGetStringWidth(messageItemText) / 2;
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row1Ytab[i] + x, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
-    // Secondary Prefs Main lables
+    // Secondary Prefs Main labels
     for (i = 0; i < SECONDARY_PREF_COUNT; i++) {
         messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemId++);
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2Ytab[i] + gOffsets.secLabelColX, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
     }
 
     if (gameIsWidescreen()) {
-        // NEW: Draw tertiary preference main labels
+        // Draw tertiary preference main labels
         messageItemIdNew = 124;
         for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
             messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
@@ -1406,6 +1486,12 @@ static int preferencesWindowInit()
             fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x,
                 messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
         }
+               
+        // Draw quaternary dial label
+        /*messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
+        x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2; // use terLabelColX because dial is in tertiary preferences column
+        fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.rowdialYtab[0] + x, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);*/
+    
     }
 
     // Range Prefs Main labels
@@ -1455,8 +1541,24 @@ static int preferencesWindowInit()
             gPreferenceDescriptions[i].btn = buttonCreate(
                 gPreferencesWindow,
                 x, y, width, height,
-                531, 531, 505 + i, 531,
+                532, 532, 505 + i, 532,
                 nullptr, nullptr, nullptr, 32);
+        } else if (i >= FIRST_QUATERNARY_PREF) {
+            // Only create quaternary button in widescreen mode
+            if (gameIsWidescreen()) {
+                // Quaternary preference (large multi-option dial)
+                int x = gPreferenceDescriptions[i].minX;
+                int y = knobY + gOffsets.quaternaryButtonOffsetY;
+                int width = gPreferenceDescriptions[i].maxX - x;
+                int height = 56;
+                gPreferenceDescriptions[i].btn = buttonCreate(
+                    gPreferencesWindow,
+                    x, y, width, height,
+                    -1, -1, -1, 505 + i,
+                    nullptr, nullptr, nullptr, 32);
+            } else {
+                gPreferenceDescriptions[i].btn = -1; // Mark as invalid button
+            }
         } else if (i >= FIRST_TERTIARY_PREF) {
             // Only create tertiary buttons in widescreen mode
             if (gameIsWidescreen()) {
@@ -1505,8 +1607,8 @@ static int preferencesWindowInit()
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getHeight(),
         -1,
         -1,
-        530,
-        530,
+        531,
+        531,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_OFF].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_CHECKBOX_ON].getData(),
         nullptr,
@@ -1525,7 +1627,7 @@ static int preferencesWindowInit()
         -1,
         -1,
         -1,
-        532,
+        533,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
         nullptr,
@@ -1561,7 +1663,7 @@ static int preferencesWindowInit()
         -1,
         -1,
         -1,
-        533,
+        534,
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_UP].getData(),
         _preferencesFrmImages[PREFERENCES_WINDOW_FRM_LITTLE_RED_BUTTON_DOWN].getData(),
         nullptr,
@@ -1652,14 +1754,14 @@ int doPreferences(bool animated)
         case KEY_F12:
             takeScreenshot();
             break;
-        case 532:
+        case 533:
             preferencesSetDefaults(true);
             break;
         default:
-            if (eventCode == KEY_ESCAPE || eventCode == 533 || _game_user_wants_to_quit != 0) {
+            if (eventCode == KEY_ESCAPE || eventCode == 534 || _game_user_wants_to_quit != 0) {
                 _RestoreSettings();
                 rc = 0;
-            } else if (eventCode >= 505 && eventCode <= 530) {
+            } else if (eventCode >= 505 && eventCode <= 531) {
                 _DoThing(eventCode);
             }
             break;
@@ -1837,6 +1939,104 @@ static void _DoThing(int eventCode)
         if (valueChanged) {
             soundPlayFile("toggle");
             inputBlockForTocks(70);
+            _UpdateThing(preferenceIndex);
+            windowRefresh(gPreferencesWindow);
+            _changed = true;
+            return;
+        }
+    } else if (preferenceIndex == FIRST_QUATERNARY_PREF) {  // Play Area dial
+        PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
+        Point pos = gOffsets.preferencePositions[preferenceIndex]; // Base position of preference widget
+        int* currentValuePtr = meta->valuePtr; // Pointer to preference's current value
+        int currentValue = *currentValuePtr;       // Actual value of the preference
+        bool valueChanged = false;                    // Flag to track if value changed
+
+        // Calculate center position of the circular knob
+        int knobCenterX = pos.x + gOffsets.quaternaryKnobHitX;
+        int knobCenterY = pos.y + gOffsets.quaternaryKnobHitY;
+
+        // Calculate distance from click point to knob center
+        double distanceToKnob = sqrt(pow((double)x - (double)knobCenterX, 2) + 
+                                    pow((double)y - (double)knobCenterY, 2));
+
+        // Check if click is outside the circular knob (radius 26 pixels)
+        if (distanceToKnob > 26.0) {
+            // Check ABOVE KNOB area for values 1 and 2
+            if (y <= knobCenterY) {
+                int aboveKnobY = pos.y + gOffsets.quaternaryYOffsets[1]; // Position for above-knob labels
+                int aboveKnobBottom = aboveKnobY + fontGetLineHeight();
+                
+                // Check if click is within the above-knob vertical range
+                if (y >= aboveKnobY && y <= aboveKnobBottom) {
+                    // Left label area (value 1)
+                    if (x >= meta->minX && x <= pos.x) {
+                        *currentValuePtr = 1;
+                        meta->direction = 0;
+                        valueChanged = true;
+                    } 
+                    // Right label area (value 2)
+                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[2] && 
+                            x <= meta->maxX) {
+                        *currentValuePtr = 2;
+                        meta->direction = 0;
+                        valueChanged = true;
+                    }
+                }
+            }
+            // Check BELOW KNOB area for values 0 and 3
+            else {
+                int belowKnobY = pos.y + gOffsets.quaternaryYOffsets[0]; // Position for below-knob labels
+                int belowKnobBottom = belowKnobY + fontGetLineHeight();
+                
+                // Check if click is within below-knob vertical range
+                if (y >= belowKnobY && y <= belowKnobBottom) {
+                    // Left label area (value 0)
+                    if (x >= meta->minX && x <= pos.x) {
+                        *currentValuePtr = 0;
+                        meta->direction = 0;
+                        valueChanged = true;
+                    } 
+                    // Right label area (value 3)
+                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[3] && 
+                            x <= meta->maxX) {
+                        *currentValuePtr = 3;
+                        meta->direction = 1;
+                        valueChanged = true;
+                    }
+                }
+            }
+        } 
+        // Click was INSIDE the circular knob - handle cycling
+        else {
+            // Handle cycling direction logic:
+            // - If we were cycling but reached min value, stop cycling
+            if (meta->direction != 0) {
+                if (currentValue == 0) {
+                    meta->direction = 0;  // Stop cycling at min value
+                }
+            } 
+            // - If we reached max value, reverse cycling direction
+            else {
+                if (currentValue == 3) {  // Max value is 3 for 4-value preferences
+                    meta->direction = 1;  // Start cycling backward
+                }
+            }
+
+            // Apply cycling based on direction
+            if (meta->direction != 0) {
+                *currentValuePtr = currentValue - 1;  // Cycle backward
+            } else {
+                *currentValuePtr = currentValue + 1;  // Cycle forward
+            }
+            
+            valueChanged = true;
+        }
+
+        // If value changed, handle UI updates
+        if (valueChanged) {
+            soundPlayFile("butin1");
+            inputBlockForTocks(150);
+            soundPlayFile("ib3lu1x1");
             _UpdateThing(preferenceIndex);
             windowRefresh(gPreferencesWindow);
             _changed = true;
@@ -2053,7 +2253,7 @@ static void _DoThing(int eventCode)
             renderPresent();
             sharedFpsLimiter.throttle();
         }
-    } else if (preferenceIndex == 25) {
+    } else if (preferenceIndex == 26) {
         gPreferencesPlayerSpeedup1 ^= 1;
     }
 

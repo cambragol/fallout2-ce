@@ -114,6 +114,7 @@ static void settingsFromConfig()
     settingsRead(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_ENABLE_HIRES_STENCIL, settings.graphics.highres_stencil);
     settingsRead(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_WIDESCREEN, settings.graphics.widescreen);
     settingsRead(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SQUARE_PIXELS, settings.graphics.square_pixels);
+    settingsRead(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_PLAY_AREA, settings.graphics.play_area);
     settingsRead(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_VARIANT_SUFFIX, settings.graphics.widescreen_variant_suffix);
 
     settingsRead(GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_OVERRIDE_LIBRARIAN_KEY, settings.mapper.override_librarian);
@@ -203,6 +204,7 @@ static void settingsToConfig()
     settingsWrite(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_ENABLE_HIRES_STENCIL, settings.graphics.highres_stencil);
     settingsWrite(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_WIDESCREEN, settings.graphics.widescreen);
     settingsWrite(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SQUARE_PIXELS, settings.graphics.square_pixels);
+    settingsWrite(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_PLAY_AREA, settings.graphics.play_area);
     settingsWrite(GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_VARIANT_SUFFIX, settings.graphics.widescreen_variant_suffix);
 
     settingsWrite(GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_OVERRIDE_LIBRARIAN_KEY, settings.mapper.override_librarian);

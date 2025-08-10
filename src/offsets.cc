@@ -747,6 +747,7 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     { 23, 23, 23, 23, 23 }, // labelX[5]
     { 251, 251, 251, 251, 251, 251 }, // secondaryLabelX[6]
     { 351, 351, 351, 351, 351, 351 }, // tertiaryLabelX[6]
+    { 351 }, // quaternarylabelX[1]
 
     // Range control parameters
     384, // rangeStartX
@@ -761,6 +762,8 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     34, // secondaryBlitHeight
     113, // tertiaryBlitWidth
     34, // tertiaryBlitHeight
+    54, // quaternaryBlitWidth
+    56, // quaternaryBlitHeight
     240, // rangeBlitWidth
     24, // rangeBlitHeight
 
@@ -795,6 +798,8 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     12, // secondaryKnobHitY
     11, // tertiaryKnobHitX
     12, // tertiaryKnobHitY
+    27, // primaryKnobHitX
+    28, // primaryKnobHitY
 
     // Range slider parameters
     384, // rangeSliderMinX
@@ -805,6 +810,7 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     -4, // primaryButtonOffsetY
     -5, // secondaryButtonOffsetY
     -5, // tertiaryButtonOffsetY
+    -4, // quaternaryButtonOffsetY
     -12, // rangeButtonOffsetY
 
     // Text delay and range label positions
@@ -816,14 +822,18 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     { 48, 125, 203, 286, 363 }, // row1Ytab[5]
     { 49, 116, 181, 247, 313, 380 }, // row2Ytab[6]
     { 49, 116, 181, 247, 313, 380 }, // row2bYtab[6]
+    { 49 }, // rowdialYtab[1]
     { 19, 94, 165, 216, 268, 319, 369, 420 }, // row3Ytab[8]
     { 2, 25, 46, 46 }, // optionXOffsets[4]
     { 10, -4, 10, 31 }, // optionYOffsets[4]
     { 4, 21 }, // secondaryOptionXOffsets[2]
     { 4, 21 }, // tertiaryOptionYOffsets[2]
+    { 2, 25, 46, 46 }, // quaternaryXOffsets[4]
+    { 10, -4, 10, 31 }, // quaternaryYOffsets[4]
     { 66, 143, 222, 304, 382 }, // primaryLabelYValues[5]
     { 66, 133, 200, 264, 331, 397 }, // secondaryLabelYValues[6]
     { 66, 133, 200, 264, 331, 397 }, // tertiaryLabelYValues[6]
+    { 80 }, // quaternaryLabelYValues[1] - used for orienting background blit
 
     // Preference positions
     {
@@ -842,6 +852,7 @@ const PreferencesOffsets gPreferencesOffsets640 = {
         Point { 440, 241 }, // PREF_QUALITY
         Point { 440, 307 }, // PREF_ASPECT
         Point { 440, 371 }, // PREF_SQUARE_PIXELS
+        Point { 425, 320 }, // PREF_PLAY_AREA
         Point { 440, 238 }, // PREF_STRETCHING
         Point { 440, 204 }, // PREF_WIDESCREEN
         Point { 374, 50 }, // PREF_COMBAT_SPEED
@@ -859,6 +870,8 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     37, // primaryButtonMaxXOffset
     22, // secondaryButtonXOffset
     22, // tertiaryButtonXOffset
+    9, // primaryButtonMinXOffset
+    37, // primaryButtonMaxXOffset
     6, // rangeThumbLeftOffset
     14, // rangeThumbRightOffset
     219.0 // rangeSliderScale (double)
@@ -900,6 +913,7 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     { 23, 23, 23, 23, 23 }, // labelX[5]
     { 251, 251, 251, 251, 251, 251 }, // secondaryLabelX[6]
     { 385, 460, 385, 460, 385, 460 }, // tertiaryLabelX[6]
+    { 415 }, // quaternarylabelX[1]
 
     // Range control parameters
     545, // rangeStartX
@@ -914,6 +928,8 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     34, // secondaryBlitHeight
     43, // tertiaryBlitWidth
     72, // tertiaryBlitHeight
+    54, // quaternaryBlitWidth
+    56, // quaternaryBlitHeight
     240, // rangeBlitWidth
     24, // rangeBlitHeight
 
@@ -948,6 +964,8 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     12, // secondaryKnobHitY
     25, // tertiaryKnobHitX
     20, // tertiaryKnobHitY
+    27, // primaryKnobHitX
+    28, // primaryKnobHitY
 
     // Range slider parameters
     545, // rangeSliderMinX
@@ -958,6 +976,7 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     -4, // primaryButtonOffsetY
     -5, // secondaryButtonOffsetY
     -15, // tertiaryButtonOffsetY
+    -4, // quaternaryButtonOffsetY
     -12, // rangeButtonOffsetY
 
     // Text delay and range label positions
@@ -969,14 +988,18 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     { 50, 131, 211, 299, 380 }, // row1Ytab[5]
     { 50, 119, 187, 256, 325, 395 }, // row2Ytab[6]
     { 50, 152, 257, 361, 470, 470 }, // row2bYtab[6]
+    { 49 }, // rowdialYtab[1]
     { 20, 99, 172, 225, 279, 332, 384, 437 }, // row3Ytab[8]
     { 2, 25, 46, 46 }, // optionXOffsets[4] -big knobs labels x
     { 10, -4, 10, 31 }, // optionYOffsets[4] -big knobs labels y
     { 4, 21 }, // secondaryOptionXOffsets[2] -small knob labels x
     { 10, -44 }, // tertiaryOptionYOffsets[2] - must serve as Y offset
+    { 7, -15, 65, 55 }, // quaternaryXOffsets[4] -big dial labels x
+    { 40, -2, -2, 40 }, // quaternaryYOffsets[4] -big dial labels y
     { 70, 151, 234, 320, 402 }, // primaryLabelYValues[5]
     { 71, 139, 209, 277, 347, 415 }, // secondaryLabelYValues[6]
     { 80, 80, 183, 183, 288, 288 }, // tertiaryLabelYValues[6] - used for orienting background blit
+    { 80 }, // quaternaryLabelYValues[1] - used for orienting background blit
 
     // Preference positions
     {
@@ -997,6 +1020,7 @@ const PreferencesOffsets gPreferencesOffsets800 = {
         Point { 460, 183 }, // PREF_ASPECT
         Point { 385, 288 }, // PREF_QUALITY
         Point { 460, 288 }, // PREF_SQUARE_PIXELS
+        Point { 415, 390 }, // PREF_PLAY_AREA
         Point { 468, 53 }, // PREF_COMBAT_SPEED
         Point { 468, 131 }, // PREF_TEXT_BASE_DELAY
         Point { 468, 205 }, // PREF_MASTER_VOLUME
@@ -1012,6 +1036,8 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     37, // primaryButtonMaxXOffset
     22, // secondaryButtonXOffset
     42, // tertiaryButtonXOffset
+    9, // primaryButtonMinXOffset
+    37, // primaryButtonMaxXOffset    
     6, // rangeThumbLeftOffset
     14, // rangeThumbRightOffset
     219.0 // rangeSliderScale (double)
