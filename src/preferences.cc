@@ -957,7 +957,7 @@ static void _UpdateThing(int index)
             gPreferencesWindowBuffer + pitch * knobY + knobX,
             pitch);
 
-    } else if (index == PREF_PLAY_AREA && gameIsWidescreen()){ // Single Play Area Dial - background blit and button blit
+    } else if (index == PREF_PLAY_AREA && gameIsWidescreen()) { // Single Play Area Dial - background blit and button blit
         int quaternaryOptionIndex = index - FIRST_QUATERNARY_PREF;
 
         int localOffsets[QUATERNARY_PREF_COUNT];
@@ -977,8 +977,7 @@ static void _UpdateThing(int index)
             gPreferencesWindowBuffer + pitch * knobY /*localOffsets[quaternaryOptionIndex]*/ + gOffsets.quaternarylabelX[0],
             pitch);
 
-        //fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
-
+        // fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
 
         for (int valueIndex = 0; valueIndex < meta->valuesCount; valueIndex++) {
             const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[valueIndex]);
@@ -1029,7 +1028,7 @@ static void _UpdateThing(int index)
         blitBufferToBufferTrans(_preferencesFrmImages[PREFERENCES_WINDOW_FRM_DIAL].getData() + (54 * 56) * value,
             54, 56, 54,
             gPreferencesWindowBuffer + pitch * knobY + knobX,
-            pitch);        
+            pitch);
     } else if (index >= FIRST_RANGE_PREF && index <= LAST_RANGE_PREF) {
         // Use knobY from offsets instead of meta->knobY
         int yPos = knobY + gOffsets.rangeButtonOffsetY;
@@ -1486,12 +1485,11 @@ static int preferencesWindowInit()
             fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x,
                 messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
         }
-               
+
         // Draw quaternary dial label
         /*messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
         x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2; // use terLabelColX because dial is in tertiary preferences column
         fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.rowdialYtab[0] + x, messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);*/
-    
     }
 
     // Range Prefs Main labels
@@ -1944,20 +1942,19 @@ static void _DoThing(int eventCode)
             _changed = true;
             return;
         }
-    } else if (preferenceIndex == FIRST_QUATERNARY_PREF) {  // Play Area dial
+    } else if (preferenceIndex == FIRST_QUATERNARY_PREF) { // Play Area dial
         PreferenceDescription* meta = &(gPreferenceDescriptions[preferenceIndex]);
         Point pos = gOffsets.preferencePositions[preferenceIndex]; // Base position of preference widget
         int* currentValuePtr = meta->valuePtr; // Pointer to preference's current value
-        int currentValue = *currentValuePtr;       // Actual value of the preference
-        bool valueChanged = false;                    // Flag to track if value changed
+        int currentValue = *currentValuePtr; // Actual value of the preference
+        bool valueChanged = false; // Flag to track if value changed
 
         // Calculate center position of the circular knob
         int knobCenterX = pos.x + gOffsets.quaternaryKnobHitX;
         int knobCenterY = pos.y + gOffsets.quaternaryKnobHitY;
 
         // Calculate distance from click point to knob center
-        double distanceToKnob = sqrt(pow((double)x - (double)knobCenterX, 2) + 
-                                    pow((double)y - (double)knobCenterY, 2));
+        double distanceToKnob = sqrt(pow((double)x - (double)knobCenterX, 2) + pow((double)y - (double)knobCenterY, 2));
 
         // Check if click is outside the circular knob (radius 26 pixels)
         if (distanceToKnob > 26.0) {
@@ -1965,7 +1962,7 @@ static void _DoThing(int eventCode)
             if (y <= knobCenterY) {
                 int aboveKnobY = pos.y + gOffsets.quaternaryYOffsets[1]; // Position for above-knob labels
                 int aboveKnobBottom = aboveKnobY + fontGetLineHeight();
-                
+
                 // Check if click is within the above-knob vertical range
                 if (y >= aboveKnobY && y <= aboveKnobBottom) {
                     // Left label area (value 1)
@@ -1973,10 +1970,9 @@ static void _DoThing(int eventCode)
                         *currentValuePtr = 1;
                         meta->direction = 0;
                         valueChanged = true;
-                    } 
+                    }
                     // Right label area (value 2)
-                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[2] && 
-                            x <= meta->maxX) {
+                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[2] && x <= meta->maxX) {
                         *currentValuePtr = 2;
                         meta->direction = 0;
                         valueChanged = true;
@@ -1987,7 +1983,7 @@ static void _DoThing(int eventCode)
             else {
                 int belowKnobY = pos.y + gOffsets.quaternaryYOffsets[0]; // Position for below-knob labels
                 int belowKnobBottom = belowKnobY + fontGetLineHeight();
-                
+
                 // Check if click is within below-knob vertical range
                 if (y >= belowKnobY && y <= belowKnobBottom) {
                     // Left label area (value 0)
@@ -1995,40 +1991,39 @@ static void _DoThing(int eventCode)
                         *currentValuePtr = 0;
                         meta->direction = 0;
                         valueChanged = true;
-                    } 
+                    }
                     // Right label area (value 3)
-                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[3] && 
-                            x <= meta->maxX) {
+                    else if (x >= pos.x + gOffsets.quaternaryXOffsets[3] && x <= meta->maxX) {
                         *currentValuePtr = 3;
                         meta->direction = 1;
                         valueChanged = true;
                     }
                 }
             }
-        } 
+        }
         // Click was INSIDE the circular knob - handle cycling
         else {
             // Handle cycling direction logic:
             // - If we were cycling but reached min value, stop cycling
             if (meta->direction != 0) {
                 if (currentValue == 0) {
-                    meta->direction = 0;  // Stop cycling at min value
+                    meta->direction = 0; // Stop cycling at min value
                 }
-            } 
+            }
             // - If we reached max value, reverse cycling direction
             else {
-                if (currentValue == 3) {  // Max value is 3 for 4-value preferences
-                    meta->direction = 1;  // Start cycling backward
+                if (currentValue == 3) { // Max value is 3 for 4-value preferences
+                    meta->direction = 1; // Start cycling backward
                 }
             }
 
             // Apply cycling based on direction
             if (meta->direction != 0) {
-                *currentValuePtr = currentValue - 1;  // Cycle backward
+                *currentValuePtr = currentValue - 1; // Cycle backward
             } else {
-                *currentValuePtr = currentValue + 1;  // Cycle forward
+                *currentValuePtr = currentValue + 1; // Cycle forward
             }
-            
+
             valueChanged = true;
         }
 
