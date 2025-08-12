@@ -431,29 +431,30 @@ void preferencesWriteDefaultOffsetsToConfig(bool isWidescreen, const Preferences
     }
 }
 
-void applyPlayAreaResolution() {
+void applyPlayAreaResolution()
+{
     switch (gPreferencesPlayArea1) {
-        case 0:
-            settings.graphics.game_width = 640;
-            settings.graphics.game_height = 480;
-            break;
-        case 1:
-            settings.graphics.game_width = 800;
-            settings.graphics.game_height = 500;
-            break;
-        case 2:
-            settings.graphics.game_width = 1280;
-            settings.graphics.game_height = 720;
-            break;
-        case 3:
-            settings.graphics.game_width = 1920;
-            settings.graphics.game_height = 1080;
-            break;
-        default:
-            // Handle unexpected values - fallback to default
-            settings.graphics.game_width = 800;
-            settings.graphics.game_height = 500;
-            break;
+    case 0:
+        settings.graphics.game_width = 640;
+        settings.graphics.game_height = 480;
+        break;
+    case 1:
+        settings.graphics.game_width = 800;
+        settings.graphics.game_height = 500;
+        break;
+    case 2:
+        settings.graphics.game_width = 1280;
+        settings.graphics.game_height = 720;
+        break;
+    case 3:
+        settings.graphics.game_width = 1920;
+        settings.graphics.game_height = 1080;
+        break;
+    default:
+        // Handle unexpected values - fallback to default
+        settings.graphics.game_width = 800;
+        settings.graphics.game_height = 500;
+        break;
     }
     /*if (gameIsWidescreen()) {
     // Wide screen resolutions (16:9 or 16:10 aspect ratios)
@@ -504,12 +505,12 @@ void applyPlayAreaResolution() {
             break;
     }
 }*/
-    //gameConfigSave();
+    // gameConfigSave();
 
     // Rebuild everything
-   /* backgroundSoundPause(); // Pause music to avoid audio glitch
-    handleWindowSizeChanged();
-    backgroundSoundResume();*/
+    /* backgroundSoundPause(); // Pause music to avoid audio glitch
+     handleWindowSizeChanged();
+     backgroundSoundResume();*/
 }
 
 void applyWidescreenPreference(bool widescreen)
@@ -523,9 +524,9 @@ void applyWidescreenPreference(bool widescreen)
     settings.graphics.game_height = newHeight;
     // settings.graphics.widescreen  = widescreen;
 
-    //configSetInt(&gGameConfig, "graphics", "game_width", newWidth);
-    //configSetInt(&gGameConfig, "graphics", "game_height", newHeight);
-    // configSetBool(&gGameConfig, "graphics", "widescreen", widescreen);
+    // configSetInt(&gGameConfig, "graphics", "game_width", newWidth);
+    // configSetInt(&gGameConfig, "graphics", "game_height", newHeight);
+    //  configSetBool(&gGameConfig, "graphics", "widescreen", widescreen);
     gameConfigSave();
 
     // Rebuild everything
@@ -768,7 +769,7 @@ static void _JustUpdate_()
     mouseSetSensitivity(gPreferencesMouseSensitivity1);
     colorSetBrightness(gPreferencesBrightness1);
     applyPlayAreaResolution();
-    //applyWidescreenPreference(gPreferencesWidescreen1);
+    // applyWidescreenPreference(gPreferencesWidescreen1);
 }
 
 // for testing background blitting location
@@ -913,9 +914,8 @@ static void _UpdateThing(int index)
             pitch,
             gPreferencesWindowBuffer + pitch * /*knobY*/ localOffsets[tertiaryOptionIndex] + gOffsets.tertiaryLabelX[tertiaryOptionIndex],
             pitch);
-        
-        //fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
 
+        // fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
 
         // Tertiary options are booleans, so it's index is also it's value.
         for (int value = 0; value < 2; value++) {
@@ -953,7 +953,7 @@ static void _UpdateThing(int index)
             if (*p != '\0') {
                 // Split into two lines at first space
                 *p = '\0';
-                
+
                 // First line
                 int textWidth1 = fontGetStringWidth(copy);
                 int centeredX1 = centerAreaX + (centerAreaWidth - textWidth1) / 2 + 4;
@@ -962,34 +962,31 @@ static void _UpdateThing(int index)
                     copy,
                     pitch,
                     pitch,
-                    _colorTable[18979]
-                );
-                
+                    _colorTable[18979]);
+
                 // Second line
                 const char* secondLine = p + 1;
                 int textWidth2 = fontGetStringWidth(secondLine);
                 int centeredX2 = centerAreaX + (centerAreaWidth - textWidth2) / 2 + 4;
-                y += fontGetLineHeight();  // Move down for second line
-                
+                y += fontGetLineHeight(); // Move down for second line
+
                 fontDrawText(
                     gPreferencesWindowBuffer + pitch * y + centeredX2,
                     secondLine,
                     pitch,
                     pitch,
-                    _colorTable[18979]
-                );
+                    _colorTable[18979]);
             } else {
                 // Single line text
                 int textWidth = fontGetStringWidth(copy);
                 int centeredX = centerAreaX + (centerAreaWidth - textWidth) / 2 + 4;
-                
+
                 fontDrawText(
                     gPreferencesWindowBuffer + pitch * y + centeredX,
                     copy,
                     pitch,
                     pitch,
-                    _colorTable[18979]
-                );
+                    _colorTable[18979]);
             }
         }
 
@@ -1023,7 +1020,7 @@ static void _UpdateThing(int index)
             gPreferencesWindowBuffer + pitch * /*knobY*/ localOffsets[quaternaryOptionIndex] + gOffsets.quaternarylabelX[0],
             pitch);
 
-        //fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
+        // fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
 
         for (int valueIndex = 0; valueIndex < meta->valuesCount; valueIndex++) {
             const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[valueIndex]);
@@ -1840,8 +1837,8 @@ int doPreferences(bool animated)
                 if (_widescreen_changed) {
                     const char* title = "Turning off Widescreen will disable\n";
                     const char* bodyText = "the extended preference screen.\n"
-                                        "\n"
-                                        "Are you sure you want to continue?";
+                                           "\n"
+                                           "Are you sure you want to continue?";
                     const char* bodyLines[] = { bodyText };
                     soundPlayFile("iisxxxx1");
                     // Show Yes/No dialog
@@ -1853,13 +1850,12 @@ int doPreferences(bool animated)
                         _colorTable[32328],
                         nullptr,
                         _colorTable[32328],
-                        DIALOG_BOX_YES_NO
-                    );
+                        DIALOG_BOX_YES_NO);
                 } else {
                     const char* title = "Graphics changes will take effect\n";
                     const char* bodyText = "on reload.";
                     const char* bodyLines[] = { bodyText };
-                    
+
                     // Show OK dialog
                     showDialogBox(
                         title,
@@ -1869,8 +1865,7 @@ int doPreferences(bool animated)
                         _colorTable[32328],
                         nullptr,
                         _colorTable[32328],
-                        1
-                    );
+                        1);
                     // For non-widescreen, always proceed
                     dialogResult = 1;
                 }
@@ -2095,7 +2090,7 @@ static void _DoThing(int eventCode)
             windowRefresh(gPreferencesWindow);
             _changed = true;
             _graphics_changed = true;
-            if((preferenceIndex == FIRST_TERTIARY_PREF + 1) && (*valuePtr == 0)){
+            if ((preferenceIndex == FIRST_TERTIARY_PREF + 1) && (*valuePtr == 0)) {
                 _widescreen_changed = true;
             } else {
                 _widescreen_changed = false;
@@ -2196,7 +2191,7 @@ static void _DoThing(int eventCode)
             windowRefresh(gPreferencesWindow);
             _changed = true;
             _graphics_changed = true;
-            if(*currentValuePtr == 0){
+            if (*currentValuePtr == 0) {
                 _widescreen_changed = true;
             } else {
                 _widescreen_changed = false;

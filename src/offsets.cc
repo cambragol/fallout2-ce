@@ -1037,7 +1037,7 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     22, // secondaryButtonXOffset
     42, // tertiaryButtonXOffset
     9, // primaryButtonMinXOffset
-    37, // primaryButtonMaxXOffset    
+    37, // primaryButtonMaxXOffset
     6, // rangeThumbLeftOffset
     14, // rangeThumbRightOffset
     219.0 // rangeSliderScale (double)
