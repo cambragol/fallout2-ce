@@ -94,16 +94,16 @@ struct MapperSettings {
 };
 
 struct GraphicSettings {
-    int game_width = 640;
-    int game_height = 480;
+    int game_width = 800;
+    int game_height = 500;
     bool fullscreen = true;
     bool stretch_enabled = true;
     bool preserve_aspect = true;
     bool high_quality = false;
     bool highres_stencil = true;
-    bool widescreen = false;
+    bool widescreen = true;
     bool square_pixels = false;
-    int play_area = 0;
+    int play_area = 1;
     std::string widescreen_variant_suffix = "_800";
 };
 

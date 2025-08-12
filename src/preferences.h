@@ -129,20 +129,6 @@ int preferencesLoad(File* stream);
 void brightnessIncrease();
 void brightnessDecrease();
 
-// Global declarations
-extern const int _row1Ytab[PRIMARY_PREF_COUNT];
-extern const int _row2Ytab[SECONDARY_PREF_COUNT];
-extern const int _row2bYtab[TERTIARY_PREF_COUNT];
-extern const int _row3Ytab[RANGE_PREF_COUNT];
-extern const short word_48FBF6[PRIMARY_OPTION_VALUE_COUNT];
-extern const short word_48FBFE[PRIMARY_OPTION_VALUE_COUNT];
-extern const short word_48FC06[SECONDARY_OPTION_VALUE_COUNT];
-extern const int dword_48FC1C[PRIMARY_PREF_COUNT];
-extern const int dword_48FC30[SECONDARY_PREF_COUNT];
-
-extern const short switch_labels[TERTIARY_OPTION_VALUE_COUNT];
-extern const int switch_titles[TERTIARY_PREF_COUNT];
-
 } // namespace fallout
 
 #endif /* FALLOUT_PREFERENCES_H_ */
