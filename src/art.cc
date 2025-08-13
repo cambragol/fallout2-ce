@@ -25,7 +25,8 @@ namespace fallout {
 
 const int MAX_ART_INDICES = 8192;
 
-static inline int artGetIndex(int fid) {
+static inline int artGetIndex(int fid)
+{
     int base_index = fid & 0xFFF;
     return (fid & 0x80000000) ? base_index + 4096 : base_index;
 }
@@ -246,7 +247,7 @@ static int artGetStableIndex(const char* filename, int vanillaCount, int variant
     // Step 3: Index space calculation
     // -------------------------------
     // Always use extended range (4096-8191) for mod assets
-    return 4096 + (hashValue % 4096);  // Returns value between 4096-8191
+    return 4096 + (hashValue % 4096); // Returns value between 4096-8191
 }
 
 int artGetFidWithVariant(int objectType, int baseId, bool useVariant)
@@ -468,8 +469,8 @@ int artInit()
 
         // MOD: Expand art lists to 8192 entries
         if (desc->fileNamesLength < MAX_ART_INDICES) {
-            char* newNames = (char*)internal_realloc(desc->fileNames, 
-                                                    MAX_ART_INDICES * FILENAME_LENGTH);
+            char* newNames = (char*)internal_realloc(desc->fileNames,
+                MAX_ART_INDICES * FILENAME_LENGTH);
             if (newNames) {
                 desc->fileNames = newNames;
                 // Initialize new slots to empty
@@ -500,7 +501,7 @@ int artInit()
         desc->modCount = 0;
 
         // Prepare index usage tracking array
-        memset(desc->usedIndices, 0, sizeof(desc->usedIndices));  // Now 8192 elements
+        memset(desc->usedIndices, 0, sizeof(desc->usedIndices)); // Now 8192 elements
 
         // Mark existing vanilla and variant indices as occupied
         for (int i = 0; i < desc->fileNamesLength; i++) {
@@ -605,14 +606,14 @@ int artInit()
                                 "Category: %s\n"
                                 "Vanilla assets: %d\n"
                                 "Variant assets: %d\n"
-                                "Total used: %d/%d\n\n"  // Changed to show 8192 max
+                                "Total used: %d/%d\n\n" // Changed to show 8192 max
                                 "Cannot add mod asset: %s\n\n"
                                 "No available index slots remain.",
                                 desc->name,
                                 desc->vanillaCount,
                                 desc->variantCount,
                                 desc->vanillaCount + desc->variantCount,
-                                MAX_ART_INDICES,  // Show new max
+                                MAX_ART_INDICES, // Show new max
                                 modAssetName);
                             showFatalError(errorMsg);
                             continue;
@@ -901,7 +902,7 @@ int artInit()
                 "Slot Ranges:\n"
                 "  Vanilla: 0-%d\n"
                 "  Variants: %d-%d\n"
-                "  Mods: %d-%d\n"  // Changed to 4096-8191
+                "  Mods: %d-%d\n" // Changed to 4096-8191
                 "------------------------------------------------------------\n",
                 desc->name,
                 totalAssets,
@@ -911,8 +912,8 @@ int artInit()
                 desc->vanillaCount - 1,
                 desc->vanillaCount,
                 desc->vanillaCount + desc->variantCount - 1,
-                4096,  // Start of mods
-                MAX_ART_INDICES - 1);  // End of mods (8191)
+                4096, // Start of mods
+                MAX_ART_INDICES - 1); // End of mods (8191)
             fileWrite(header, strlen(header), 1, artListFile);
 
             // Add capacity warning if category is full
@@ -1326,7 +1327,7 @@ char* artBuildFilePath(int fid)
     *_art_name = '\0';
 
     // Extract FID components
-    int id = artGetIndex(fid);  // Use helper function to get actual index
+    int id = artGetIndex(fid); // Use helper function to get actual index
     int animType = FID_ANIM_TYPE(fid);
     int weaponCode = (fid & 0xF000) >> 12;
     int objectType = FID_TYPE(fid);
@@ -1714,10 +1715,10 @@ int artAliasFid(int fid)
 {
     int type = FID_TYPE(fid);
     int anim = FID_ANIM_TYPE(fid);
-    
+
     // Preserve extended flag
     unsigned int ext_flag = fid & 0x80000000;
-    
+
     if (type == OBJ_TYPE_CRITTER) {
         if (anim == ANIM_ELECTRIFY
             || anim == ANIM_BURNED_TO_NOTHING
@@ -1728,12 +1729,7 @@ int artAliasFid(int fid)
             || anim == ANIM_FIRE_DANCE
             || anim == ANIM_CALLED_SHOT_PIC) {
             // Preserve extended flag in the aliased FID
-            return ext_flag | 
-                   (fid & 0x70000000) | 
-                   ((anim << 16) & 0xFF0000) | 
-                   0x1000000 | 
-                   (fid & 0xF000) | 
-                   (_anon_alias[fid & 0xFFF] & 0xFFF);
+            return ext_flag | (fid & 0x70000000) | ((anim << 16) & 0xFF0000) | 0x1000000 | (fid & 0xF000) | (_anon_alias[fid & 0xFFF] & 0xFFF);
         }
     }
 
@@ -1823,27 +1819,22 @@ static void artCacheFreeImpl(void* ptr)
 }
 
 static int buildFidInternal(unsigned int frmId, unsigned char weaponCode,
-                           unsigned char animType, unsigned char objectType, 
-                           unsigned char rotation) 
+    unsigned char animType, unsigned char objectType,
+    unsigned char rotation)
 {
     unsigned int ext_flag = 0;
-    
+
     // Handle extended indices (4096-8191)
     if (frmId >= 4096 && frmId < 8192) {
-        ext_flag = 0x80000000;  // Set bit 31
-        frmId -= 4096;          // Store index relative to 0-4095 range
+        ext_flag = 0x80000000; // Set bit 31
+        frmId -= 4096; // Store index relative to 0-4095 range
     } else if (frmId >= 8192) {
         // Error handling for out-of-range indices
         debugPrint("WARNING: art index %d exceeds maximum allowed value (8191)", frmId);
-        frmId = 0;  // Fallback to first art
+        frmId = 0; // Fallback to first art
     }
-    
-    return ext_flag |
-           ((rotation << 28) & 0x70000000) |
-           (objectType << 24) |
-           ((animType << 16) & 0xFF0000) |
-           ((weaponCode << 12) & 0xF000) |
-           (frmId & 0xFFF);  // Last 12 bits store the index
+
+    return ext_flag | ((rotation << 28) & 0x70000000) | (objectType << 24) | ((animType << 16) & 0xFF0000) | ((weaponCode << 12) & 0xF000) | (frmId & 0xFFF); // Last 12 bits store the index
 }
 
 // 0x419C88

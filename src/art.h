@@ -9,7 +9,7 @@
 #include "proto_types.h"
 
 #define FILENAME_LENGTH 32 // Standardized filename buffer size
-#define ART_INDEX_MAX 8192  // Maximum art indices supported
+#define ART_INDEX_MAX 8192 // Maximum art indices supported
 #define ART_VANILLA_MAX 4095 // Last vanilla index
 
 namespace fallout {
