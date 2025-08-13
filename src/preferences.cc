@@ -77,7 +77,7 @@ static const int gPreferencesWindowFrmIds[PREFERENCES_WINDOW_FRM_COUNT] = {
     8, // lilredup.frm - little red button up
     9, // lilreddn.frm - little red button down
     172, // autoup.frm - toggle switch up
-    1775 // prfdial.frm - large dial
+    6365 // prfdial.frm - large dial
 };
 
 // 0x6637E8
