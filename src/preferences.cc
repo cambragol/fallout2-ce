@@ -4,6 +4,7 @@
 
 #include <algorithm>
 
+#include "SDL.h"
 #include "art.h"
 #include "color.h"
 #include "combat.h"
@@ -18,6 +19,7 @@
 #include "graph_lib.h"
 #include "input.h"
 #include "kb.h"
+#include "math.h"
 #include "memory.h"
 #include "message.h"
 #include "mouse.h"
@@ -26,8 +28,6 @@
 #include "scripts.h"
 #include "settings.h"
 #include "svga.h"
-#include "SDL.h"
-#include "math.h"
 #include "text_font.h"
 #include "text_object.h"
 #include "window_manager.h"
@@ -443,22 +443,22 @@ void applyPlayAreaResolution()
 {
     if (GameMode::isInGameMode(GameMode::kPreferences)) {
         SDL_DisplayMode dm;
-        int displayIndex = 0;  // Primary display
+        int displayIndex = 0; // Primary display
 
         switch (gPreferencesPlayArea1) {
-        case 0:  // Default
+        case 0: // Default
             settings.graphics.game_width = 640;
             settings.graphics.game_height = 480;
             break;
-        case 1:  // Normal
+        case 1: // Normal
             settings.graphics.game_width = 800;
             settings.graphics.game_height = 500;
             break;
-        case 2:  // Large - 75% of screen size
-        case 3:  // Massive - Full screen size
+        case 2: // Large - 75% of screen size
+        case 3: // Massive - Full screen size
             if (SDL_GetCurrentDisplayMode(displayIndex, &dm) == 0) {
                 float scale = (gPreferencesPlayArea1 == 2) ? 0.75f : 1.0f;
-                
+
                 // Calculate target dimensions while maintaining screen aspect ratio
                 settings.graphics.game_width = (int)roundf(dm.w * scale);
                 settings.graphics.game_height = (int)roundf(dm.h * scale);
@@ -468,7 +468,7 @@ void applyPlayAreaResolution()
                 settings.graphics.game_height = (gPreferencesPlayArea1 == 2) ? 720 : 1080;
             }
             break;
-        default:  // Fallback
+        default: // Fallback
             settings.graphics.game_width = 800;
             settings.graphics.game_height = 500;
             break;
@@ -1747,7 +1747,8 @@ static int preferencesWindowFree()
     return 0;
 }
 
-static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaChanged) {
+static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaChanged)
+{
     if (widescreenChanged || playAreaChanged) {
         // Warning dialog (Yes/No)
         const int titleMsgId = widescreenChanged ? 100 : 105;
@@ -1755,7 +1756,7 @@ static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaC
         const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 101);
         const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 102);
         const char* bodyLines[] = { bodyText, bodyText2 };
-        
+
         soundPlayFile("iisxxxx1");
         return showDialogBox(
             title,
@@ -1765,14 +1766,13 @@ static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaC
             _colorTable[32328],
             nullptr,
             _colorTable[32328],
-            DIALOG_BOX_YES_NO
-        );
+            DIALOG_BOX_YES_NO);
     } else {
         // Info dialog (OK)
         const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 103);
         const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 104);
         const char* bodyLines[] = { bodyText };
-        
+
         showDialogBox(
             title,
             bodyLines,
@@ -1781,7 +1781,7 @@ static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaC
             _colorTable[32328],
             nullptr,
             _colorTable[32328],
-            1  // DIALOG_BOX_OK
+            1 // DIALOG_BOX_OK
         );
         return 1; // Always proceed after info dialog
     }
@@ -1824,10 +1824,10 @@ int doPreferences(bool animated)
         case 504:
             if (_graphics_changed) {
                 int dialogResult = showGraphicsConfirmationDialog(_widescreen_changed, _play_area_changed);
-                
+
                 // Handle dialog results
                 if (dialogResult == 1) {
-                    rc = 1;  // User confirmed - save and exit
+                    rc = 1; // User confirmed - save and exit
                 } else if (dialogResult == 0) {
                     rc = -1; // User canceled - stay in preferences
                 }

@@ -374,18 +374,16 @@ int screenGetVisibleHeight()
 static bool createRenderer(int width, int height)
 {
     gSdlRenderer = SDL_CreateRenderer(
-        gSdlWindow, 
-        -1, 
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-    );
+        gSdlWindow,
+        -1,
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     if (!gSdlRenderer) {
         // Try without VSYNC if accelerated fails
         gSdlRenderer = SDL_CreateRenderer(
-            gSdlWindow, 
-            -1, 
-            SDL_RENDERER_ACCELERATED
-        );
+            gSdlWindow,
+            -1,
+            SDL_RENDERER_ACCELERATED);
     }
 
     if (!gSdlRenderer) {
