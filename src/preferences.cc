@@ -26,6 +26,8 @@
 #include "scripts.h"
 #include "settings.h"
 #include "svga.h"
+#include "SDL.h"
+#include "math.h"
 #include "text_font.h"
 #include "text_object.h"
 #include "window_manager.h"
@@ -85,6 +87,10 @@ static MessageList gPreferencesMessageList;
 
 // 0x663840
 static MessageListItem gPreferencesMessageListItem;
+
+static MessageList gFissionMessageList;
+
+static MessageListItem gFissionMessageListItem;
 
 // 0x6638C8
 static double gPreferencesTextBaseDelay2;
@@ -203,6 +209,8 @@ static bool _changed;
 static bool _graphics_changed;
 
 static bool _widescreen_changed;
+
+static bool _play_area_changed;
 
 // 0x6639AC
 static int gPreferencesCombatMessages1;
@@ -433,106 +441,39 @@ void preferencesWriteDefaultOffsetsToConfig(bool isWidescreen, const Preferences
 
 void applyPlayAreaResolution()
 {
-    switch (gPreferencesPlayArea1) {
-    case 0:
-        settings.graphics.game_width = 640;
-        settings.graphics.game_height = 480;
-        break;
-    case 1:
-        settings.graphics.game_width = 800;
-        settings.graphics.game_height = 500;
-        break;
-    case 2:
-        settings.graphics.game_width = 1280;
-        settings.graphics.game_height = 720;
-        break;
-    case 3:
-        settings.graphics.game_width = 1920;
-        settings.graphics.game_height = 1080;
-        break;
-    default:
-        // Handle unexpected values - fallback to default
-        settings.graphics.game_width = 800;
-        settings.graphics.game_height = 500;
-        break;
-    }
-    /*if (gameIsWidescreen()) {
-    // Wide screen resolutions (16:9 or 16:10 aspect ratios)
-    switch (gPreferencesPlayArea1) {
-        case 0:
-            settings.graphics.game_width = 1280;
-            settings.graphics.game_height = 720;  // 16:9
-            break;
-        case 1:
-            settings.graphics.game_width = 1366;
-            settings.graphics.game_height = 768;  // 16:9
-            break;
-        case 2:
-            settings.graphics.game_width = 1600;
-            settings.graphics.game_height = 900;  // 16:9
-            break;
-        case 3:
-            settings.graphics.game_width = 1920;
-            settings.graphics.game_height = 1080; // 16:9
-            break;
-        default:
-            settings.graphics.game_width = 1280;
-            settings.graphics.game_height = 720;
-            break;
-    }
-} else {
-    // Non-wide screen resolutions (4:3 or 5:4 aspect ratios)
-    switch (gPreferencesPlayArea1) {
-        case 0:
+    if (GameMode::isInGameMode(GameMode::kPreferences)) {
+        SDL_DisplayMode dm;
+        int displayIndex = 0;  // Primary display
+
+        switch (gPreferencesPlayArea1) {
+        case 0:  // Default
             settings.graphics.game_width = 640;
-            settings.graphics.game_height = 480;   // 4:3
+            settings.graphics.game_height = 480;
             break;
-        case 1:
+        case 1:  // Normal
             settings.graphics.game_width = 800;
-            settings.graphics.game_height = 600;   // 4:3
+            settings.graphics.game_height = 500;
             break;
-        case 2:
-            settings.graphics.game_width = 1024;
-            settings.graphics.game_height = 768;   // 4:3
+        case 2:  // Large - 75% of screen size
+        case 3:  // Massive - Full screen size
+            if (SDL_GetCurrentDisplayMode(displayIndex, &dm) == 0) {
+                float scale = (gPreferencesPlayArea1 == 2) ? 0.75f : 1.0f;
+                
+                // Calculate target dimensions while maintaining screen aspect ratio
+                settings.graphics.game_width = (int)roundf(dm.w * scale);
+                settings.graphics.game_height = (int)roundf(dm.h * scale);
+            } else {
+                // Fallback if SDL query fails
+                settings.graphics.game_width = (gPreferencesPlayArea1 == 2) ? 1280 : 1920;
+                settings.graphics.game_height = (gPreferencesPlayArea1 == 2) ? 720 : 1080;
+            }
             break;
-        case 3:
-            settings.graphics.game_width = 1280;
-            settings.graphics.game_height = 1024;  // 5:4
-            break;
-        default:
+        default:  // Fallback
             settings.graphics.game_width = 800;
-            settings.graphics.game_height = 600;
+            settings.graphics.game_height = 500;
             break;
+        }
     }
-}*/
-    // gameConfigSave();
-
-    // Rebuild everything
-    /* backgroundSoundPause(); // Pause music to avoid audio glitch
-     handleWindowSizeChanged();
-     backgroundSoundResume();*/
-}
-
-void applyWidescreenPreference(bool widescreen)
-{
-    // Compute and clamp desired resolution
-    int newWidth = widescreen ? std::max(settings.graphics.game_width, 800) : 640;
-    int newHeight = widescreen ? std::max(settings.graphics.game_height, 500) : 480;
-
-    // Sync into settings & .cfg
-    settings.graphics.game_width = newWidth;
-    settings.graphics.game_height = newHeight;
-    // settings.graphics.widescreen  = widescreen;
-
-    // configSetInt(&gGameConfig, "graphics", "game_width", newWidth);
-    // configSetInt(&gGameConfig, "graphics", "game_height", newHeight);
-    //  configSetBool(&gGameConfig, "graphics", "widescreen", widescreen);
-    gameConfigSave();
-
-    // Rebuild everything
-    backgroundSoundPause(); // Pause music to avoid audio glitch
-    handleWindowSizeChanged();
-    backgroundSoundResume();
 }
 
 int preferencesInit()
@@ -769,7 +710,6 @@ static void _JustUpdate_()
     mouseSetSensitivity(gPreferencesMouseSensitivity1);
     colorSetBrightness(gPreferencesBrightness1);
     applyPlayAreaResolution();
-    // applyWidescreenPreference(gPreferencesWidescreen1);
 }
 
 // for testing background blitting location
@@ -919,7 +859,7 @@ static void _UpdateThing(int index)
 
         // Tertiary options are booleans, so it's index is also it's value.
         for (int value = 0; value < 2; value++) {
-            const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[value]);
+            const char* text = getmsg(&gFissionMessageList, &gFissionMessageListItem, meta->labelIds[value]);
 
             char copy[100]; // TODO: Verify buffer size is sufficient
             strcpy(copy, text);
@@ -1023,7 +963,7 @@ static void _UpdateThing(int index)
         // fillRectWithColor(gPreferencesWindowBuffer, pitch, x, y, width, height, color);
 
         for (int valueIndex = 0; valueIndex < meta->valuesCount; valueIndex++) {
-            const char* text = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, meta->labelIds[valueIndex]);
+            const char* text = getmsg(&gFissionMessageList, &gFissionMessageListItem, meta->labelIds[valueIndex]);
 
             char copy[100]; // TODO: Size is probably wrong.
             strcpy(copy, text);
@@ -1508,6 +1448,16 @@ static int preferencesWindowInit()
         return -1;
     }
 
+    if (!messageListInit(&gFissionMessageList)) {
+        return -1;
+    }
+
+    char fissionPath[COMPAT_MAX_PATH];
+    snprintf(fissionPath, sizeof(fissionPath), "%s%s", asc_5186C8, "fission.msg");
+    if (!messageListLoad(&gFissionMessageList, fissionPath)) {
+        return -1;
+    }
+
     _oldFont = fontGetCurrent();
 
     _SaveSettings();
@@ -1531,6 +1481,7 @@ static int preferencesWindowInit()
     _changed = false;
     _graphics_changed = false;
     _widescreen_changed = false;
+    _play_area_changed = false;
 
     int preferencesWindowX = (screenGetWidth() - gOffsets.width) / 2;
     int preferencesWindowY = (screenGetHeight() - gOffsets.height) / 2;
@@ -1577,7 +1528,7 @@ static int preferencesWindowInit()
         // Draw tertiary preference main labels
         messageItemIdNew = 124;
         for (i = 0; i < TERTIARY_PREF_COUNT; i++) {
-            messageItemText = getmsg(&gPreferencesMessageList, &gPreferencesMessageListItem, messageItemIdNew++);
+            messageItemText = getmsg(&gFissionMessageList, &gFissionMessageListItem, messageItemIdNew++);
             x = gOffsets.terLabelColX - fontGetStringWidth(messageItemText) / 2;
             fontDrawText(gPreferencesWindowBuffer + gOffsets.width * gOffsets.row2bYtab[i] + x,
                 messageItemText, gOffsets.width, gOffsets.width, _colorTable[18979]);
@@ -1796,6 +1747,46 @@ static int preferencesWindowFree()
     return 0;
 }
 
+static int showGraphicsConfirmationDialog(bool widescreenChanged, bool playAreaChanged) {
+    if (widescreenChanged || playAreaChanged) {
+        // Warning dialog (Yes/No)
+        const int titleMsgId = widescreenChanged ? 100 : 105;
+        const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, titleMsgId);
+        const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 101);
+        const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 102);
+        const char* bodyLines[] = { bodyText, bodyText2 };
+        
+        soundPlayFile("iisxxxx1");
+        return showDialogBox(
+            title,
+            bodyLines,
+            2,
+            192, 160,
+            _colorTable[32328],
+            nullptr,
+            _colorTable[32328],
+            DIALOG_BOX_YES_NO
+        );
+    } else {
+        // Info dialog (OK)
+        const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 103);
+        const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 104);
+        const char* bodyLines[] = { bodyText };
+        
+        showDialogBox(
+            title,
+            bodyLines,
+            1,
+            192, 135,
+            _colorTable[32328],
+            nullptr,
+            _colorTable[32328],
+            1  // DIALOG_BOX_OK
+        );
+        return 1; // Always proceed after info dialog
+    }
+}
+
 // 0x490798
 int doPreferences(bool animated)
 {
@@ -1832,53 +1823,13 @@ int doPreferences(bool animated)
             // FALLTHROUGH
         case 504:
             if (_graphics_changed) {
-                int dialogResult = -1;
-
-                if (_widescreen_changed) {
-                    const char* title = "Turning off Widescreen will disable\n";
-                    const char* bodyText = "the extended preference screen.\n"
-                                           "\n"
-                                           "Are you sure you want to continue?";
-                    const char* bodyLines[] = { bodyText };
-                    soundPlayFile("iisxxxx1");
-                    // Show Yes/No dialog
-                    dialogResult = showDialogBox(
-                        title,
-                        bodyLines,
-                        1,
-                        192, 160,
-                        _colorTable[32328],
-                        nullptr,
-                        _colorTable[32328],
-                        DIALOG_BOX_YES_NO);
-                } else {
-                    const char* title = "Graphics changes will take effect\n";
-                    const char* bodyText = "on reload.";
-                    const char* bodyLines[] = { bodyText };
-
-                    // Show OK dialog
-                    showDialogBox(
-                        title,
-                        bodyLines,
-                        1,
-                        192, 135,
-                        _colorTable[32328],
-                        nullptr,
-                        _colorTable[32328],
-                        1);
-                    // For non-widescreen, always proceed
-                    dialogResult = 1;
-                }
-
+                int dialogResult = showGraphicsConfirmationDialog(_widescreen_changed, _play_area_changed);
+                
                 // Handle dialog results
                 if (dialogResult == 1) {
-                    // User confirmed - save changes and exit
-                    rc = 1; // Exit preferences screen
+                    rc = 1;  // User confirmed - save and exit
                 } else if (dialogResult == 0) {
-                    // User canceled widescreen change - stay in preferences
-                    // Give user opportunity to restorn 'widescreen'? - so no changes
-                    // Reset rc to -1 to keep looping
-                    rc = -1;
+                    rc = -1; // User canceled - stay in preferences
                 }
             } else {
                 // No graphics changes - exit immediately
@@ -1902,6 +1853,7 @@ int doPreferences(bool animated)
             takeScreenshot();
             break;
         case 533:
+            showGraphicsConfirmationDialog(false, false);
             preferencesSetDefaults(true);
             break;
         default:
@@ -2192,9 +2144,9 @@ static void _DoThing(int eventCode)
             _changed = true;
             _graphics_changed = true;
             if (*currentValuePtr == 0) {
-                _widescreen_changed = true;
+                _play_area_changed = true;
             } else {
-                _widescreen_changed = false;
+                _play_area_changed = false;
             }
             return;
         }
