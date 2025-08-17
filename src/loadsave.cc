@@ -1602,7 +1602,7 @@ int lsgLoadGame(int mode)
     }
 
     if (mode == LOAD_SAVE_MODE_FROM_MAIN_MENU) {
-        if (rc == 0){
+        if (rc == 0) {
             // fade to black on return to Main Menu
             paletteFadeTo(gPaletteBlack);
             lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
