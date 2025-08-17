@@ -149,41 +149,50 @@ int falloutMain(int argc, char** argv)
 
                 break;
             case MAIN_MENU_LOAD_GAME:
+                mainMenuWindowHide(true);
+                mainMenuWindowFree();
                 if (1) {
                     int win = windowCreate(0, 0, screenGetWidth(), screenGetHeight(), _colorTable[0], WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
-                    mainMenuWindowHide(true);
-                    mainMenuWindowFree();
 
-                    // NOTE: Uninline.
-                    main_loadgame_new();
+                    main_loadgame_new(); // NOTE: Uninline.
 
-                    colorPaletteLoad("color.pal");
-                    paletteFadeTo(_cmap);
                     int loadGameRc = lsgLoadGame(LOAD_SAVE_MODE_FROM_MAIN_MENU);
+
                     if (loadGameRc == -1) {
                         debugPrint("\n ** Error running LoadGame()! **\n");
                     } else if (loadGameRc != 0) {
+                        // Handle successful load (non-zero return)
+                        // fade to white on entering loaded game
+                        paletteFadeTo(gPaletteWhite);
+
                         windowDestroy(win);
+
+                        // fade in from white on entering loaded game
+                        colorPaletteLoad("color.pal");
+                        paletteFadeTo(_cmap);
                         win = -1;
+
                         mainLoop();
+
+                        // fade to white when leaving game
+                        paletteFadeTo(gPaletteWhite);
                     }
-                    paletteFadeTo(gPaletteWhite);
+
+                    // Cleanup (runs whether loadGameRc was 0, -1, or non-zero)
                     if (win != -1) {
                         windowDestroy(win);
                     }
 
-                    // NOTE: Uninline.
-                    main_unload_new();
+                    main_unload_new(); // Called exactly once
+                    main_reset_system(); // Called exactly once
 
-                    // NOTE: Uninline.
-                    main_reset_system();
-
+                    // Show death scene if flagged
                     if (_main_show_death_scene != 0) {
                         showDeath();
                         _main_show_death_scene = 0;
                     }
-                    mainMenuWindowInit();
                 }
+                mainMenuWindowInit();
                 break;
             case MAIN_MENU_TIMEOUT:
                 debugPrint("Main menu timed-out\n");

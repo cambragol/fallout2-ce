@@ -44,7 +44,7 @@ const CharacterEditorOffsets gCharEditorOffsets640 = {
     480, // windowHeight
 
     // Buttons
-    9, // nameButtonX
+    15, // nameButtonX
     0, // nameButtonY
     347, // tagSkillsButtonX
     26, // tagSkillsButtonY
@@ -261,7 +261,7 @@ const CharacterEditorOffsets gCharEditorOffsets800 = {
     500, // windowHeight
 
     // Buttons
-    9, // nameButtonX
+    15, // nameButtonX
     10, // nameButtonY
     427, // tagSkillsButtonX
     36, // tagSkillsButtonY

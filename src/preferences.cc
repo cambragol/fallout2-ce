@@ -441,7 +441,7 @@ void preferencesWriteDefaultOffsetsToConfig(bool isWidescreen, const Preferences
 
 void applyPlayAreaResolution()
 {
-    if (GameMode::isInGameMode(GameMode::kPreferences)) {
+    if (GameMode::isInGameMode(GameMode::kPreferences)) { // only apply play area settings when in preference screen (otherwise get graphics bug)
         SDL_DisplayMode dm;
         int displayIndex = 0; // Primary display
 

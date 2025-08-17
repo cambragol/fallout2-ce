@@ -1831,7 +1831,6 @@ static int buildFidInternal(unsigned int frmId, unsigned char weaponCode,
     } else if (frmId >= 8192) {
         // Error handling for out-of-range indices
         debugPrint("WARNING: art index %d exceeds maximum allowed value (8191)", frmId);
-        frmId = 0; // Fallback to first art
     }
 
     return ext_flag | ((rotation << 28) & 0x70000000) | (objectType << 24) | ((animType << 16) & 0xFF0000) | ((weaponCode << 12) & 0xF000) | (frmId & 0xFFF); // Last 12 bits store the index

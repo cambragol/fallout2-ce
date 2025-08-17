@@ -4175,7 +4175,7 @@ static int characterEditorShowOptions()
             ? (screenGetHeight() - _editorFrmImages[41].getHeight()) / 2
             : 90;
 
-        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
         if (win == -1) {
             return -1;
         }
