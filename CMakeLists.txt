@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
-set(EXECUTABLE_NAME fallout-fission)
+set(EXECUTABLE_NAME fallout2-ce)
 
 if(APPLE)
     if(IOS)
