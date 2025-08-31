@@ -1493,8 +1493,8 @@ int lsgLoadGame(int mode)
                             gOffsets.windowWidth);
                         blitBufferToBufferStretch(
                             _thumbnail_image,
-                            LS_PREVIEW_WIDTH,
-                            LS_PREVIEW_HEIGHT,
+                            LS_PREVIEW_WIDTH - 1,
+                            LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
                             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                             gOffsets.previewWidth,
@@ -1543,8 +1543,8 @@ int lsgLoadGame(int mode)
                         gOffsets.windowWidth);
                     blitBufferToBufferStretch(
                         _thumbnail_image,
-                        LS_PREVIEW_WIDTH,
-                        LS_PREVIEW_HEIGHT,
+                        LS_PREVIEW_WIDTH - 1,
+                        LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
                         gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                         gOffsets.previewWidth,

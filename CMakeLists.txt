@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 
-set(EXECUTABLE_NAME fallout2-ce)
+set(EXECUTABLE_NAME fallout-fission)
 
 if(APPLE)
     if(IOS)
@@ -331,6 +331,7 @@ if(APPLE)
         set(RESOURCES
             "os/ios/AppIcon.xcassets"
             "os/ios/LaunchScreen.storyboard"
+            "os/macos/fission.dat"
         )
 
         target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
@@ -344,25 +345,26 @@ if(APPLE)
         )
 
         set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
-        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
+        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout-Fission")
     else()
         set(RESOURCES
-            "os/macos/fallout2-ce.icns"
+            "os/macos/fallout-fission.icns"
+            "os/macos/fission.dat"
         )
 
         target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
         set_source_files_properties(${RESOURCES} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
         set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-            OUTPUT_NAME "Fallout II Community Edition"
+            OUTPUT_NAME "Fallout-Fission"
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist"
             XCODE_ATTRIBUTE_EXECUTABLE_NAME "${EXECUTABLE_NAME}"
             XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.alexbatalov.fallout2-ce"
         )
 
-        set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
-        set(MACOSX_BUNDLE_BUNDLE_NAME "Fallout II: Community Edition")
-        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout II")
+        set(MACOSX_BUNDLE_ICON_FILE "fallout-fission.icns")
+        set(MACOSX_BUNDLE_BUNDLE_NAME "Fallout-Fission")
+        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout-Fission")
     endif()
 
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
@@ -440,14 +442,14 @@ if(APPLE)
 
         set(CPACK_GENERATOR "ZIP")
         set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
-        set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
+        set(CPACK_PACKAGE_FILE_NAME "fallout-fission")
         set(CPACK_ARCHIVE_FILE_EXTENSION "ipa")
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
 
         set(CPACK_GENERATOR "DragNDrop")
         set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
-        set(CPACK_PACKAGE_FILE_NAME "Fallout II Community Edition")
+        set(CPACK_PACKAGE_FILE_NAME "Fallout-Fission")
     endif()
 
     include(CPack)

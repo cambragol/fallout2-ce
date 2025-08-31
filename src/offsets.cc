@@ -628,7 +628,7 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     500, // windowHeight
 
     // Preview
-    268, // previewWidth
+    270, // previewWidth
     145, // previewHeight
     452, // previewX
     55, // previewY

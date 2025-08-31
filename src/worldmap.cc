@@ -3923,7 +3923,8 @@ int wmSetupRandomEncounter()
                 if (prevCritter != nullptr) {
                     if (prevCritter != critter) {
                         if (encounterTableEntry->subEntiesLength != 1) {
-                            if (encounterTableEntry->subEntiesLength == 2 && !isInCombat()) {
+                            // prevents crash on worldmap when one of two groups of critters fails to spawn
+                            if (encounterTableEntry->subEntiesLength == 2 && !isInCombat() && critter != nullptr) {
                                 prevCritter->data.critter.combat.whoHitMe = critter;
                                 critter->data.critter.combat.whoHitMe = prevCritter;
 
@@ -6308,7 +6309,7 @@ static int wmTownMapInit()
         return -1;
     }
 
-    int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 167, gameIsWidescreen());
+    int fid = buildFid(OBJ_TYPE_INTERFACE, 4132, 0, 0, 0);
     if (!_townBackgroundFrmImage.lock(fid)) {
         return -1;
     }

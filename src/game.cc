@@ -1350,30 +1350,30 @@ static int gameDbInit()
         }
     }
 
-    // Helper lambda to actually open the CE datafile
-    auto loadFalloutCe = [&]() -> int {
-        const char* main_file_name = settings.system.falloutce_dat_path.c_str();
-        const char* patch_file_name = settings.system.falloutce_patches_path.c_str();
+    // Helper lambda to actually open the fission datafile
+    auto loadFission = [&]() -> int {
+        const char* main_file_name = settings.system.fission_dat_path.c_str();
+        const char* patch_file_name = settings.system.fission_patches_path.c_str();
         if (*patch_file_name == '\0') {
             patch_file_name = nullptr;
         }
         int handle = dbOpen(main_file_name, 0, patch_file_name, 1);
         if (handle == -1) {
             showMesageBox(
-                "Could not find the falloutce datafile. "
-                "Please make sure the falloutce.dat file is in the folder "
+                "Could not find the fission datafile. "
+                "Please make sure the fission.dat file is in the folder "
                 "that you are running FALLOUT from.");
         }
         return handle;
     };
 
-    bool hasFalloutCe = !settings.system.falloutce_dat_path.empty();
+    bool hasFission = !settings.system.fission_dat_path.empty();
     bool useMasterOverride = settings.system.master_override;
 
     // If master.dat is *not* the “original” AND override is *not* set,
-    // then load falloutce.dat *before* master.dat.
-    if (!is_original && !useMasterOverride && hasFalloutCe) {
-        if (loadFalloutCe() == -1)
+    // then load fission.dat *before* master.dat.
+    if (!is_original && !useMasterOverride && hasFission) {
+        if (loadFission() == -1)
             return -1;
     }
 
@@ -1399,10 +1399,10 @@ static int gameDbInit()
     }
 
     // If master.dat *is* the original, OR if override is set,
-    // then load falloutce.dat *after* master.dat.
-    if ((is_original || useMasterOverride) && hasFalloutCe) {
+    // then load fission.dat *after* master.dat.
+    if ((is_original || useMasterOverride) && hasFission) {
 
-        if (loadFalloutCe() == -1)
+        if (loadFission() == -1)
             return -1;
     }
 
