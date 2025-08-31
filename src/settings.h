@@ -13,12 +13,12 @@ struct SystemSettings {
     std::string master_patches_path = "data";
     std::string critter_dat_path = "critter.dat";
     std::string critter_patches_path = "data";
-    #ifdef __APPLE__
+#ifdef __APPLE__
     std::string fission_dat_path = "Fallout-Fission.app/Contents/Resources/fission.dat";
-    //std::string fission_dat_path = "fission.dat";
-    #else
+// std::string fission_dat_path = "fission.dat";
+#else
     std::string fission_dat_path = "fission.dat";
-    #endif    
+#endif
     std::string fission_patches_path = "data";
     std::string language = ENGLISH;
     bool master_override;

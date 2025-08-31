@@ -617,7 +617,7 @@ void renderPresent()
     }
 
     // Background color for tracking screen stretching issues
-    //SDL_SetRenderDrawColor(gSdlRenderer, 0, 0, 0, 255);
+    // SDL_SetRenderDrawColor(gSdlRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gSdlRenderer);
 
     SDL_RenderCopy(gSdlRenderer, gSdlTexture, &srcRect, &destRect);

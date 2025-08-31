@@ -179,7 +179,6 @@ int mainMenuWindowInit()
 
     blitBufferToBuffer(_mainMenuBackgroundFrmImage.getData(), gOffsets.width, gOffsets.height, gOffsets.width, gMainMenuWindowBuffer, gOffsets.width);
     _mainMenuBackgroundFrmImage.unlock();
-    
 
     int oldFont = fontGetCurrent();
     fontSetCurrent(100);
@@ -216,12 +215,12 @@ int mainMenuWindowInit()
     }
 
     blitBufferToBufferTrans(
-                _mainMenuFissionLogoFrmImage.getData(),
-                _mainMenuFissionLogoFrmImage.getWidth(),
-                _mainMenuFissionLogoFrmImage.getHeight(),
-                _mainMenuFissionLogoFrmImage.getWidth(),
-                gMainMenuWindowBuffer + gOffsets.width * (gOffsets.hashY - 2) + gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
-                gOffsets.width);
+        _mainMenuFissionLogoFrmImage.getData(),
+        _mainMenuFissionLogoFrmImage.getWidth(),
+        _mainMenuFissionLogoFrmImage.getHeight(),
+        _mainMenuFissionLogoFrmImage.getWidth(),
+        gMainMenuWindowBuffer + gOffsets.width * (gOffsets.hashY - 2) + gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
+        gOffsets.width);
 
     // Version.
     char version[VERSION_MAX];
@@ -231,7 +230,7 @@ int mainMenuWindowInit()
 
     // Hash
     char commitHash[VERSION_MAX] = "POWERED BY: ";
-    //strcat(commitHash, _BUILD_HASH);
+    // strcat(commitHash, _BUILD_HASH);
     len = fontGetStringWidth(commitHash);
     windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.versionX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.versionY, fontSettings | 0x06000000);
 

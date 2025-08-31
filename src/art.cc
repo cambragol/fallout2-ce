@@ -485,65 +485,64 @@ int artInit()
         // ------------------
         // Search for mod list files in this art category using pattern:
         // <game_dir>/art/<category>/mod_*.lst
- char searchPattern[COMPAT_MAX_PATH];
-snprintf(searchPattern, sizeof(searchPattern),
-    "%sart%c%s%c*.lst",
-    _cd_path_base,
-    DIR_SEPARATOR,
-    desc->name,
-    DIR_SEPARATOR);
+        char searchPattern[COMPAT_MAX_PATH];
+        snprintf(searchPattern, sizeof(searchPattern),
+            "%sart%c%s%c*.lst",
+            _cd_path_base,
+            DIR_SEPARATOR,
+            desc->name,
+            DIR_SEPARATOR);
 
-// Find all matching .lst files
-char** foundModFiles = nullptr;
-int modFileCount = fileNameListInit(searchPattern, &foundModFiles, 0, 0);
+        // Find all matching .lst files
+        char** foundModFiles = nullptr;
+        int modFileCount = fileNameListInit(searchPattern, &foundModFiles, 0, 0);
 
-// Initialize mod tracking
-desc->modCount = 0;
+        // Initialize mod tracking
+        desc->modCount = 0;
 
-// Prepare index usage tracking array
-memset(desc->usedIndices, 0, sizeof(desc->usedIndices)); // Now 8192 elements
+        // Prepare index usage tracking array
+        memset(desc->usedIndices, 0, sizeof(desc->usedIndices)); // Now 8192 elements
 
-// Mark existing vanilla and variant indices as occupied
-for (int i = 0; i < desc->fileNamesLength; i++) {
-    desc->usedIndices[i] = true;
-}
+        // Mark existing vanilla and variant indices as occupied
+        for (int i = 0; i < desc->fileNamesLength; i++) {
+            desc->usedIndices[i] = true;
+        }
 
-if (modFileCount > 0) {
-    // Build base directory path for this art category
-    char baseDir[COMPAT_MAX_PATH];
-    snprintf(baseDir, sizeof(baseDir), "%sart%c%s%c",
-        _cd_path_base,
-        DIR_SEPARATOR,
-        desc->name,
-        DIR_SEPARATOR);
+        if (modFileCount > 0) {
+            // Build base directory path for this art category
+            char baseDir[COMPAT_MAX_PATH];
+            snprintf(baseDir, sizeof(baseDir), "%sart%c%s%c",
+                _cd_path_base,
+                DIR_SEPARATOR,
+                desc->name,
+                DIR_SEPARATOR);
 
-    // Sort files to ensure fission.lst is processed first
-    for (int i = 0; i < modFileCount - 1; i++) {
-        for (int j = i + 1; j < modFileCount; j++) {
-            // Move fission.lst to the front
-            if (strcmp(foundModFiles[j], "fission.lst") == 0) {
-                char* temp = foundModFiles[i];
-                foundModFiles[i] = foundModFiles[j];
-                foundModFiles[j] = temp;
-                break;
+            // Sort files to ensure fission.lst is processed first
+            for (int i = 0; i < modFileCount - 1; i++) {
+                for (int j = i + 1; j < modFileCount; j++) {
+                    // Move fission.lst to the front
+                    if (strcmp(foundModFiles[j], "fission.lst") == 0) {
+                        char* temp = foundModFiles[i];
+                        foundModFiles[i] = foundModFiles[j];
+                        foundModFiles[j] = temp;
+                        break;
+                    }
+                }
             }
-        }
-    }
 
-    // Process each found mod list file
-    for (int i = 0; i < modFileCount; i++) {
-        // Skip files that don't match our expected patterns
-        if (strcmp(foundModFiles[i], "fission.lst") != 0 && 
-            strncmp(foundModFiles[i], "mod_", 4) != 0) {
-            continue;
-        }
+            // Process each found mod list file
+            for (int i = 0; i < modFileCount; i++) {
+                // Skip files that don't match our expected patterns
+                if (strcmp(foundModFiles[i], "fission.lst") != 0 && strncmp(foundModFiles[i], "mod_", 4) != 0) {
+                    continue;
+                }
 
-        // Construct full path to mod list
-        char fullPath[COMPAT_MAX_PATH];
-        snprintf(fullPath, sizeof(fullPath), "%s%s", baseDir, foundModFiles[i]);
+                // Construct full path to mod list
+                char fullPath[COMPAT_MAX_PATH];
+                snprintf(fullPath, sizeof(fullPath), "%s%s", baseDir, foundModFiles[i]);
 
-        char* modEntries = nullptr;
-        int modEntryCount = 0;
+                char* modEntries = nullptr;
+                int modEntryCount = 0;
 
                 // Load assets from mod list file
                 if (artReadList(fullPath, &modEntries, &modEntryCount) == 0) {
