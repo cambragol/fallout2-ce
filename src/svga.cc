@@ -27,6 +27,7 @@ static bool gPreserveAspect = true; // used internally for stretching
 static bool gUserAspectPreference = true; // store user preference for restore
 static bool gHighQuality = false; // maybe false by default
 static bool gSquarePixels = false;
+static bool gWidescreen = false;
 
 static int gContentWidth = 800;
 static int gContentHeight = 500;
@@ -117,7 +118,7 @@ void restoreUserAspectPreference()
 
 bool gameIsWidescreen()
 {
-    return (settings.graphics.game_width >= 800 && settings.graphics.game_height >= 500 && settings.graphics.widescreen);
+    return (gWidescreen); // changed to be set in init, to prevent mid-game widescreen asset changes
 }
 
 // 0x4CAE1C
@@ -128,6 +129,10 @@ int _GNW95_init_mode_ex(int width, int height, int bpp)
     width = settings.graphics.game_width;
     height = settings.graphics.game_height;
     fullscreen = settings.graphics.fullscreen;
+
+    if (width >= 800 && height >= 500 && settings.graphics.widescreen) {
+        gWidescreen = true; // set here to prevent mid game widescreen setting changes (from preferences)
+    }
 
     configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, &gInterfaceBarMode);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, &gInterfaceBarWidth);
@@ -368,8 +373,25 @@ int screenGetVisibleHeight()
 
 static bool createRenderer(int width, int height)
 {
-    gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
-    if (gSdlRenderer == nullptr) {
+    gSdlRenderer = SDL_CreateRenderer(
+        gSdlWindow,
+        -1,
+        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    if (!gSdlRenderer) {
+        // Try without VSYNC if accelerated fails
+        gSdlRenderer = SDL_CreateRenderer(
+            gSdlWindow,
+            -1,
+            SDL_RENDERER_ACCELERATED);
+    }
+
+    if (!gSdlRenderer) {
+        // Final fallback to software
+        gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
+    }
+
+    if (!gSdlRenderer) {
         return false;
     }
 
@@ -594,7 +616,8 @@ void renderPresent()
             gSdlTextureSurface->pitch);
     }
 
-    SDL_SetRenderDrawColor(gSdlRenderer, 0, 0, 255, 255);
+    // Background color for tracking screen stretching issues
+    // SDL_SetRenderDrawColor(gSdlRenderer, 0, 0, 0, 255);
     SDL_RenderClear(gSdlRenderer);
 
     SDL_RenderCopy(gSdlRenderer, gSdlTexture, &srcRect, &destRect);

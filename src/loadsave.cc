@@ -37,6 +37,7 @@
 #include "mouse.h"
 #include "object.h"
 #include "offsets.h"
+#include "palette.h"
 #include "party_member.h"
 #include "perk.h"
 #include "pipboy.h"
@@ -1245,6 +1246,11 @@ int lsgLoadGame(int mode)
     renderPresent();
     _dbleclkcntr = 24;
 
+    // palette handled here to allow fade in from black like other main menu pages
+    // fades into Load/Save screen from black (from Main Menu)
+    colorPaletteLoad("color.pal");
+    paletteFadeTo(_cmap);
+
     int rc = -1;
     int doubleClickSlot = -1;
     while (rc == -1) {
@@ -1487,8 +1493,8 @@ int lsgLoadGame(int mode)
                             gOffsets.windowWidth);
                         blitBufferToBufferStretch(
                             _thumbnail_image,
-                            LS_PREVIEW_WIDTH,
-                            LS_PREVIEW_HEIGHT,
+                            LS_PREVIEW_WIDTH - 1,
+                            LS_PREVIEW_HEIGHT - 1,
                             LS_PREVIEW_WIDTH,
                             gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                             gOffsets.previewWidth,
@@ -1537,8 +1543,8 @@ int lsgLoadGame(int mode)
                         gOffsets.windowWidth);
                     blitBufferToBufferStretch(
                         _thumbnail_image,
-                        LS_PREVIEW_WIDTH,
-                        LS_PREVIEW_HEIGHT,
+                        LS_PREVIEW_WIDTH - 1,
+                        LS_PREVIEW_HEIGHT - 1,
                         LS_PREVIEW_WIDTH,
                         gLoadSaveWindowBuffer + gOffsets.windowWidth * gOffsets.previewY + gOffsets.previewX,
                         gOffsets.previewWidth,
@@ -1595,9 +1601,17 @@ int lsgLoadGame(int mode)
         sharedFpsLimiter.throttle();
     }
 
-    lsgWindowFree(mode == LOAD_SAVE_MODE_FROM_MAIN_MENU
-            ? LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU
-            : LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+    if (mode == LOAD_SAVE_MODE_FROM_MAIN_MENU) {
+        if (rc == 0) {
+            // fade to black on return to Main Menu
+            paletteFadeTo(gPaletteBlack);
+            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
+        } else {
+            lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME_FROM_MAIN_MENU);
+        }
+    } else {
+        lsgWindowFree(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
+    }
 
     pipboyMessageListFree();
 
@@ -1692,7 +1706,7 @@ static int lsgWindowInit(int windowType)
     // Load interface images
     for (int index = 0; index < LOAD_SAVE_FRM_COUNT; index++) {
         // Use widescreen variants when available
-        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], "_800", isWidescreen);
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gLoadSaveFrmIds[index], isWidescreen);
 
         if (!_loadsaveFrmImages[index].lock(fid)) {
             // Fallback to base FID if variant fails
@@ -1726,7 +1740,7 @@ static int lsgWindowInit(int windowType)
         gOffsets.windowWidth,
         gOffsets.windowHeight,
         256,
-        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP | WINDOW_TRANSPARENT);
     if (gLoadSaveWindow == -1) {
         // Cleanup FRM images
         for (int i = 0; i < LOAD_SAVE_FRM_COUNT; i++) {
@@ -2674,7 +2688,7 @@ static int _GetComment(int slot)
         _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getWidth(),
         _loadsaveFrmImages[LOAD_SAVE_FRM_BOX].getHeight(),
         256,
-        WINDOW_MODAL | WINDOW_MOVE_ON_TOP);
+        WINDOW_MODAL | WINDOW_MOVE_ON_TOP | WINDOW_TRANSPARENT);
     if (window == -1) {
         return -1;
     }

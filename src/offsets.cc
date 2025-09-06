@@ -44,7 +44,7 @@ const CharacterEditorOffsets gCharEditorOffsets640 = {
     480, // windowHeight
 
     // Buttons
-    9, // nameButtonX
+    15, // nameButtonX
     0, // nameButtonY
     347, // tagSkillsButtonX
     26, // tagSkillsButtonY
@@ -261,7 +261,7 @@ const CharacterEditorOffsets gCharEditorOffsets800 = {
     500, // windowHeight
 
     // Buttons
-    9, // nameButtonX
+    15, // nameButtonX
     10, // nameButtonY
     427, // tagSkillsButtonX
     36, // tagSkillsButtonY
@@ -628,7 +628,7 @@ const LoadSaveOffsets gLoadSaveOffsets800 = {
     500, // windowHeight
 
     // Preview
-    268, // previewWidth
+    270, // previewWidth
     145, // previewHeight
     452, // previewX
     55, // previewY
@@ -728,6 +728,12 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     { 49, 116, 181, 247, 313, 380 }, // secondaryKnobY[6]
     { 66, 133, 200, 264, 331, 397 }, // secondaryLabelY[6]
 
+    // Tertiary preferences (middle column)
+    340, // tertiaryColumnX
+    340, // tertiaryKnobX
+    { 49, 116, 181, 247, 313, 380 }, // tertiaryKnobY[6]
+    { 66, 133, 200, 264, 331, 397 }, // tertiaryLabelY[6]
+
     // Range preferences (right column)
     374, // rangeColumnX
     374, // rangeKnobX
@@ -736,9 +742,12 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     // Label positions
     99, // primLabelColX
     206, // secLabelColX
+    306, // terLabelColX
     384, // rangLabelColX
     { 23, 23, 23, 23, 23 }, // labelX[5]
     { 251, 251, 251, 251, 251, 251 }, // secondaryLabelX[6]
+    { 351, 351, 351, 351, 351, 351 }, // tertiaryLabelX[6]
+    { 351 }, // quaternarylabelX[1]
 
     // Range control parameters
     384, // rangeStartX
@@ -751,6 +760,10 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     54, // primaryBlitHeight
     113, // secondaryBlitWidth
     34, // secondaryBlitHeight
+    113, // tertiaryBlitWidth
+    34, // tertiaryBlitHeight
+    54, // quaternaryBlitWidth
+    56, // quaternaryBlitHeight
     240, // rangeBlitWidth
     24, // rangeBlitHeight
 
@@ -783,6 +796,10 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     21, // primaryKnobHitY
     11, // secondaryKnobHitX
     12, // secondaryKnobHitY
+    11, // tertiaryKnobHitX
+    12, // tertiaryKnobHitY
+    27, // primaryKnobHitX
+    28, // primaryKnobHitY
 
     // Range slider parameters
     384, // rangeSliderMinX
@@ -792,6 +809,8 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     // Button hitbox offsets
     -4, // primaryButtonOffsetY
     -5, // secondaryButtonOffsetY
+    -5, // tertiaryButtonOffsetY
+    -4, // quaternaryButtonOffsetY
     -12, // rangeButtonOffsetY
 
     // Text delay and range label positions
@@ -802,12 +821,19 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     // Position arrays
     { 48, 125, 203, 286, 363 }, // row1Ytab[5]
     { 49, 116, 181, 247, 313, 380 }, // row2Ytab[6]
+    { 49, 116, 181, 247, 313, 380 }, // row2bYtab[6]
+    { 49 }, // rowdialYtab[1]
     { 19, 94, 165, 216, 268, 319, 369, 420 }, // row3Ytab[8]
     { 2, 25, 46, 46 }, // optionXOffsets[4]
     { 10, -4, 10, 31 }, // optionYOffsets[4]
     { 4, 21 }, // secondaryOptionXOffsets[2]
+    { 21, 4 }, // tertiaryOptionYOffsets[2]
+    { 2, 25, 46, 46 }, // quaternaryXOffsets[4]
+    { 10, -4, 10, 31 }, // quaternaryYOffsets[4]
     { 66, 143, 222, 304, 382 }, // primaryLabelYValues[5]
     { 66, 133, 200, 264, 331, 397 }, // secondaryLabelYValues[6]
+    { 66, 133, 200, 264, 331, 397 }, // tertiaryLabelYValues[6]
+    { 425 }, // quaternaryLabelYValues[1] - used for orienting background blit
 
     // Preference positions
     {
@@ -822,6 +848,13 @@ const PreferencesOffsets gPreferencesOffsets640 = {
         Point { 299, 271 }, // PREF_RUNNING
         Point { 299, 338 }, // PREF_SUBTITLES
         Point { 299, 404 }, // PREF_ITEM_HIGHLIGHT
+        Point { 440, 174 }, // PREF_WINDOWED
+        Point { 440, 241 }, // PREF_QUALITY
+        Point { 440, 307 }, // PREF_ASPECT
+        Point { 440, 371 }, // PREF_SQUARE_PIXELS
+        Point { 425, 320 }, // PREF_PLAY_AREA
+        Point { 440, 238 }, // PREF_STRETCHING
+        Point { 440, 204 }, // PREF_WIDESCREEN
         Point { 374, 50 }, // PREF_COMBAT_SPEED
         Point { 374, 125 }, // PREF_TEXT_BASE_DELAY
         Point { 374, 196 }, // PREF_MASTER_VOLUME
@@ -836,6 +869,9 @@ const PreferencesOffsets gPreferencesOffsets640 = {
     9, // primaryButtonMinXOffset
     37, // primaryButtonMaxXOffset
     22, // secondaryButtonXOffset
+    22, // tertiaryButtonXOffset
+    9, // primaryButtonMinXOffset
+    37, // primaryButtonMaxXOffset
     6, // rangeThumbLeftOffset
     14, // rangeThumbRightOffset
     219.0 // rangeSliderScale (double)
@@ -847,65 +883,78 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     500, // height
 
     // Primary preferences (left column)
-    100, // primaryColumnX
-    100, // primaryKnobX
+    76, // primaryColumnX
+    76, // primaryKnobX
     { 50, 131, 211, 299, 380 }, // primaryKnobY[5]
     { 70, 151, 234, 320, 402 }, // primaryLabelY[5]
 
     // Secondary preferences (middle column)
-    380, // secondaryColumnX
-    380, // secondaryKnobX
+    299, // secondaryColumnX
+    299, // secondaryKnobX
     { 50, 119, 187, 256, 325, 395 }, // secondaryKnobY[6]
     { 71, 139, 209, 277, 347, 415 }, // secondaryLabelY[6]
 
+    // Tertiary preferences (middle column)
+    390, // tertiaryColumnX
+    390, // tertiaryKnobX
+    { 50, 119, 187, 256, 325, 395 }, // tertiaryKnobY[6]
+    { 71, 139, 209, 277, 347, 415 }, // tertiaryLabelY[6]
+
     // Range preferences (right column)
-    468, // rangeColumnX
-    468, // rangeKnobX
+    535, // rangeColumnX
+    535, // rangeKnobX
     { 20, 99, 172, 225, 279, 332, 384, 437 }, // rangeKnobY[8]
 
     // Label positions
-    124, // primLabelColX
-    255, // secLabelColX
-    479, // rangLabelColX
+    99, // primLabelColX
+    206, // secLabelColX
+    447, // terLabelColX
+    545, // rangLabelColX
     { 23, 23, 23, 23, 23 }, // labelX[5]
     { 251, 251, 251, 251, 251, 251 }, // secondaryLabelX[6]
+    { 375, 450, 375, 450, 375, 450 }, // tertiaryLabelX[6]
+    { 375 }, // quaternarylabelX[1]
 
     // Range control parameters
-    480, // rangeStartX
-    274, // rangeWidth
+    545, // rangeStartX
+    219, // rangeWidth
     21, // knobWidth
-    { 480, 630, 705, 780, 555 }, // rangeLabelX[5]
+    { 546, 655, 715, 780, 595 }, // rangeLabelX[5]
 
     // Blit dimensions
     160, // primaryBlitWidth
     54, // primaryBlitHeight
     113, // secondaryBlitWidth
     34, // secondaryBlitHeight
-    300, // rangeBlitWidth
+    63, // tertiaryBlitWidth
+    75, // tertiaryBlitHeight
+    140, // quaternaryBlitWidth
+    61, // quaternaryBlitHeight
+    240, // rangeBlitWidth
     24, // rangeBlitHeight
 
     // Title and buttons
-    110, // titleTextX
+    150, // titleTextX
     10, // titleTextY
-    54, // defaultLabelX
+    113, // defaultLabelX
     468, // defaultLabelY
-    211, // doneLabelX
+    239, // doneLabelX
     468, // doneLabelY
-    354, // cancelLabelX
+    353, // cancelLabelX
     468, // cancelLabelY
     72, // speedLabelX
-    506, // speedLabelY
+    570, // speedLabelY
 
     // Button positions
-    29, // defaultButtonX
-    469, // defaultButtonY
-    185, // doneButtonX
-    469, // doneButtonY
-    329, // cancelButtonX
-    469, // cancelButtonY
+    93, // defaultButtonX
+    468, // defaultButtonY
+    218, // doneButtonX
+    468, // doneButtonY
+    333, // cancelButtonX
+    468, // cancelButtonY
 
     // Checkbox position
-    479, // playerSpeedCheckboxX
+    545, // playerSpeedCheckboxX
     68, // playerSpeedCheckboxY
 
     // Knob hit detection offsets
@@ -913,45 +962,65 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     21, // primaryKnobHitY
     11, // secondaryKnobHitX
     12, // secondaryKnobHitY
+    25, // tertiaryKnobHitX
+    20, // tertiaryKnobHitY
+    27, // primaryKnobHitX
+    28, // primaryKnobHitY
 
     // Range slider parameters
-    480, // rangeSliderMinX
-    754, // rangeSliderMaxX
-    274, // rangeSliderWidth
+    545, // rangeSliderMinX
+    764, // rangeSliderMaxX
+    219, // rangeSliderWidth
 
     // Button hitbox offsets
     -4, // primaryButtonOffsetY
     -5, // secondaryButtonOffsetY
+    -15, // tertiaryButtonOffsetY
+    -4, // quaternaryButtonOffsetY
     -12, // rangeButtonOffsetY
 
     // Text delay and range label positions
-    54.8, // textBaseDelayScale (double)
+    43.8, // textBaseDelayScale (double)
     555, // rangeLabel4Option1X
     705, // rangeLabel4Option2X
 
     // Position arrays
     { 50, 131, 211, 299, 380 }, // row1Ytab[5]
     { 50, 119, 187, 256, 325, 395 }, // row2Ytab[6]
+    { 50, 152, 257, 361, 470, 470 }, // row2bYtab[6]
+    { 49 }, // rowdialYtab[1]
     { 20, 99, 172, 225, 279, 332, 384, 437 }, // row3Ytab[8]
-    { 2, 25, 46, 46 }, // optionXOffsets[4]
-    { 10, -4, 10, 31 }, // optionYOffsets[4]
-    { 4, 21 }, // secondaryOptionXOffsets[2]
+    { 2, 25, 46, 46 }, // optionXOffsets[4] -big knobs labels x
+    { 10, -4, 10, 31 }, // optionYOffsets[4] -big knobs labels y
+    { 4, 21 }, // secondaryOptionXOffsets[2] -small knob labels x
+    { -44, 10 }, // tertiaryOptionYOffsets[2] - must serve as Y offset
+    { 7, -15, 55, 55 }, // quaternaryXOffsets[4] -big dial labels x
+    { 40, -2, -2, 40 }, // quaternaryYOffsets[4] -big dial labels y
     { 70, 151, 234, 320, 402 }, // primaryLabelYValues[5]
     { 71, 139, 209, 277, 347, 415 }, // secondaryLabelYValues[6]
+    { 70, 70, 173, 173, 278, 278 }, // tertiaryLabelYValues[6] - used for orienting background blit
+    { 385 }, // quaternaryLabelYValues[1] - used for orienting background blit
 
     // Preference positions
     {
-        Point { 100, 74 }, // PREF_GAME_DIFFICULTY
-        Point { 100, 157 }, // PREF_COMBAT_DIFFICULTY
-        Point { 100, 237 }, // PREF_VIOLENCE_LEVEL
-        Point { 100, 324 }, // PREF_TARGET_HIGHLIGHT
-        Point { 100, 406 }, // PREF_COMBAT_LOOKS
-        Point { 380, 76 }, // PREF_COMBAT_MESSAGES
-        Point { 380, 147 }, // PREF_COMBAT_TAUNTS
-        Point { 380, 216 }, // PREF_LANGUAGE_FILTER
-        Point { 380, 284 }, // PREF_RUNNING
-        Point { 380, 354 }, // PREF_SUBTITLES
-        Point { 380, 423 }, // PREF_ITEM_HIGHLIGHT
+        Point { 76, 74 }, // PREF_GAME_DIFFICULTY
+        Point { 76, 157 }, // PREF_COMBAT_DIFFICULTY
+        Point { 76, 237 }, // PREF_VIOLENCE_LEVEL
+        Point { 76, 324 }, // PREF_TARGET_HIGHLIGHT
+        Point { 76, 406 }, // PREF_COMBAT_LOOKS
+        Point { 299, 76 }, // PREF_COMBAT_MESSAGES
+        Point { 299, 147 }, // PREF_COMBAT_TAUNTS
+        Point { 299, 216 }, // PREF_LANGUAGE_FILTER
+        Point { 299, 284 }, // PREF_RUNNING
+        Point { 299, 354 }, // PREF_SUBTITLES
+        Point { 299, 423 }, // PREF_ITEM_HIGHLIGHT
+        Point { 385, 80 }, // PREF_WINDOWED
+        Point { 460, 80 }, // REF_WIDESCREEN
+        Point { 385, 183 }, // PREF_STRETCHING
+        Point { 460, 183 }, // PREF_ASPECT
+        Point { 385, 288 }, // PREF_QUALITY
+        Point { 460, 288 }, // PREF_SQUARE_PIXELS
+        Point { 415, 390 }, // PREF_PLAY_AREA
         Point { 468, 53 }, // PREF_COMBAT_SPEED
         Point { 468, 131 }, // PREF_TEXT_BASE_DELAY
         Point { 468, 205 }, // PREF_MASTER_VOLUME
@@ -966,9 +1035,12 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     9, // primaryButtonMinXOffset
     37, // primaryButtonMaxXOffset
     22, // secondaryButtonXOffset
+    42, // tertiaryButtonXOffset
+    9, // primaryButtonMinXOffset
+    37, // primaryButtonMaxXOffset
     6, // rangeThumbLeftOffset
     14, // rangeThumbRightOffset
-    274.0 // rangeSliderScale (double)
+    219.0 // rangeSliderScale (double)
 };
 
 const WorldmapOffsets gWorldmapOffsets640 = {
@@ -1372,52 +1444,63 @@ void applyConfigToLoadSaveOffsets(Config* config, const char* section, LoadSaveO
     configGetInt(config, section, "moreTextOffsetX", &offsets->moreTextOffsetX);
 }
 
-void applyConfigToPreferencesOffsets(Config* config, const char* section, PreferencesOffsets* offsets)
+void applyConfigToPreferencesOffsets(Config* config, char const* section, PreferencesOffsets* offsets)
 {
-
     // Window
     configGetInt(config, section, "width", &offsets->width);
     configGetInt(config, section, "height", &offsets->height);
 
-    // Primary preferences
+    // Primary preferences (left column)
     configGetInt(config, section, "primaryColumnX", &offsets->primaryColumnX);
     configGetInt(config, section, "primaryKnobX", &offsets->primaryKnobX);
     configGetIntArray(config, section, "primaryKnobY", offsets->primaryKnobY, PRIMARY_PREF_COUNT);
     configGetIntArray(config, section, "primaryLabelY", offsets->primaryLabelY, PRIMARY_PREF_COUNT);
 
-    // Secondary preferences
+    // Secondary preferences (middle column)
     configGetInt(config, section, "secondaryColumnX", &offsets->secondaryColumnX);
     configGetInt(config, section, "secondaryKnobX", &offsets->secondaryKnobX);
     configGetIntArray(config, section, "secondaryKnobY", offsets->secondaryKnobY, SECONDARY_PREF_COUNT);
     configGetIntArray(config, section, "secondaryLabelY", offsets->secondaryLabelY, SECONDARY_PREF_COUNT);
 
-    // Range preferences
+    // ─── NEW: Tertiary preferences (middle‑right column) ───
+    configGetInt(config, section, "tertiaryColumnX", &offsets->tertiaryColumnX);
+    configGetInt(config, section, "tertiaryKnobX", &offsets->tertiaryKnobX);
+    configGetIntArray(config, section, "tertiaryKnobY", offsets->tertiaryKnobY, TERTIARY_PREF_COUNT);
+    configGetIntArray(config, section, "tertiaryLabelY", offsets->tertiaryLabelY, TERTIARY_PREF_COUNT);
+
+    // Range preferences (right column)
     configGetInt(config, section, "rangeColumnX", &offsets->rangeColumnX);
     configGetInt(config, section, "rangeKnobX", &offsets->rangeKnobX);
     configGetIntArray(config, section, "rangeKnobY", offsets->rangeKnobY, RANGE_PREF_COUNT);
 
-    // Label positions
+    // Label columns
     configGetInt(config, section, "primLabelColX", &offsets->primLabelColX);
     configGetInt(config, section, "secLabelColX", &offsets->secLabelColX);
+    configGetInt(config, section, "terLabelColX", &offsets->terLabelColX); // <— tertiary
     configGetInt(config, section, "rangLabelColX", &offsets->rangLabelColX);
+
+    // Label X‑arrays
     configGetIntArray(config, section, "labelX", offsets->labelX, PRIMARY_PREF_COUNT);
     configGetIntArray(config, section, "secondaryLabelX", offsets->secondaryLabelX, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "tertiaryLabelX", offsets->tertiaryLabelX, TERTIARY_PREF_COUNT); // <— tertiary
 
     // Range control
     configGetInt(config, section, "rangeStartX", &offsets->rangeStartX);
     configGetInt(config, section, "rangeWidth", &offsets->rangeWidth);
     configGetInt(config, section, "knobWidth", &offsets->knobWidth);
-    configGetIntArray(config, section, "rangeLabelX", offsets->rangeLabelX, 4);
+    configGetIntArray(config, section, "rangeLabelX", offsets->rangeLabelX, RANGE_PREF_COUNT);
 
     // Blit dimensions
     configGetInt(config, section, "primaryBlitWidth", &offsets->primaryBlitWidth);
     configGetInt(config, section, "primaryBlitHeight", &offsets->primaryBlitHeight);
     configGetInt(config, section, "secondaryBlitWidth", &offsets->secondaryBlitWidth);
     configGetInt(config, section, "secondaryBlitHeight", &offsets->secondaryBlitHeight);
+    configGetInt(config, section, "tertiaryBlitWidth", &offsets->tertiaryBlitWidth); // <— tertiary
+    configGetInt(config, section, "tertiaryBlitHeight", &offsets->tertiaryBlitHeight); // <— tertiary
     configGetInt(config, section, "rangeBlitWidth", &offsets->rangeBlitWidth);
     configGetInt(config, section, "rangeBlitHeight", &offsets->rangeBlitHeight);
 
-    // Title and buttons
+    // Title & button labels
     configGetInt(config, section, "titleTextX", &offsets->titleTextX);
     configGetInt(config, section, "titleTextY", &offsets->titleTextY);
     configGetInt(config, section, "defaultLabelX", &offsets->defaultLabelX);
@@ -1428,50 +1511,60 @@ void applyConfigToPreferencesOffsets(Config* config, const char* section, Prefer
     configGetInt(config, section, "cancelLabelY", &offsets->cancelLabelY);
     configGetInt(config, section, "speedLabelX", &offsets->speedLabelX);
     configGetInt(config, section, "speedLabelY", &offsets->speedLabelY);
+
+    // Button positions
     configGetInt(config, section, "defaultButtonX", &offsets->defaultButtonX);
     configGetInt(config, section, "defaultButtonY", &offsets->defaultButtonY);
     configGetInt(config, section, "doneButtonX", &offsets->doneButtonX);
     configGetInt(config, section, "doneButtonY", &offsets->doneButtonY);
     configGetInt(config, section, "cancelButtonX", &offsets->cancelButtonX);
     configGetInt(config, section, "cancelButtonY", &offsets->cancelButtonY);
+
+    // Checkbox
     configGetInt(config, section, "playerSpeedCheckboxX", &offsets->playerSpeedCheckboxX);
     configGetInt(config, section, "playerSpeedCheckboxY", &offsets->playerSpeedCheckboxY);
 
-    // Hit detection
+    // ─── Hit‑area offsets ───
     configGetInt(config, section, "primaryKnobHitX", &offsets->primaryKnobHitX);
     configGetInt(config, section, "primaryKnobHitY", &offsets->primaryKnobHitY);
     configGetInt(config, section, "secondaryKnobHitX", &offsets->secondaryKnobHitX);
     configGetInt(config, section, "secondaryKnobHitY", &offsets->secondaryKnobHitY);
+    configGetInt(config, section, "tertiaryKnobHitX", &offsets->tertiaryKnobHitX); // <— tertiary
+    configGetInt(config, section, "tertiaryKnobHitY", &offsets->tertiaryKnobHitY); // <— tertiary
+
+    // Range slider parameters
     configGetInt(config, section, "rangeSliderMinX", &offsets->rangeSliderMinX);
     configGetInt(config, section, "rangeSliderMaxX", &offsets->rangeSliderMaxX);
     configGetInt(config, section, "rangeSliderWidth", &offsets->rangeSliderWidth);
+
+    // Button hitbox offsets
     configGetInt(config, section, "primaryButtonOffsetY", &offsets->primaryButtonOffsetY);
     configGetInt(config, section, "secondaryButtonOffsetY", &offsets->secondaryButtonOffsetY);
+    configGetInt(config, section, "tertiaryButtonOffsetY", &offsets->tertiaryButtonOffsetY); // <— tertiary
     configGetInt(config, section, "rangeButtonOffsetY", &offsets->rangeButtonOffsetY);
 
+    // Text delay & extra labels
     configGetDouble(config, section, "textBaseDelayScale", &offsets->textBaseDelayScale);
     configGetInt(config, section, "rangeLabel4Option1X", &offsets->rangeLabel4Option1X);
     configGetInt(config, section, "rangeLabel4Option2X", &offsets->rangeLabel4Option2X);
 
+    // Position arrays
     configGetIntArray(config, section, "row1Ytab", offsets->row1Ytab, PRIMARY_PREF_COUNT);
     configGetIntArray(config, section, "row2Ytab", offsets->row2Ytab, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "row2bYtab", offsets->row2bYtab, TERTIARY_PREF_COUNT); // <— tertiary
     configGetIntArray(config, section, "row3Ytab", offsets->row3Ytab, RANGE_PREF_COUNT);
 
-    configGetIntArray(config, section, "optionXOffsets", offsets->optionXOffsets, 4);
-    configGetIntArray(config, section, "optionYOffsets", offsets->optionYOffsets, 4);
-    configGetIntArray(config, section, "secondaryOptionXOffsets", offsets->secondaryOptionXOffsets, 2);
+    configGetIntArray(config, section, "optionXOffsets", offsets->optionXOffsets, PRIMARY_OPTION_VALUE_COUNT);
+    configGetIntArray(config, section, "optionYOffsets", offsets->optionYOffsets, PRIMARY_OPTION_VALUE_COUNT);
+    configGetIntArray(config, section, "secondaryOptionXOffsets", offsets->secondaryOptionXOffsets, SECONDARY_OPTION_VALUE_COUNT);
+    configGetIntArray(config, section, "tertiaryOptionYOffsets", offsets->tertiaryOptionYOffsets, TERTIARY_OPTION_VALUE_COUNT); // <— tertiary
 
+    // Label‑value arrays
     configGetIntArray(config, section, "primaryLabelYValues", offsets->primaryLabelYValues, PRIMARY_PREF_COUNT);
     configGetIntArray(config, section, "secondaryLabelYValues", offsets->secondaryLabelYValues, SECONDARY_PREF_COUNT);
+    configGetIntArray(config, section, "tertiaryLabelYValues", offsets->tertiaryLabelYValues, TERTIARY_PREF_COUNT); // <— tertiary
 
-    configGetInt(config, section, "primaryButtonMinXOffset", &offsets->primaryButtonMinXOffset);
-    configGetInt(config, section, "primaryButtonMaxXOffset", &offsets->primaryButtonMaxXOffset);
-    configGetInt(config, section, "secondaryButtonXOffset", &offsets->secondaryButtonXOffset);
-    configGetInt(config, section, "rangeThumbLeftOffset", &offsets->rangeThumbLeftOffset);
-    configGetInt(config, section, "rangeThumbRightOffset", &offsets->rangeThumbRightOffset);
-    configGetDouble(config, section, "rangeSliderScale", &offsets->rangeSliderScale);
-
-    // Preference positions
+    // Preference‑position [x,y] pairs
     for (int i = 0; i < PREF_COUNT; i++) {
         char key[64];
         snprintf(key, sizeof(key), "preferencePositions%dX", i);

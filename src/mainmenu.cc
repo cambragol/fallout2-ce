@@ -84,6 +84,8 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
+static FrmImage _mainMenuFissionLogoFrmImage;
+
 bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
 {
     return loadOffsetsFromConfig<MainMenuOffsets>(
@@ -169,7 +171,7 @@ int mainMenuWindowInit()
 
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
 
-    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 140, "_800", gameIsWidescreen());
+    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 140, gameIsWidescreen());
     if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
         // NOTE: Uninline.
         return main_menu_fatal_error();
@@ -206,23 +208,37 @@ int mainMenuWindowInit()
     if (fontSettingsSFall)
         fontSettings = fontSettingsSFall;
 
+    // fission.frm
+    fid = buildFid(OBJ_TYPE_INTERFACE, 4503, 0, 0, 0);
+    if (!_mainMenuFissionLogoFrmImage.lock(fid)) {
+        return main_menu_fatal_error();
+    }
+
+    blitBufferToBufferTrans(
+        _mainMenuFissionLogoFrmImage.getData(),
+        _mainMenuFissionLogoFrmImage.getWidth(),
+        _mainMenuFissionLogoFrmImage.getHeight(),
+        _mainMenuFissionLogoFrmImage.getWidth(),
+        gMainMenuWindowBuffer + gOffsets.width * (gOffsets.hashY - 2) + gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
+        gOffsets.width);
+
     // Version.
     char version[VERSION_MAX];
     versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
-    windowDrawText(gMainMenuWindow, version, 0, gOffsets.versionX - len, gOffsets.versionY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, version, 0, gOffsets.hashX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.hashY, fontSettings | 0x06000000);
 
     // Hash
-    char commitHash[VERSION_MAX] = "BUILD HASH: ";
-    strcat(commitHash, _BUILD_HASH);
+    char commitHash[VERSION_MAX] = "POWERED BY: ";
+    // strcat(commitHash, _BUILD_HASH);
     len = fontGetStringWidth(commitHash);
-    windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.hashX - len, gOffsets.hashY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.versionX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.versionY, fontSettings | 0x06000000);
 
     // Build Date
-    char buildDate[VERSION_MAX] = "DATE: ";
+    /*char buildDate[VERSION_MAX] = "DATE: ";
     strcat(buildDate, _BUILD_DATE);
     len = fontGetStringWidth(buildDate);
-    windowDrawText(gMainMenuWindow, buildDate, 0, gOffsets.buildDateX - len, gOffsets.buildDateY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, buildDate, 0, gOffsets.buildDateX - len, gOffsets.buildDateY, fontSettings | 0x06000000);*/
 
     // menuup.frm
     fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
@@ -310,6 +326,7 @@ void mainMenuWindowFree()
 
     _mainMenuButtonPressedFrmImage.unlock();
     _mainMenuButtonNormalFrmImage.unlock();
+    _mainMenuFissionLogoFrmImage.unlock();
 
     if (gMainMenuWindow != -1) {
         windowDestroy(gMainMenuWindow);

@@ -1437,7 +1437,7 @@ static int characterEditorWindowInit()
     // Load other graphics
     for (i = 0; i < EDITOR_GRAPHIC_COUNT; i++) {
         // Use widescreen variants when available
-        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gCharacterEditorFrmIds[i], "_800", isWidescreen);
+        int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, gCharacterEditorFrmIds[i], isWidescreen);
 
         if (!_editorFrmImages[i].lock(fid)) {
             // Fallback to base FID if variant fails
@@ -1542,7 +1542,7 @@ static int characterEditorWindowInit()
 
     // Get background FID with possible widescreen variant
     int baseFrmId = gCharacterEditorIsCreationMode ? 169 : 177;
-    fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, baseFrmId, "_800", isWidescreen);
+    fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, baseFrmId, isWidescreen);
 
     // Load the art
     if (!_editorBackgroundFrmImage.lock(fid)) {
@@ -4175,7 +4175,7 @@ static int characterEditorShowOptions()
             ? (screenGetHeight() - _editorFrmImages[41].getHeight()) / 2
             : 90;
 
-        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
+        int win = windowCreate(optionsWindowX, optionsWindowY, _editorFrmImages[41].getWidth(), _editorFrmImages[41].getHeight(), 256, WINDOW_MODAL | WINDOW_DONT_MOVE_TOP | WINDOW_TRANSPARENT);
         if (win == -1) {
             return -1;
         }
