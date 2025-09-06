@@ -177,7 +177,13 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     debugPrint(">init_options_menu\n");
 
     if (!gIsMapper && skipOpeningMovies < 2) {
-        resizeContent(640, 480);
+
+        if (gameIsWidescreen()) {
+            resizeContent(800, 500);
+        } else {
+            resizeContent(640, 480);
+        }
+        // resizeContent(640, 480);
         showSplash();
     }
 
@@ -1459,9 +1465,21 @@ static void showSplash()
         snprintf(path, sizeof(path), "art\\splash\\");
     }
 
-    File* stream;
+    File* stream = nullptr;
     for (int index = 0; index < SPLASH_COUNT; index++) {
         char filePath[64];
+
+        // First try widescreen version if in widescreen mode
+        if (gameIsWidescreen()) {
+            snprintf(filePath, sizeof(filePath), "%ssplash%d%s.rix", path, splash,
+                settings.graphics.widescreen_variant_suffix.c_str());
+            stream = fileOpen(filePath, "rb");
+            if (stream != nullptr) {
+                break;
+            }
+        }
+
+        // If widescreen version not found or not in widescreen mode, try regular version
         snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
         if (stream != nullptr) {
@@ -1469,7 +1487,6 @@ static void showSplash()
         }
 
         splash++;
-
         if (splash >= SPLASH_COUNT) {
             splash = 0;
         }
