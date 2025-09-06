@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "window_manager.h"
 
 #include <algorithm>
 
@@ -42,6 +43,32 @@ static DFile* dfileOpenInternal(DBase* dbase, const char* filename, const char* 
 static int dfileReadCharInternal(DFile* stream);
 static bool dfileReadCompressed(DFile* stream, void* ptr, size_t size);
 static void dfileUngetCompressed(DFile* stream, int ch);
+
+/**
+ * Normalizes a path for .DAT file access.
+ * Converts all forward slashes to backslashes and ensures consistent formatting.
+ */
+static char* normalizePathForDat(const char* path) {
+    if (path == nullptr) {
+        return nullptr;
+    }
+    
+    char* normalizedPath = (char*)malloc(strlen(path) + 1);
+    if (normalizedPath == nullptr) {
+        return nullptr;
+    }
+    
+    strcpy(normalizedPath, path);
+    
+    // Convert all forward slashes to backslashes
+    for (char* p = normalizedPath; *p != '\0'; p++) {
+        if (*p == '/') {
+            *p = '\\';
+        }
+    }
+    
+    return normalizedPath;
+}
 
 // Reads .DAT file contents.
 //
@@ -198,28 +225,56 @@ bool dbaseClose(DBase* dbase)
     return true;
 }
 
+// Custom pattern matching function for .dat files with case-insensitive matching
+bool datPatternMatch(const char* pattern, const char* path) {
+    char normalizedPattern[COMPAT_MAX_PATH];
+    char normalizedPath[COMPAT_MAX_PATH];
+    
+    strcpy(normalizedPattern, pattern);
+    strcpy(normalizedPath, path);
+
+    for (char* p = normalizedPath; *p != '\0'; p++) {
+        if (*p == '\\') *p = '/';
+        // Convert to lowercase for case-insensitive matching
+        *p = tolower(*p);
+    }
+    
+    return fpattern_match(normalizedPattern, normalizedPath);
+}
+
 // 0x4E5308
 bool dbaseFindFirstEntry(DBase* dbase, DFileFindData* findFileData, const char* pattern)
 {
+    // Check if this is a new pattern search
+    static int searchCount = 0;
+    static char lastPattern[COMPAT_MAX_PATH] = "";
+    
+    if (strcmp(pattern, lastPattern) != 0) {
+        searchCount++;
+        strcpy(lastPattern, pattern);
+    }
+    
     for (int index = 0; index < dbase->entriesLength; index++) {
         DBaseEntry* entry = &(dbase->entries[index]);
-        if (fpattern_match(pattern, entry->path)) {
+        
+        if (datPatternMatch(pattern, entry->path)) {
+            // Store the first match for the findFileData
             strcpy(findFileData->fileName, entry->path);
             strcpy(findFileData->pattern, pattern);
             findFileData->index = index;
-            return true;
+            return true; // Return immediately on first match
         }
     }
-
+    
     return false;
 }
 
-// 0x4E53A0
 bool dbaseFindNextEntry(DBase* dbase, DFileFindData* findFileData)
 {
     for (int index = findFileData->index + 1; index < dbase->entriesLength; index++) {
         DBaseEntry* entry = &(dbase->entries[index]);
-        if (fpattern_match(findFileData->pattern, entry->path)) {
+        
+        if (datPatternMatch(findFileData->pattern, entry->path)) {
             strcpy(findFileData->fileName, entry->path);
             findFileData->index = index;
             return true;
@@ -309,7 +364,16 @@ DFile* dfileOpen(DBase* dbase, const char* filePath, const char* mode)
     assert(filePath); // dfile.c, 296
     assert(mode); // dfile.c, 297
 
-    return dfileOpenInternal(dbase, filePath, mode, nullptr);
+    // NORMALIZE PATH FOR .DAT ACCESS - CRITICAL FIX
+    char* normalizedPath = normalizePathForDat(filePath);
+    if (normalizedPath == nullptr) {
+        return nullptr;
+    }
+    
+    DFile* result = dfileOpenInternal(dbase, normalizedPath, mode, nullptr);
+    
+    free(normalizedPath);
+    return result;
 }
 
 // [vfprintf].
