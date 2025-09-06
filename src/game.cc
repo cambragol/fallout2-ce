@@ -183,7 +183,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
         } else {
             resizeContent(640, 480);
         }
-        //resizeContent(640, 480);
+        // resizeContent(640, 480);
         showSplash();
     }
 
@@ -1468,17 +1468,17 @@ static void showSplash()
     File* stream = nullptr;
     for (int index = 0; index < SPLASH_COUNT; index++) {
         char filePath[64];
-        
+
         // First try widescreen version if in widescreen mode
         if (gameIsWidescreen()) {
-            snprintf(filePath, sizeof(filePath), "%ssplash%d%s.rix", path, splash, 
-                     settings.graphics.widescreen_variant_suffix.c_str());
+            snprintf(filePath, sizeof(filePath), "%ssplash%d%s.rix", path, splash,
+                settings.graphics.widescreen_variant_suffix.c_str());
             stream = fileOpen(filePath, "rb");
             if (stream != nullptr) {
                 break;
             }
         }
-        
+
         // If widescreen version not found or not in widescreen mode, try regular version
         snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
