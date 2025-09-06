@@ -936,21 +936,21 @@ const PreferencesOffsets gPreferencesOffsets800 = {
     // Title and buttons
     150, // titleTextX
     10, // titleTextY
-    113, // defaultLabelX
+    121, // defaultLabelX
     468, // defaultLabelY
-    239, // doneLabelX
+    247, // doneLabelX
     468, // doneLabelY
-    353, // cancelLabelX
+    361, // cancelLabelX
     468, // cancelLabelY
     72, // speedLabelX
     570, // speedLabelY
 
     // Button positions
-    93, // defaultButtonX
+    101, // defaultButtonX
     468, // defaultButtonY
-    218, // doneButtonX
+    226, // doneButtonX
     468, // doneButtonY
-    333, // cancelButtonX
+    341, // cancelButtonX
     468, // cancelButtonY
 
     // Checkbox position
