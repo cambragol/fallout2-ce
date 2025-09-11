@@ -338,10 +338,10 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
         int artWidth = artGetWidth(background, 0, 0);
         int artHeight = artGetHeight(background, 0, 0);
         unsigned char* backgroundData = artGetFrameData(background, 0, 0);
-        
+
         // Clear the screen buffer
         bufferFill(gEndgameEndingSlideshowWindowBuffer, screenWidth, screenHeight, screenWidth, _colorTable[0]);
-        
+
         // Load the appropriate palette for this art
         endgameEndingLoadPalette(6, art_num);
 
@@ -372,13 +372,13 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
 
         int currentPanPosition;
         int targetPanPosition;
-        
+
         // Set panning direction (left to right or right to left)
         if (direction == -1) {
             currentPanPosition = artWidth - screenWidth; // Start from right
-            targetPanPosition = 0;                      // End at left
+            targetPanPosition = 0; // End at left
         } else {
-            currentPanPosition = 0;                     // Start from left
+            currentPanPosition = 0; // Start from left
             targetPanPosition = artWidth - screenWidth; // End at right
         }
 
@@ -396,8 +396,8 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
             // Check if it's time to update the frame
             if (getTicksSince(lastFrameTime) >= baseFrameDelay) {
                 // Render the current panning position
-                blitBufferToBuffer(backgroundData + currentPanPosition, screenWidth, screenHeight, artWidth, 
-                                   gEndgameEndingSlideshowWindowBuffer, screenWidth);
+                blitBufferToBuffer(backgroundData + currentPanPosition, screenWidth, screenHeight, artWidth,
+                    gEndgameEndingSlideshowWindowBuffer, screenWidth);
 
                 // Update subtitles if they're loaded
                 if (subtitlesLoaded) {
@@ -410,7 +410,7 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
                 // Calculate palette intensity for fade effects
                 bool shouldAdjustPalette;
                 double intensityFactor;
-                
+
                 if (currentPanPosition > fadeStartDistance) {
                     if (subtitleTriggerPosition > currentPanPosition) {
                         shouldAdjustPalette = false;
@@ -489,7 +489,7 @@ static void endgameEndingRenderStaticScene(int art_num, const char* narratorFile
 
     int game_width, game_height;
 
-    if (gameIsWidescreen()){
+    if (gameIsWidescreen()) {
         game_width = 800;
         game_height = 500;
     } else {
@@ -591,7 +591,7 @@ static int endgameEndingSlideshowWindowInit()
 
     int game_width, game_height;
 
-    if (gameIsWidescreen()){
+    if (gameIsWidescreen()) {
         game_width = 800;
         game_height = 500;
     } else {
@@ -860,7 +860,7 @@ static void endgameEndingRefreshSubtitles()
 {
     int game_width, game_height;
 
-    if (gameIsWidescreen()){
+    if (gameIsWidescreen()) {
         game_width = 800;
         game_height = 500;
     } else {
