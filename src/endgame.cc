@@ -207,6 +207,17 @@ static int gEndgameEndingSlideshowWindow;
 
 static int gEndgameEndingOverlay;
 
+static void getScreenDimensions(int* width, int* height)
+{
+    if (gameIsWidescreen()) {
+        *width = 800;
+        *height = 500;
+    } else {
+        *width = 640;
+        *height = 480;
+    }
+}
+
 // 0x43F788
 void endgamePlaySlideshow()
 {
@@ -322,15 +333,7 @@ static void endgameEndingRenderPanningScene(int direction, const char* narratorF
     int fid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, art_num, gameIsWidescreen());
 
     int screenWidth, screenHeight;
-
-    // Set screen dimensions based on widescreen mode
-    if (gameIsWidescreen()) {
-        screenWidth = 800;
-        screenHeight = 500;
-    } else {
-        screenWidth = 640;
-        screenHeight = 480;
-    }
+    getScreenDimensions(&screenWidth, &screenHeight);
 
     CacheEntry* backgroundHandle;
     Art* background = artLock(fid, &backgroundHandle);
@@ -488,14 +491,7 @@ static void endgameEndingRenderStaticScene(int art_num, const char* narratorFile
     }
 
     int game_width, game_height;
-
-    if (gameIsWidescreen()) {
-        game_width = 800;
-        game_height = 500;
-    } else {
-        game_width = 640;
-        game_height = 480;
-    }
+    getScreenDimensions(&game_width, &game_height);
 
     unsigned char* backgroundData = artGetFrameData(background, 0, 0);
     if (backgroundData != nullptr) {
@@ -590,14 +586,7 @@ static int endgameEndingSlideshowWindowInit()
     }
 
     int game_width, game_height;
-
-    if (gameIsWidescreen()) {
-        game_width = 800;
-        game_height = 500;
-    } else {
-        game_width = 640;
-        game_height = 480;
-    }
+    getScreenDimensions(&game_width, &game_height);
 
     backgroundSoundDelete();
 
@@ -859,14 +848,7 @@ static int endgameEndingSubtitlesLoad(const char* filePath)
 static void endgameEndingRefreshSubtitles()
 {
     int game_width, game_height;
-
-    if (gameIsWidescreen()) {
-        game_width = 800;
-        game_height = 500;
-    } else {
-        game_width = 640;
-        game_height = 480;
-    }
+    getScreenDimensions(&game_width, &game_height);
 
     if (gEndgameEndingSubtitlesLength <= gEndgameEndingSubtitlesCurrentLine) {
         if (gEndgameEndingVoiceOverSubtitlesLoaded) {
