@@ -5,6 +5,7 @@
 #include "art.h"
 #include "color.h"
 #include "draw.h"
+#include "dbox.h"
 #include "game.h"
 #include "game_sound.h"
 #include "input.h"
@@ -53,6 +54,10 @@ static bool gMainMenuWindowInitialized = false;
 
 // 0x51950C
 static unsigned int gMainMenuScreensaverDelay = 120000;
+
+static MessageList gFissionMessageList;
+
+static MessageListItem gFissionMessageListItem;
 
 // 0x519510
 static const int gMainMenuButtonKeyBindings[MAIN_MENU_BUTTON_COUNT] = {
@@ -125,9 +130,20 @@ int mainMenuWindowInit()
     int fid;
     MessageListItem msg;
     int len;
+    int btn;
 
     if (gMainMenuWindowInitialized) {
         return 0;
+    }
+
+    if (!messageListInit(&gFissionMessageList)) {
+        return -1;
+    }
+
+    char fissionPath[COMPAT_MAX_PATH];
+    snprintf(fissionPath, sizeof(fissionPath), "%s%s", asc_5186C8, "fission.msg");
+    if (!messageListLoad(&gFissionMessageList, fissionPath)) {
+        return -1;
     }
 
     // Set widescreen - must be wider in both axis and set to widescreen
@@ -214,13 +230,19 @@ int mainMenuWindowInit()
         return main_menu_fatal_error();
     }
 
-    blitBufferToBufferTrans(
-        _mainMenuFissionLogoFrmImage.getData(),
+    btn = buttonCreate(gMainMenuWindow,
+        gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
+        gOffsets.hashY - 2,
         _mainMenuFissionLogoFrmImage.getWidth(),
         _mainMenuFissionLogoFrmImage.getHeight(),
-        _mainMenuFissionLogoFrmImage.getWidth(),
-        gMainMenuWindowBuffer + gOffsets.width * (gOffsets.hashY - 2) + gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
-        gOffsets.width);
+        -1,
+        -1,
+        -1,
+        501,
+        _mainMenuFissionLogoFrmImage.getData(),
+        _mainMenuFissionLogoFrmImage.getData(),
+        nullptr,
+        BUTTON_FLAG_TRANSPARENT);
 
     // Version.
     char version[VERSION_MAX];
@@ -228,13 +250,13 @@ int mainMenuWindowInit()
     len = fontGetStringWidth(version);
     windowDrawText(gMainMenuWindow, version, 0, gOffsets.hashX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.hashY, fontSettings | 0x06000000);
 
-    // Hash
+    // Hash - modified for release/fission logo
     char commitHash[VERSION_MAX] = "POWERED BY: ";
     // strcat(commitHash, _BUILD_HASH);
     len = fontGetStringWidth(commitHash);
     windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.versionX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.versionY, fontSettings | 0x06000000);
 
-    // Build Date
+    // Build Date - removed for release
     /*char buildDate[VERSION_MAX] = "DATE: ";
     strcat(buildDate, _BUILD_DATE);
     len = fontGetStringWidth(buildDate);
@@ -387,6 +409,27 @@ int _main_menu_is_enabled()
     return 1;
 }
 
+static int showFissionAbout()
+{
+        // Info dialog (OK)
+        const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 300);
+        const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 301);
+        const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 302);
+        const char* bodyLines[] = { bodyText, bodyText2 };
+
+        showDialogBox(
+            title,
+            bodyLines,
+            2,
+            192, 135,
+            _colorTable[32328],
+            nullptr,
+            _colorTable[32328],
+            1 // DIALOG_BOX_OK
+        );
+        return 1;
+}
+
 // 0x481AEC
 int mainMenuWindowHandleEvents()
 {
@@ -430,6 +473,10 @@ int mainMenuWindowHandleEvents()
                 brightnessDecrease();
             } else if (keyCode == KEY_UPPERCASE_D || keyCode == KEY_LOWERCASE_D) {
                 rc = MAIN_MENU_SCREENSAVER;
+                continue;
+            } else if (keyCode == 501){
+                main_menu_play_sound("nmselec0");
+                showFissionAbout();
                 continue;
             } else if (keyCode == 1111) {
                 if (!(mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT)) {
