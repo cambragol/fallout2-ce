@@ -4,8 +4,8 @@
 
 #include "art.h"
 #include "color.h"
-#include "draw.h"
 #include "dbox.h"
+#include "draw.h"
 #include "game.h"
 #include "game_sound.h"
 #include "input.h"
@@ -411,23 +411,23 @@ int _main_menu_is_enabled()
 
 static int showFissionAbout()
 {
-        // Info dialog (OK)
-        const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 300);
-        const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 301);
-        const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 302);
-        const char* bodyLines[] = { bodyText, bodyText2 };
+    // Info dialog (OK)
+    const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 300);
+    const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 301);
+    const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 302);
+    const char* bodyLines[] = { bodyText, bodyText2 };
 
-        showDialogBox(
-            title,
-            bodyLines,
-            2,
-            192, 135,
-            _colorTable[32328],
-            nullptr,
-            _colorTable[32328],
-            1 // DIALOG_BOX_OK
-        );
-        return 1;
+    showDialogBox(
+        title,
+        bodyLines,
+        2,
+        192, 135,
+        _colorTable[32328],
+        nullptr,
+        _colorTable[32328],
+        1 // DIALOG_BOX_OK
+    );
+    return 1;
 }
 
 // 0x481AEC
@@ -474,7 +474,7 @@ int mainMenuWindowHandleEvents()
             } else if (keyCode == KEY_UPPERCASE_D || keyCode == KEY_LOWERCASE_D) {
                 rc = MAIN_MENU_SCREENSAVER;
                 continue;
-            } else if (keyCode == 501){
+            } else if (keyCode == 501) {
                 main_menu_play_sound("nmselec0");
                 showFissionAbout();
                 continue;
