@@ -1793,13 +1793,14 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
         File* stream = nullptr;
 
         if (gArtLanguageInitialized) {
-            char* pch = strchr(artFilePath, '\\');
-            if (pch == nullptr) {
-                pch = artFilePath;
+            // Skip past "art/" to get the relative path within art directory
+            const char* relativePath = artFilePath;
+            if (strncmp(artFilePath, "art/", 4) == 0 || strncmp(artFilePath, "art\\", 4) == 0) {
+                relativePath = artFilePath + 4;
             }
 
             char localizedPath[COMPAT_MAX_PATH];
-            snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, pch);
+            snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, relativePath);
 
             stream = fileOpen(localizedPath, "rb");
         }
@@ -1830,13 +1831,14 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
     if (artFileName != nullptr) {
         bool loaded = false;
         if (gArtLanguageInitialized) {
-            char* pch = strchr(artFileName, '\\');
-            if (pch == nullptr) {
-                pch = artFileName;
+            // Skip past "art/" to get the relative path within art directory
+            const char* relativePath = artFileName;
+            if (strncmp(artFileName, "art/", 4) == 0 || strncmp(artFileName, "art\\", 4) == 0) {
+                relativePath = artFileName + 4;
             }
 
             char localizedPath[COMPAT_MAX_PATH];
-            snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, pch);
+            snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, relativePath);
 
             if (artRead(localizedPath, data) == 0) {
                 loaded = true;
