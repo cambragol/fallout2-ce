@@ -398,7 +398,7 @@ static void showDeath()
     int game_width, game_height;
 
     restoreUserAspectPreference();
-    if(gameIsWidescreen() && backgroundFrmImage.getWidth() >= 800){
+    if (gameIsWidescreen() && backgroundFrmImage.getWidth() >= 800) {
         resizeContent(800, 500);
         game_width = 800;
         game_height = 500;

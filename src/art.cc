@@ -1798,10 +1798,10 @@ static int artCacheGetFileSizeImpl(int fid, int* sizePtr)
             if (strncmp(artFilePath, "art/", 4) == 0 || strncmp(artFilePath, "art\\", 4) == 0) {
                 relativePath = artFilePath + 4;
             }
-            
+
             char localizedPath[COMPAT_MAX_PATH];
             snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, relativePath);
-            
+
             stream = fileOpen(localizedPath, "rb");
         }
 
@@ -1836,10 +1836,10 @@ static int artCacheReadDataImpl(int fid, int* sizePtr, unsigned char* data)
             if (strncmp(artFileName, "art/", 4) == 0 || strncmp(artFileName, "art\\", 4) == 0) {
                 relativePath = artFileName + 4;
             }
-            
+
             char localizedPath[COMPAT_MAX_PATH];
             snprintf(localizedPath, sizeof(localizedPath), "art\\%s\\%s", gArtLanguage, relativePath);
-            
+
             if (artRead(localizedPath, data) == 0) {
                 loaded = true;
             }
