@@ -711,8 +711,20 @@ static void endgameEndingVoiceOverInit(const char* fileBaseName)
     gEndgameEndingVoiceOverSpeechLoaded = false;
     gEndgameEndingVoiceOverSubtitlesLoaded = false;
 
-    // Build speech file path.
-    snprintf(path, sizeof(path), "%s%s", "narrator\\", fileBaseName);
+    const char* language = settings.system.language.c_str();
+    int speechFileSize;
+    bool speechFound = false;
+
+    // Added localized language paths to allow localized narrations
+    if (compat_stricmp(language, ENGLISH) != 0) {
+        snprintf(path, sizeof(path), "narrator\\%s\\%s", language, fileBaseName);
+        speechFound = true;
+    }
+
+    // If localized not found or English language
+    if (!speechFound) {
+        snprintf(path, sizeof(path), "narrator\\%s", fileBaseName);
+    }
 
     if (speechLoad(path, 10, 14, 15) != -1) {
         gEndgameEndingVoiceOverSpeechLoaded = true;
@@ -1169,7 +1181,17 @@ void endgameSetupDeathEnding(int reason)
     }
 
     // Build death ending file path.
-    strcpy(gEndgameDeathEndingFileName, "narrator\\");
+    const char* language = settings.system.language.c_str();
+
+    if (compat_stricmp(language, ENGLISH) != 0) {
+        // Localized narrator folder
+        strcpy(gEndgameDeathEndingFileName, "narrator\\");
+        strcat(gEndgameDeathEndingFileName, language);
+        strcat(gEndgameDeathEndingFileName, "\\");
+    } else {
+        // Default narrator folder
+        strcpy(gEndgameDeathEndingFileName, "narrator\\");
+    }
 
     int percentage = 0;
     endgameDeathEndingValidate(&percentage);
