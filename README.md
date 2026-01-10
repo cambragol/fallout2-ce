@@ -4,7 +4,7 @@
 
 This is an active fork of the original Community Edition, focused on features for Fallout: Sonora.
 
-## ✅ Features
+## Features
 
 - Original gameplay, improved engine
 - Runs natively on multiple platforms
@@ -12,7 +12,7 @@ This is an active fork of the original Community Edition, focused on features fo
 - Added features (improved barter, extended pathfinding, worldmap trails, etc)
 - Fully supports some popular mods (see below)
 
-## ⚠️ Mod Compatibility
+## Mod Compatibility
 
 Fully support:
 - Fallout: Nevada (original version)
