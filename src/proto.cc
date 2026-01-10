@@ -2632,9 +2632,11 @@ static void load_single_mod_proto_list(const char* list_path, const char* mod_na
 
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines and comments
         if (line[0] == '\0' || line[0] == '#' || line[0] == ';') {
@@ -2838,9 +2840,11 @@ static void load_mod_proto_messages_from_file(const char* full_path, const char*
     while (fileReadString(line, sizeof(line) - 1, stream)) {
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines and comments
         if (line[0] == '\0' || line[0] == '#' || line[0] == ';') {
@@ -3388,7 +3392,8 @@ static void protoGenerateModProtoListDebug()
 
     // Detailed mod proto listing by type
     for (int type = 0; type < OBJ_TYPE_COUNT; type++) {
-        if (protosByType[type] == 0) continue;
+        if (protosByType[type] == 0)
+            continue;
 
         fprintf(debugStream, "%s MOD PROTOS:\n", artGetObjectTypeName(type));
         for (int i = 0; i < strlen(artGetObjectTypeName(type)) + 12; i++) {
@@ -3397,7 +3402,8 @@ static void protoGenerateModProtoListDebug()
         fputc('\n', debugStream);
 
         for (int i = 0; i < _mod_proto_entries_size; i++) {
-            if (_mod_proto_entries[i].type != type) continue;
+            if (_mod_proto_entries[i].type != type)
+                continue;
 
             ModProtoEntry* entry = &_mod_proto_entries[i];
 

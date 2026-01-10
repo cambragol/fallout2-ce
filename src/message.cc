@@ -664,9 +664,11 @@ void messageListFilterGenderWords(MessageList* messageList, int gender)
  */
 bool messageListAddModProtoMessage(int pid, int message_type, const char* text)
 {
-    if (message_type < 0 || message_type > 1) return false;
+    if (message_type < 0 || message_type > 1)
+        return false;
     auto& messages = _modProtoMessages[pid];
-    if (messages[message_type]) internal_free(messages[message_type]);
+    if (messages[message_type])
+        internal_free(messages[message_type]);
     messages[message_type] = internal_strdup(text);
     return messages[message_type] != nullptr;
 }
@@ -680,7 +682,8 @@ bool messageListAddModProtoMessage(int pid, int message_type, const char* text)
  */
 char* messageListGetModProtoMessage(int pid, int message_type)
 {
-    if (message_type < 0 || message_type > 1) return nullptr;
+    if (message_type < 0 || message_type > 1)
+        return nullptr;
     auto it = _modProtoMessages.find(pid);
     if (it != _modProtoMessages.end()) {
         return it->second[message_type];
@@ -696,7 +699,8 @@ void messageListFreeModProtoMessages()
 {
     for (auto& pair : _modProtoMessages) {
         for (int i = 0; i < 2; i++) {
-            if (pair.second[i]) internal_free(pair.second[i]);
+            if (pair.second[i])
+                internal_free(pair.second[i]);
         }
     }
     _modProtoMessages.clear();
@@ -772,9 +776,11 @@ static void loadModFileWithSections(MessageList* messageList, const char* fullPa
     while (fileReadString(line, sizeof(line) - 1, stream)) {
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines and comments
         if (line[0] == '\0' || line[0] == '#' || line[0] == ';') {
@@ -933,7 +939,8 @@ static void loadModMessagesForType(MessageList* messageList, const char* msg_typ
  */
 void generateMessageReport(MessageList* messageList, const char* msg_type)
 {
-    if (!messageList || !msg_type) return;
+    if (!messageList || !msg_type)
+        return;
 
     char reportPath[COMPAT_MAX_PATH];
     snprintf(reportPath, sizeof(reportPath), "%sdata%clists%cmessages_%s_list.txt", _cd_path_base, DIR_SEPARATOR, DIR_SEPARATOR, msg_type);

@@ -617,9 +617,11 @@ static void holodiskLoadModFile(const char* filename)
     while (fileReadString(line, sizeof(line) - 1, stream)) {
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines and comments
         if (line[0] == '\0' || line[0] == '#' || line[0] == ';') {
@@ -775,7 +777,8 @@ static uint32_t questGetModNamespace(const char* filename)
     baseName[sizeof(baseName) - 1] = '\0';
 
     char* dot = strrchr(baseName, '.');
-    if (dot) *dot = '\0';
+    if (dot)
+        *dot = '\0';
 
     return questHashString(baseName);
 }
@@ -1630,7 +1633,8 @@ static void pipboyWindowHandleStatus(int userInput)
 
                             // Set selection to last item on the new page
                             gPipboySelectedQuestIndex = questsOnNewPage - 1;
-                            if (gPipboySelectedQuestIndex < 0) gPipboySelectedQuestIndex = 0;
+                            if (gPipboySelectedQuestIndex < 0)
+                                gPipboySelectedQuestIndex = 0;
                             gPipboySelectedIndex = gPipboySelectedQuestIndex;
 
                             // Also go to previous page for holodisks if available
@@ -1695,7 +1699,8 @@ static void pipboyWindowHandleStatus(int userInput)
 
                             // Set to last holodisk on the new page
                             gPipboySelectedHolodiskIndex = holodisksOnCurrentPage - 1;
-                            if (gPipboySelectedHolodiskIndex < 0) gPipboySelectedHolodiskIndex = 0;
+                            if (gPipboySelectedHolodiskIndex < 0)
+                                gPipboySelectedHolodiskIndex = 0;
 
                             // Also go to previous page for quests if available
                             if (_view_page_quest > 0) {
@@ -1876,7 +1881,8 @@ static void pipboyWindowHandleStatus(int userInput)
 
                     // Try to use the same index in holodisk list
                     gPipboySelectedHolodiskIndex = fmin(gPipboySelectedQuestIndex, gPipboyWindowHolodisksCount - 1);
-                    if (gPipboySelectedHolodiskIndex < 0) gPipboySelectedHolodiskIndex = 0;
+                    if (gPipboySelectedHolodiskIndex < 0)
+                        gPipboySelectedHolodiskIndex = 0;
                     gPipboySelectedIndex = gPipboySelectedHolodiskIndex;
 
                     pipboyRedrawStatusPageWithSelection();
@@ -1996,7 +2002,8 @@ static void pipboyWindowHandleStatus(int userInput)
 
                     // Try to use the same index in quest list
                     gPipboySelectedQuestIndex = fmin(gPipboySelectedHolodiskIndex, gPipboyWindowQuestsCurrentPageCount - 1);
-                    if (gPipboySelectedQuestIndex < 0) gPipboySelectedQuestIndex = 0;
+                    if (gPipboySelectedQuestIndex < 0)
+                        gPipboySelectedQuestIndex = 0;
                     gPipboySelectedIndex = gPipboySelectedQuestIndex;
 
                     pipboyRedrawStatusPageWithSelection();
@@ -2027,7 +2034,8 @@ static void pipboyWindowHandleStatus(int userInput)
 
                         // Set quest selection to last item on the new page (for left arrow)
                         gPipboySelectedQuestIndex = questsOnNewPage - 1;
-                        if (gPipboySelectedQuestIndex < 0) gPipboySelectedQuestIndex = 0;
+                        if (gPipboySelectedQuestIndex < 0)
+                            gPipboySelectedQuestIndex = 0;
                         gPipboySelectedIndex = gPipboySelectedQuestIndex;
 
                         // rebuild entire page
@@ -4195,13 +4203,15 @@ static void generateQuestListDebug()
             // Check if this is a valid base quest (non-zero location indicates initialized)
             if (gQuestDescriptions[i].location != 0) {
                 baseCount++;
-                if (i > maxUsedIndex) maxUsedIndex = i;
+                if (i > maxUsedIndex)
+                    maxUsedIndex = i;
             }
         } else {
             // Check if this is a valid mod quest
             if (gQuestModNames[i][0] != '\0') {
                 modCount++;
-                if (i > maxUsedIndex) maxUsedIndex = i;
+                if (i > maxUsedIndex)
+                    maxUsedIndex = i;
             }
         }
     }
@@ -4353,9 +4363,11 @@ static int questLoadModFile(const char* filename)
 
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines after trimming
         if (line[0] == '\0') {
@@ -4519,9 +4531,11 @@ static int questInit()
 
         // Remove line endings
         char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        if (newline)
+            *newline = '\0';
         char* cr = strchr(line, '\r');
-        if (cr) *cr = '\0';
+        if (cr)
+            *cr = '\0';
 
         // Skip empty lines after trimming
         if (line[0] == '\0') {

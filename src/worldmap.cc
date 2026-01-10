@@ -964,25 +964,29 @@ void worldmapWriteDefaultOffsetsToConfig(bool isWidescreen, const WorldmapOffset
 
 int wmGetAreaVisitedState(int areaIndex)
 {
-    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX) return 0;
+    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX)
+        return 0;
     return wmAreaInfoList[areaIndex].visitedState;
 }
 
 const char* wmGetAreaName(int areaIndex)
 {
-    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX) return "";
+    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX)
+        return "";
     return wmAreaInfoList[areaIndex].name;
 }
 
 const char* wmGetMapLookupName(int mapIndex)
 {
-    if (mapIndex < 0 || mapIndex >= TOTAL_MAP_MAX) return "";
+    if (mapIndex < 0 || mapIndex >= TOTAL_MAP_MAX)
+        return "";
     return wmMapInfoList[mapIndex].lookupName;
 }
 
 int wmGetAreaId(int areaIndex)
 {
-    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX) return 0;
+    if (areaIndex < 0 || areaIndex >= TOTAL_AREA_MAX)
+        return 0;
     return wmAreaInfoList[areaIndex].areaId;
 }
 
@@ -1035,7 +1039,8 @@ static uint32_t wmGetModNamespace(const char* filename)
     baseName[sizeof(baseName) - 1] = '\0';
 
     char* dot = strrchr(baseName, '.');
-    if (dot) *dot = '\0';
+    if (dot)
+        *dot = '\0';
 
     return wmHashString(baseName);
 }
@@ -2705,7 +2710,8 @@ static uint32_t wmAreaGetModNamespace(const char* filename)
     baseName[sizeof(baseName) - 1] = '\0';
 
     char* dot = strrchr(baseName, '.');
-    if (dot) *dot = '\0';
+    if (dot)
+        *dot = '\0';
 
     return wmAreaHashString(baseName);
 }
@@ -2747,22 +2753,26 @@ static void wmAreaInitFromConfig(CityInfo* city, Config* config, const char* sec
         debugPrint("\nwmAreaInitFromConfig: ERROR: Missing world_pos in section %s", section);
         return;
     }
-    if (strParseInt(&str, &(city->x)) == -1) return;
-    if (strParseInt(&str, &(city->y)) == -1) return;
+    if (strParseInt(&str, &(city->x)) == -1)
+        return;
+    if (strParseInt(&str, &(city->y)) == -1)
+        return;
 
     // Required field: start_state
     if (!configGetString(config, section, "start_state", &str)) {
         debugPrint("\nwmAreaInitFromConfig: ERROR: Missing start_state in section %s", section);
         return;
     }
-    if (strParseStrFromList(&str, &(city->state), wmStateStrs, 2) == -1) return;
+    if (strParseStrFromList(&str, &(city->state), wmStateStrs, 2) == -1)
+        return;
 
     // Required field: size
     if (!configGetString(config, section, "size", &str)) {
         debugPrint("\nwmAreaInitFromConfig: ERROR: Missing size in section %s", section);
         return;
     }
-    if (strParseStrFromList(&str, &(city->size), wmAreaSizeStrs, 3) == -1) return;
+    if (strParseStrFromList(&str, &(city->size), wmAreaSizeStrs, 3) == -1)
+        return;
 
     // Optional field: townmap_art_idx
     if (configGetInt(config, section, "townmap_art_idx", &num)) {
@@ -2782,7 +2792,8 @@ static void wmAreaInitFromConfig(CityInfo* city, Config* config, const char* sec
 
     // Optional field: lock_state
     if (configGetString(config, section, "lock_state", &str)) {
-        if (strParseStrFromList(&str, &(city->lockState), wmStateStrs, 2) == -1) return;
+        if (strParseStrFromList(&str, &(city->lockState), wmStateStrs, 2) == -1)
+            return;
     }
 
     // Load entrances
@@ -2796,13 +2807,20 @@ static void wmAreaInitFromConfig(CityInfo* city, Config* config, const char* sec
         EntranceInfo* entrance = &(city->entrances[city->entrancesLength]);
         wmEntranceSlotInit(entrance);
 
-        if (strParseStrFromList(&str, &(entrance->state), wmStateStrs, 2) == -1) return;
-        if (strParseInt(&str, &(entrance->x)) == -1) return;
-        if (strParseInt(&str, &(entrance->y)) == -1) return;
-        if (strParseStrFromFunc(&str, &(entrance->map), &wmParseFindMapIdxMatch) == -1) return;
-        if (strParseInt(&str, &(entrance->elevation)) == -1) return;
-        if (strParseInt(&str, &(entrance->tile)) == -1) return;
-        if (strParseInt(&str, &(entrance->rotation)) == -1) return;
+        if (strParseStrFromList(&str, &(entrance->state), wmStateStrs, 2) == -1)
+            return;
+        if (strParseInt(&str, &(entrance->x)) == -1)
+            return;
+        if (strParseInt(&str, &(entrance->y)) == -1)
+            return;
+        if (strParseStrFromFunc(&str, &(entrance->map), &wmParseFindMapIdxMatch) == -1)
+            return;
+        if (strParseInt(&str, &(entrance->elevation)) == -1)
+            return;
+        if (strParseInt(&str, &(entrance->tile)) == -1)
+            return;
+        if (strParseInt(&str, &(entrance->rotation)) == -1)
+            return;
 
         city->entrancesLength++;
     }
@@ -2882,13 +2900,20 @@ static void wmAreaUpdateFromConfig(CityInfo* city, Config* config, const char* s
         EntranceInfo* entrance = &(city->entrances[city->entrancesLength]);
         wmEntranceSlotInit(entrance);
 
-        if (strParseStrFromList(&str, &(entrance->state), wmStateStrs, 2) == -1) break;
-        if (strParseInt(&str, &(entrance->x)) == -1) break;
-        if (strParseInt(&str, &(entrance->y)) == -1) break;
-        if (strParseStrFromFunc(&str, &(entrance->map), &wmParseFindMapIdxMatch) == -1) break;
-        if (strParseInt(&str, &(entrance->elevation)) == -1) break;
-        if (strParseInt(&str, &(entrance->tile)) == -1) break;
-        if (strParseInt(&str, &(entrance->rotation)) == -1) break;
+        if (strParseStrFromList(&str, &(entrance->state), wmStateStrs, 2) == -1)
+            break;
+        if (strParseInt(&str, &(entrance->x)) == -1)
+            break;
+        if (strParseInt(&str, &(entrance->y)) == -1)
+            break;
+        if (strParseStrFromFunc(&str, &(entrance->map), &wmParseFindMapIdxMatch) == -1)
+            break;
+        if (strParseInt(&str, &(entrance->elevation)) == -1)
+            break;
+        if (strParseInt(&str, &(entrance->tile)) == -1)
+            break;
+        if (strParseInt(&str, &(entrance->rotation)) == -1)
+            break;
 
         city->entrancesLength++;
     }
@@ -3140,7 +3165,8 @@ static void wmGenerateAreaListDebug()
     // First pass: count and mark duplicates
     for (int i = 0; i < wmMaxAreaNum; i++) {
         if (wmAreaInfoList[i].name[0] != '\0') {
-            if (i > maxUsedIndex) maxUsedIndex = i;
+            if (i > maxUsedIndex)
+                maxUsedIndex = i;
 
             if (i < BASE_AREA_MAX) {
                 baseCount++;
@@ -3954,7 +3980,8 @@ static void wmGenerateMapListDebug()
     // First pass: count and mark duplicates
     for (int i = 0; i < wmMaxMapNum; i++) {
         if (wmMapInfoList[i].lookupName[0] != '\0') {
-            if (i > maxUsedIndex) maxUsedIndex = i;
+            if (i > maxUsedIndex)
+                maxUsedIndex = i;
 
             if (i < BASE_MAP_MAX) {
                 baseCount++;

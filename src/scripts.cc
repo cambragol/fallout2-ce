@@ -1484,14 +1484,16 @@ static void generateScriptsListReport(int vanillaCount, bool collisionOccurred, 
     for (int i = 0; i < gScriptsListEntriesLength; i++) {
         if (gScriptsListEntries[i].name[0] != '\0') {
             totalCount++;
-            if (i > maxIndex) maxIndex = i;
+            if (i > maxIndex)
+                maxIndex = i;
 
             // Determine if this is vanilla or mod
             if (i < vanillaCount) {
                 actualVanillaCount++;
             } else {
                 actualModCount++;
-                if (firstModIndex == -1) firstModIndex = i;
+                if (firstModIndex == -1)
+                    firstModIndex = i;
                 lastModIndex = i;
             }
         }
