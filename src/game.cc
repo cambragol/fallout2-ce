@@ -1336,6 +1336,20 @@ int showQuitConfirmationDialog()
     return rc;
 }
 
+// create a folder to hold 'lists' reports
+void createListsFolder()
+{
+    // create the "lists" folder inside the "data" directory
+    const char* dataDir = "data";
+    const char* listsFolderName = "lists";
+
+    char listsFolderPath[COMPAT_MAX_PATH];
+    compat_makepath(listsFolderPath, nullptr, dataDir, listsFolderName, nullptr);
+
+    // create the lists folder
+    compat_mkdir(listsFolderPath);
+}
+
 // 0x44418C
 static int gameDbInit()
 {
@@ -1447,6 +1461,8 @@ static int gameDbInit()
         }
     }
 
+    createListsFolder();
+
     sfallLoadMods();
 
     return 0;
@@ -1551,6 +1567,7 @@ static void showSplash()
     // Perform clean blit
     _scr_blit(data, width, height, 0, 0, width, height, x, y);
     paletteFadeTo(palette);
+    inputPauseForTocks(1000); // Added for gravitas
 
     internal_free(data);
     internal_free(palette);

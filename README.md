@@ -1,148 +1,170 @@
-# Fallout 2 Community Engine (Fallout2-CE)
+<p align="center">
+  <img src="files/fallout-fission-logo.jpg" alt="Fallout: F.I.S.S.I.O.N. Logo" width="1024">
+</p>
 
-**Fallout2-CE** is a cross-platform reimplementation of Fallout 2, preserving the original gameplay while fixing engine bugs and adding quality-of-life improvements. It runs smoothly on Windows, Linux, macOS, Android, iOS, and even in browsers.
+# Fallout: F.I.S.S.I.O.N.
+*Flexible Isometric Simulation System for Interactive Open‑world Nuclear‑roleplaying*
 
-This is an active fork of the original Community Edition, focused on features for Fallout: Sonora.
+Fallout: F.I.S.S.I.O.N. is a next‑generation, cross‑platform reimplementation of Fallout 1 & 2 (Fallout2-CE) that preserves the original isometric, turn‑based gameplay while adding modding enhancements, widescreen support, and true community‑driven extensibility. Run it on Windows, Linux, macOS, Android, iOS—and even in browsers.
 
-## Features
+> ⚛️ **Powered by the F.I.S.S.I.O.N. Engine**
+> *Flexible. Isometric. Simulation. System. Interactive. Open‑world. Nuclear‑roleplay.*
+> **Split from the past, Powering the future**
 
-- Original gameplay, improved engine
-- Runs natively on multiple platforms
-- Support for large game areas and widescreens
-- Added features (improved barter, extended pathfinding, worldmap trails, etc)
-- Fully supports some popular mods (see below)
+---
 
-## Mod Compatibility
+## Key Features
 
-Fully support:
-- Fallout: Nevada (original version)
-- Fallout: Sonora (original version)
+- 🔲 **Authentic isometric, turn‑based experience** (SPECIAL, original Fallout gameplay)
+- 💻 **True cross‑platform support**: Windows, macOS, Linux, iOS, Android, Web
+- 🖥️ **Widescreen & high‑res scaling** with pixel‑perfect aspect preservation
+- 🧩 **Modular, customizable systems**—community mods plug in seamlessly (working now)
+- 📦 **100% compatible** with original Fallout 1 & 2 assets  (can't run Fallout 1 yet... one day)
+- 🌎 **Future‑proof**: easily extended for new content and Fallout 2 integration (working now)
 
-**Not supported yet**:
-- [Restoration Project](https://github.com/BGforgeNet/Fallout2_Restoration_Project)
-- [Fallout: Et Tu](https://github.com/rotators/Fo1in2)
-- [Olympus 2207](https://olympus2207.com)
-- Resurrection, Yesterday — untested
+---
 
-For Fallout 1, see [Fallout1-CE](https://github.com/alexbatalov/fallout1-ce) (unrelated project).
+## 🔠 F.I.S.S.I.O.N. Breakdown
+
+```
+╔═══════════════════════╦════════════════════════════════════════════╗
+║      ATTRIBUTE        ║               DESCRIPTION                  ║
+╠═══════════════════════╬════════════════════════════════════════════╣
+║ F – Flexible          ║ Adaptable, moddable, and future‑ready      ║
+║ I – Isometric         ║ Faithful to classic 2D grid perspective    ║
+║ S – Simulation        ║ Manages AI, world rules, stats, turn timing║
+║ S – System            ║ Unified architecture for engine/runtime    ║
+║ I – Interactive       ║ Dynamic player choices and feedback        ║
+║ O – Open‑world        ║ Seamless large‑map exploration             ║
+║ N – Nuclear‑roleplay  ║ Immersive post‑nuclear RPG experience      ║
+╚═══════════════════════╩════════════════════════════════════════════╝
+```
+
+---
+
+## ⚠️ Mod/Game Compatibility
+
+**Fully supported**:
+- Fallout 2
+- Fallout: Nevada
+- Fallout: Sonora
+
+**Not supported yet, maybe never**:
+- Fallout 1
+- Fallout Nevada or Sonora 'repacks'
+- Restoration Project
+- Fallout: Et Tu
+- Olympus 2207
+- Resurrection, Yesterday (untested)
+
+(For full Fallout 1 support see [Fallout1-CE](https://github.com/alexbatalov/fallout1-ce).)
 
 ---
 
 ## 💾 Installation
 
-You must own Fallout 2. Purchase it from [GOG](https://www.gog.com/game/fallout_2), [Steam](https://store.steampowered.com/app/38410), or [Epic Games](https://store.epicgames.com/p/fallout-2). Then:
+### Prerequisites
+You must own **Fallout 2** (GOG, Steam, or Epic Games version) and have it fully installed. F.I.S.S.I.O.N. is a drop-in replacement for `Fallout2.exe` and requires the complete game data.
 
-- Download the latest [release](https://github.com/fallout2-ce/fallout2-ce/releases)
-- Or [build from source](https://github.com/fallout2-ce/fallout2-ce#building)
+**Supported base installations:**
+- **Vanilla Fallout 2** - The classic game
+- **Fallout: Nevada** - Russian total conversion mod
+- **Fallout: Sonora** - Russian total conversion mod
 
-### ▶️ Quick Start by Platform
+### Quick Installation
+1. **Ensure you have a working vanilla Fallout 2 installation**
+2. **Download** the latest [F.I.S.S.I.O.N. release](https://github.com/cambragol/fission-ce/releases)
+3. **Extract** the F.I.S.S.I.O.N. files into your Fallout 2 folder
+4. **Run** `fallout-fission.exe` (Windows) or `fallout-fission.app` (macOS) instead of the original executable
+
+That's it! F.I.S.S.I.O.N. automatically loads all existing content and adds its enhanced modding capabilities.
+
+### Platform-Specific Instructions
 
 #### 🪟 Windows
 
-1. Copy `fallout2-ce.exe` into your `Fallout2` folder.
-2. Run it instead of `fallout2.exe`.
-
-#### 🐧 Linux
-
-1. Use a Windows install as a base (or extract from GoG):
-
-```bash
-sudo apt install innoextract libsdl2-2.0-0
-innoextract ~/Downloads/setup_fallout2_2.1.0.18.exe -I app
-mv app ~/Fallout2
 ```
-
-2. Copy `fallout2-ce` to that folder and run `./fallout2-ce`.
+# Example: Installing into a Steam Fallout 2 installation
+# 1\. Navigate to your Fallout 2 folder (typically):
+cd "C:\Program Files (x86)\Steam\steamapps\common\Fallout 2"
+# 2\. Extract F.I.S.S.I.O.N. files here
+# 3\. Run fallout-fission.exe
+```
 
 #### 🍎 macOS
 
-> Requires macOS 10.11+ (Intel or Apple Silicon)
-
-1. Use a Windows or MacPlay install as a base.
-2. Copy `fallout2-ce.app` into the same folder.
-3. Run `fallout2-ce.app`.
-
-#### 🤖 Android
-
-> Touch interface simulates a trackpad:
-- 1 finger = move cursor
-- 1-tap = left click
-- 2-tap = right click
-- 2-finger drag = scroll
-
-1. Copy required files to your device: `master.dat`, `critter.dat`, `patch000.dat`, and `data/`.
-2. Install `fallout2-ce.apk` and launch it.
-3. Select game data folder when prompted.
-
-#### 🍏 iOS
-
-> Same controls as Android. Requires sideloading.
-
-1. Sideload `fallout2-ce.ipa` using [AltStore](https://altstore.io/) or [Sideloadly](https://sideloadly.io/).
-2. Launch once to enable File Sharing.
-3. Use Finder or iTunes to copy data files to the app (see [Apple guide](https://support.apple.com/HT210598)).
-
-## ⚙️ Configuration
-
-Edit `fallout2.cfg` to ensure correct file paths. Depending on source, filenames may need to be lowercase or uppercase:
-
-- `master_dat`, `critter_dat`, `master_patches`, `critter_patches`
-- `music_path1` (e.g. `data/sound/music/` or `SOUND/MUSIC/`)
-
-### Graphics Settings (`[graphics]` in `fallout2.cfg`)
-
-```ini
-fullscreen=0          ; 0 = windowed, 1 = fullscreen
-game_width=640
-game_height=480
-high_quality=0        
-highres_stencil=1     
-preserve_aspect=0
-splash_size=0
-stretch_enabled=0
-widescreen=0
+```
+# Example: Using a GOG Fallout 2 installation
+# 1. Right-click Fallout2.app → "Show Package Contents"
+# 2. Navigate to Contents/Resources/Data/
+# 3. Extract F.I.S.S.I.O.N. files here
+# 4. Run fallout-fission.app
 ```
 
-- **Desktops**: Any size you want.
-- **Tablets**: Use logical resolution (e.g. iPad Pro = 834x1194)
-- **Phones**: Use 480 for height, calculate width by aspect ratio.
+#### 🐧 Linux
 
-### Advanced Settings (`ddraw.ini`)
-
-This config (part of Sfall) provides fine-tuning and modding options. Example:
-
-```ini
-[Misc]
-IFACE_BAR_MODE=0
-IFACE_BAR_SIDE_ART=2
-IFACE_BAR_SIDES_ORI=0
-;IFACE_BAR_WIDTH=800
+```
+# Example: Using a Wine Fallout 2 installation
+# 1. Navigate to your Fallout 2 Wine prefix
+cd ~/.wine/drive_c/Program\ Files/Fallout\ 2/
+# 2. Extract F.I.S.S.I.O.N. files
+# 3. Run with: wine fallout-fission.exe
 ```
 
-You’ll need `f2_res.dat` for these options:  
-➡ [Download f2_res.dat](https://github.com/fallout2-ce/fallout2-ce/raw/refs/heads/mainmenu/files/f2_res.dat)
+### 📁 Expected Folder Structure
 
-Sample config: [ddraw.ini](https://raw.githubusercontent.com/fallout2-ce/fallout2-ce/refs/heads/main/files/ddraw.ini)
+After installation, your Fallout 2 folder should contain:
+
+```
+Fallout 2/
+├── fallout-fission.exe     # F.I.S.S.I.O.N. executable (Windows)
+├── fallout-fission.app     # F.I.S.S.I.O.N. application (macOS)
+├── fission.dat            # Engine data file
+├── master.dat            # Original game data
+├── critter.dat           # Original game data
+├── patch000.dat          # Patch data (if present)
+├── data/                 # Game data folder
+│   ├── proto/           # Proto files (vanilla + mods)
+│   ├── text/            # Text files (vanilla + mods)
+│   └── maps/            # Map files
+└── data/lists/          # Auto-generated mod reports (created on first run)
+```
+
+### ⚠️ Important Notes
+
+-   F.I.S.S.I.O.N. does NOT include game data - you must own Fallout 2
+
+-   Your existing saves will work - F.I.S.S.I.O.N. maintains full compatibility
+
+-   Mods stay where they are - F.I.S.S.I.O.N. reads from existing `data/` structure
+
+-   No configuration needed for basic use - just replace the executable
 
 ---
 
-## 🚀 Quality of Life Improvements
+## ⚙️ Configuration
 
-- 5x pathfinding nodes for smoother movement
-- `Ctrl+Click` to quickly transfer items
-- Press `A` to “Take All” or set quantity
-- Auto-calculate caps during bartering
-- Music continues across maps (with config)
-- Auto-open doors (with config)
+Use the in-game 'preferences' screen for 'graphics' configuration.
+
+Other configuration can be done fia the fallout2.cfg file.
+
+For advanced tweaks, use the [sfall] sections in 'fallout2.cfg' (Sfall):
+
+```
+[sfall-misc]
+WorldMapTravelMarkers=1
+GaplessMusic=1
+EnhancedBarter=1
+```
 
 ---
 
 ## 🛠️ Contributing
 
-We're good.
+Contributions are welcome! Please open issues or pull requests on GitHub.
 
 ---
 
 ## 📜 License
 
-Code is released under the [Sustainable Use License](LICENSE.md).
+Released under the [Sustainable Use License](LICENSE.md).

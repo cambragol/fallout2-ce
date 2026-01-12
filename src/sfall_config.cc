@@ -7,7 +7,7 @@
 
 namespace fallout {
 
-#define SFALL_CONFIG_FILE_NAME "ddraw.ini"
+#define SFALL_CONFIG_FILE_NAME "fallout2.cfg"
 
 bool gSfallConfigInitialized = false;
 Config gSfallConfig;
@@ -88,7 +88,7 @@ bool sfallConfigInit(int argc, char** argv)
         strcpy(path, SFALL_CONFIG_FILE_NAME);
     }
 
-    auto configChecker = ConfigChecker(gSfallConfig, "ddraw.ini");
+    auto configChecker = ConfigChecker(gSfallConfig, "fallout2.cfg");
 
     configRead(&gSfallConfig, path, false);
 
