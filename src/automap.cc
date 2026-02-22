@@ -1343,7 +1343,7 @@ static int automapLoadHeader(File* stream)
     }
 
     if (gAutomapHeader.version == 1) {
-        // Version 1: Read 480 offsets (160 maps ï¿½ 3 elevations)
+        // Version 1: Read 480 offsets (160 maps × 3 elevations)
         int oldOffsets[480];
         if (_db_freadIntCount(stream, oldOffsets, 480) == -1) {
             return -1;
@@ -1426,7 +1426,7 @@ static void _decode_map_data(int elevation)
 static int automapCreate()
 {
     gAutomapHeader.version = 2; // NEW FORMAT
-    gAutomapHeader.dataSize = 24005; // 1 + 4 + (2000ï¿½3ï¿½4)
+    gAutomapHeader.dataSize = 24005; // 1 + 4 + (2000×3×4)
 
     // Initialize ALL offsets to 0
     for (int i = 0; i < AUTOMAP_MAP_COUNT; i++) {

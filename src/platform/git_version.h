@@ -2,8 +2,8 @@
 
 #define _BUILD_AUTHOR "cambragol"
 #define _BUILD_BRANCH "main"
-#define _BUILD_HASH "ad43d68"
-#define _BUILD_VER ""
-#define _BUILD_DATE "Jul 19 2025 23:00:36"
+#define _BUILD_HASH "19b47ae"
+#define _BUILD_VER "beta"
+#define _BUILD_DATE "Feb 22 2026 11:25:20"
 
 #define CI_BUILD 0
