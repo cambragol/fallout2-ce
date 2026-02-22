@@ -200,6 +200,7 @@ static void settingsFromConfig()
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAPLESS_MUSIC, settings.sfall_misc.gapless_music);
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS, settings.sfall_misc.worldmap_trail_markers);
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ENHANCED_BARTER, settings.sfall_misc.enhanced_barter);
+    settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STRICT_VANILLA, settings.sfall_misc.strict_vanilla);
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, settings.sfall_misc.iface_bar_mode);
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, settings.sfall_misc.iface_bar_width);
     settingsRead(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, settings.sfall_misc.iface_bar_side_art);
@@ -241,7 +242,7 @@ static void settingsToConfig()
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_RUNNING_KEY, settings.preferences.running);
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, settings.preferences.subtitles);
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_SPEED_KEY, settings.preferences.combat_speed);
-    settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_PLAYER_SPEED_KEY, settings.preferences.player_speedup);
+    settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_PLAYER_SPEED_KEY, settings.preferences.player_speedup); // also used for Affect Non-Combat Speed
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_BASE_DELAY_KEY, settings.preferences.text_base_delay);
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_TEXT_LINE_DELAY_KEY, settings.preferences.text_line_delay);
     settingsWrite(GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_BRIGHTNESS_KEY, settings.preferences.brightness);
@@ -368,6 +369,7 @@ static void settingsToConfig()
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAPLESS_MUSIC, settings.sfall_misc.gapless_music);
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS, settings.sfall_misc.worldmap_trail_markers);
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ENHANCED_BARTER, settings.sfall_misc.enhanced_barter);
+    settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STRICT_VANILLA, settings.sfall_misc.strict_vanilla);
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, settings.sfall_misc.iface_bar_mode);
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, settings.sfall_misc.iface_bar_width);
     settingsWrite(SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, settings.sfall_misc.iface_bar_side_art);
