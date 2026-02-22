@@ -1,8 +1,6 @@
 #include "dinput.h"
 #include "svga.h"
 
-#include "svga.h"
-
 namespace fallout {
 
 static int gMouseWheelDeltaX = 0;

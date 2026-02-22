@@ -52,7 +52,6 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_arrays.h"
-#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "sfall_ext.h"
 #include "sfall_global_scripts.h"
@@ -123,8 +122,6 @@ int _game_user_wants_to_quit = 0;
 // 0x58E940
 MessageList gMiscMessageList;
 
-int gSplashScreenScaling = 0;
-
 // CE: Sonora folks like to store objects in global variables.
 static void** gGameGlobalPointers = nullptr;
 
@@ -140,9 +137,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     // Sfall config should be initialized before game config, since it can
     // override it's file name.
     sfallConfigInit(argc, argv);
-
-    // SFALL: Execute all code that should be executed BEFORE game init
-    sfallOnBeforeGameInit();
 
     settingsInit(isMapper, argc, argv);
 
@@ -162,9 +156,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     programWindowSetTitle(windowTitle);
     _initWindow(1, flags);
     paletteInit();
-
-    // SFALL: Execute all code that should be executed ON game init
-    sfallOnGameInit();
 
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, FRENCH) == 0) {
@@ -238,7 +229,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     queueInit();
     critterInit();
     aiInit();
-    inventoryResetDude();
+    _inven_reset_dude();
 
     if (gameSoundInit() != 0) {
         debugPrint("Sound initialization failed.\n");
@@ -405,9 +396,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
 
-    // SFALL: Execute all code that should be executed AFTER game init
-    sfallOnAfterGameInit();
-
     return 0;
 }
 
@@ -427,7 +415,7 @@ void gameReset()
     lsgInit();
     critterReset();
     aiReset();
-    inventoryResetDude();
+    _inven_reset_dude();
     gameSoundReset();
     _movieStop();
     movieEffectsReset();
@@ -455,7 +443,6 @@ void gameReset()
     messageListRepositoryReset();
     sfallArraysReset();
     sfall_gl_scr_reset();
-    sfallOnGameReset();
 }
 
 // 0x442C34
@@ -469,7 +456,6 @@ void gameExit()
     sfallListsExit();
     sfall_gl_vars_exit();
     premadeCharactersExit();
-    sfallOnGameExit();
 
     tileDisable();
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, nullptr);
@@ -481,7 +467,6 @@ void gameExit()
     // NOTE: Uninline.
     gameFreeGlobalVars();
 
-    sfallOnBeforeGameClose();
     scriptsExit();
     animationExit();
     protoExit();
@@ -1075,7 +1060,7 @@ static int gameLoadGlobalVars()
 // 0x443CE8
 int globalVarsRead(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr)
 {
-    inventoryResetDude();
+    _inven_reset_dude();
 
     File* stream = fileOpen(path, "rt");
     if (stream == nullptr) {
@@ -1181,16 +1166,7 @@ static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsi
 {
     MessageListItem messageListItem;
 
-    ScreenshotHandler* handler = screenshotHandlerDefaultImpl;
-
-    char* formatName = nullptr;
-    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCREENSHOTS_FORMAT, &formatName);
-
-    if (compat_stricmp(formatName, "png") == 0) {
-        handler = screenshotHandlerPngImpl;
-    }
-
-    if (handler(width, height, buffer, palette) != 0) {
+    if (screenshotHandlerDefaultImpl(width, height, buffer, palette) != 0) {
         // Error saving screenshot.
         messageListItem.num = 8;
         if (messageListGetItem(&gMiscMessageList, &messageListItem)) {

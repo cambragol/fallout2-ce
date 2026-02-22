@@ -1,6 +1,5 @@
 #include "art.h"
 
-#include <assert.h>
 #include <stdio.h>
 
 #include "db.h" // for fileOpen, fileClose

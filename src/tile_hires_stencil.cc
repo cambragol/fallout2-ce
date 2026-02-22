@@ -5,7 +5,6 @@
 #include "settings.h"
 #include "stdio.h"
 #include "tile.h"
-#include "window_manager.h"
 #include <string.h>
 #include <vector>
 
@@ -260,7 +259,8 @@ void tile_hires_stencil_on_center_tile_or_elevation_change()
             // TODO: Maybe create new function in tile.cc and use it here
             int tile_x = HEX_GRID_WIDTH - 1 - tileInfo.tile % HEX_GRID_WIDTH;
             int tile_y = tileInfo.tile / HEX_GRID_WIDTH;
-            if (tile_x <= gTileBorderMinX || tile_x >= gTileBorderMaxX || tile_y <= gTileBorderMinY || tile_y >= gTileBorderMaxY) {
+            if (
+                tile_x <= gTileBorderMinX || tile_x >= gTileBorderMaxX || tile_y <= gTileBorderMinY || tile_y >= gTileBorderMaxY) {
                 continue;
             }
         }
@@ -407,16 +407,6 @@ void tile_hires_stencil_init()
 {
     gIsTileHiresStencilEnabled = settings.graphics.highres_stencil;
     if (!gIsTileHiresStencilEnabled) {
-        return;
-    }
-
-    if (gTileIgnoreMapEdges) {
-        static bool isMessageShown = false;
-        if (!isMessageShown) {
-            showMesageBox("Tile hires stencil is disabled because map edges are ignored.");
-            isMessageShown = true;
-        }
-        gIsTileHiresStencilEnabled = false;
         return;
     }
 

@@ -7,7 +7,6 @@
 
 #include "config.h"
 #include "draw.h"
-#include "game.h"
 #include "interface.h"
 #include "memory.h"
 #include "mouse.h"
@@ -408,12 +407,6 @@ int screenGetVisibleHeight()
         windowBottomMargin = INTERFACE_BAR_HEIGHT;
     }
     return screenGetHeight() - windowBottomMargin;
-}
-
-bool screenIsFullscreen()
-{
-    Uint32 flags = SDL_GetWindowFlags(gSdlWindow);
-    return (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
 }
 
 static bool createRenderer(int width, int height)

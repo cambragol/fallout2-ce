@@ -9,6 +9,7 @@
 
 #include "art.h"
 #include "color.h"
+#include "config.h"
 #include "debug.h"
 #include "draw.h"
 #include "game_mouse.h"
@@ -88,9 +89,6 @@ static TileWindowRefreshElevationProc* gTileWindowRefreshElevationProc = tileRef
 
 // 0x51D968
 static bool gTileEnabled = true;
-
-// Controls whether map edge borders and scroll blockers are enforced.
-bool gTileIgnoreMapEdges = false;
 
 // 0x51D96C
 const int _off_tile[6] = {
@@ -564,7 +562,7 @@ int tileSetCenter(int tile, int flags)
             }
         }
 
-        if (gTileScrollBlockingEnabled && !gTileIgnoreMapEdges) {
+        if (gTileScrollBlockingEnabled) {
             if (_obj_scroll_blocking_at(tile, gElevation) == 0) {
                 return -1;
             }
@@ -574,7 +572,7 @@ int tileSetCenter(int tile, int flags)
     int tile_x = gHexGridWidth - 1 - tile % gHexGridWidth;
     int tile_y = tile / gHexGridWidth;
 
-    if (gTileBorderInitialized && !gTileIgnoreMapEdges) {
+    if (gTileBorderInitialized) {
         if (tile_x <= gTileBorderMinX || tile_x >= gTileBorderMaxX || tile_y <= gTileBorderMinY || tile_y >= gTileBorderMaxY) {
             return -1;
         }

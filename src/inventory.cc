@@ -572,7 +572,7 @@ static FrmImage _inventoryFrmImages[INVENTORY_FRM_COUNT];
 static FrmImage _moveFrmImages[8];
 
 // 0x46E724
-void inventoryResetDude()
+void _inven_reset_dude()
 {
     _inven_dude = gDude;
     _inven_pid = 0x1000000;
@@ -1675,7 +1675,7 @@ static void _exit_inventory(bool shouldEnableIso)
             if (critter != gDude
                 && critter->data.critter.combat.team != gDude->data.critter.combat.team
                 && statRoll(critter, STAT_PERCEPTION, 0, nullptr) >= ROLL_SUCCESS) {
-                critterSetWhoHitMe(critter, gDude);
+                _critter_set_who_hit_me(critter, gDude);
 
                 if (watcher == nullptr) {
                     watcher = critter;
@@ -2365,7 +2365,7 @@ static void inventoryItemSlotOnMouseEnter(int btn, int keyCode)
             mouseSetFrame(cursorData->frmData, cursorData->width, cursorData->height, cursorData->width, v5, v6, 0);
 
             if (item != _last_target) {
-                objectLookAtFunc(_stack[0], item, gInventoryPrintItemDescriptionHandler);
+                _obj_look_at_func(_stack[0], item, gInventoryPrintItemDescriptionHandler);
             }
         } else {
             InventoryCursorData* cursorData = &(gInventoryCursorData[INVENTORY_WINDOW_CURSOR_ARROW]);
@@ -2556,7 +2556,7 @@ static void _inven_pickup(int buttonCode, int indexOffset)
             if (itemAdd(_inven_dude, item, 1)) {
                 *itemSlot = item;
             } else if (itemSlot == &gInventoryArmor) {
-                adjustCritterStatsOnArmorChange(_stack[0], item, nullptr);
+                _adjust_ac(_stack[0], item, nullptr);
             } else if (gInventoryRightHandItem == gInventoryLeftHandItem) {
                 gInventoryLeftHandItem = nullptr;
                 gInventoryRightHandItem = nullptr;
@@ -2616,7 +2616,7 @@ static void _inven_pickup(int buttonCode, int indexOffset)
                     itemAdd(_inven_dude, item, 1);
                 }
             } else {
-                adjustCritterStatsOnArmorChange(_stack[0], currentArmor, item);
+                _adjust_ac(_stack[0], currentArmor, item);
                 gInventoryArmor = item;
             }
         }
@@ -2656,7 +2656,7 @@ static void _switch_hand(Object* sourceItem, Object** targetSlot, Object** sourc
 
         if (sourceSlot != nullptr && (sourceSlot != &gInventoryArmor || itemGetType(*targetSlot) == ITEM_TYPE_ARMOR)) {
             if (sourceSlot == &gInventoryArmor) {
-                adjustCritterStatsOnArmorChange(_stack[0], gInventoryArmor, *targetSlot);
+                _adjust_ac(_stack[0], gInventoryArmor, *targetSlot);
             }
             *sourceSlot = *targetSlot;
         } else {
@@ -2675,7 +2675,7 @@ static void _switch_hand(Object* sourceItem, Object** targetSlot, Object** sourc
 
             if (sourceSlot != nullptr) {
                 if (sourceSlot == &gInventoryArmor) {
-                    adjustCritterStatsOnArmorChange(_stack[0], gInventoryArmor, nullptr);
+                    _adjust_ac(_stack[0], gInventoryArmor, nullptr);
                 }
                 *sourceSlot = nullptr;
             }
@@ -2683,7 +2683,7 @@ static void _switch_hand(Object* sourceItem, Object** targetSlot, Object** sourc
     } else {
         if (sourceSlot != nullptr) {
             if (sourceSlot == &gInventoryArmor) {
-                adjustCritterStatsOnArmorChange(_stack[0], gInventoryArmor, nullptr);
+                _adjust_ac(_stack[0], gInventoryArmor, nullptr);
             }
             *sourceSlot = nullptr;
         }
@@ -2701,7 +2701,7 @@ static void _switch_hand(Object* sourceItem, Object** targetSlot, Object** sourc
 // and [newArmor] can be NULL.
 //
 // 0x4715F8
-void adjustCritterStatsOnArmorChange(Object* critter, Object* oldArmor, Object* newArmor)
+void _adjust_ac(Object* critter, Object* oldArmor, Object* newArmor)
 {
     int armorClassBonus = critterGetBonusStat(critter, STAT_ARMOR_CLASS);
     int oldArmorClass = armorGetArmorClass(oldArmor);
@@ -3354,7 +3354,7 @@ static void inventoryRenderSummary()
 // the beginning.
 //
 // 0x472698
-Object* inventoryFindByType(Object* obj, int itemType, int* indexPtr)
+Object* _inven_find_type(Object* obj, int itemType, int* indexPtr)
 {
     int dummy = -1;
     if (indexPtr == nullptr) {
@@ -3384,7 +3384,7 @@ Object* inventoryFindByType(Object* obj, int itemType, int* indexPtr)
 // Searches for an item with a given id inside given obj's inventory.
 //
 // 0x4726EC
-Object* inventoryFindById(Object* obj, int id)
+Object* _inven_find_id(Object* obj, int id)
 {
     if (obj->id == id) {
         return obj;
@@ -3399,7 +3399,7 @@ Object* inventoryFindById(Object* obj, int id)
         }
 
         if (itemGetType(item) == ITEM_TYPE_CONTAINER) {
-            item = inventoryFindById(item, id);
+            item = _inven_find_id(item, id);
             if (item != nullptr) {
                 return item;
             }
@@ -3412,7 +3412,7 @@ Object* inventoryFindById(Object* obj, int id)
 // Returns inventory item at a given index.
 //
 // 0x472740
-Object* inventoryItemByIndex(Object* obj, int index)
+Object* _inven_index_ptr(Object* obj, int index)
 {
     Inventory* inventory;
 
@@ -3427,13 +3427,13 @@ Object* inventoryItemByIndex(Object* obj, int index)
 
 // inven_wield
 // 0x472758
-int inventoryEquip(Object* critter, Object* item, int hand)
+int _inven_wield(Object* critter, Object* item, int hand)
 {
-    return inventoryEquipFunc(critter, item, hand, true);
+    return _invenWieldFunc(critter, item, hand, true);
 }
 
 // 0x472768
-int inventoryEquipFunc(Object* critter, Object* item, int handIndex, bool animate)
+int _invenWieldFunc(Object* critter, Object* item, int handIndex, bool animate)
 {
     if (animate) {
         if (!isoIsDisabled()) {
@@ -3467,7 +3467,7 @@ int inventoryEquipFunc(Object* critter, Object* item, int handIndex, bool animat
                 animationRegisterSetFid(critter, fid, 0);
             }
         } else {
-            adjustCritterStatsOnArmorChange(critter, armor, item);
+            _adjust_ac(critter, armor, item);
         }
     } else {
         int hand;
@@ -3575,13 +3575,13 @@ int inventoryEquipFunc(Object* critter, Object* item, int handIndex, bool animat
 
 // inven_unwield
 // 0x472A54
-int inventoryUnequip(Object* critter_obj, int hand)
+int _inven_unwield(Object* critter_obj, int hand)
 {
-    return inventoryUnequipFunc(critter_obj, hand, true);
+    return _invenUnwieldFunc(critter_obj, hand, true);
 }
 
 // 0x472A64
-int inventoryUnequipFunc(Object* critter, int hand, bool animate)
+int _invenUnwieldFunc(Object* critter, int hand, bool animate)
 {
     int activeHand;
     Object* item;
@@ -3851,7 +3851,7 @@ static void inventoryExamineItem(Object* critter, Object* item)
         _colorTable[992]);
 
     // Examine item.
-    objectExamineFunc(critter, item, inventoryRenderItemDescription);
+    _obj_examine_func(critter, item, inventoryRenderItemDescription);
 
     // Add weight if neccessary.
     int weight = itemGetWeight(item);
@@ -5373,7 +5373,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
         mouseState = mouseGetEvent();
         if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
             if (inventoryWindowType != INVENTORY_WINDOW_TYPE_NORMAL) {
-                objectLookAtFunc(_stack[0], item, gInventoryPrintItemDescriptionHandler);
+                _obj_look_at_func(_stack[0], item, gInventoryPrintItemDescriptionHandler);
             } else {
                 inventoryExamineItem(_stack[0], item);
             }
@@ -5552,7 +5552,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
     case GAME_MOUSE_ACTION_MENU_ITEM_DROP:
         if (itemSlot != nullptr) {
             if (itemSlot == &gInventoryArmor) {
-                adjustCritterStatsOnArmorChange(_stack[0], item, nullptr);
+                _adjust_ac(_stack[0], item, nullptr);
             }
             itemAdd(owner, item, 1);
             quantity = 1;
@@ -5569,13 +5569,13 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
             if (quantity > 0) {
                 if (quantity == 1) {
                     itemSetMoney(item, 1);
-                    objectDrop(owner, item);
+                    _obj_drop(owner, item);
                 } else {
                     if (itemRemove(owner, item, quantity - 1) == 0) {
                         Object* item2;
                         if (_inven_from_button(keyCode, &item2, &itemSlot, &owner) != 0) {
                             itemSetMoney(item2, quantity);
-                            objectDrop(owner, item2);
+                            _obj_drop(owner, item2);
                         } else {
                             itemAdd(owner, item, quantity - 1);
                         }
@@ -5584,24 +5584,24 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
             }
         } else if (explosiveIsActiveExplosive(item->pid)) {
             _dropped_explosive = 1;
-            objectDrop(owner, item);
+            _obj_drop(owner, item);
         } else {
             if (quantity > 1) {
                 quantity = inventoryQuantitySelect(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
 
                 for (int index = 0; index < quantity; index++) {
                     if (_inven_from_button(keyCode, &item, &itemSlot, &owner) != 0) {
-                        objectDrop(owner, item);
+                        _obj_drop(owner, item);
                     }
                 }
             } else {
-                objectDrop(owner, item);
+                _obj_drop(owner, item);
             }
         }
         break;
     case GAME_MOUSE_ACTION_MENU_ITEM_LOOK:
         if (inventoryWindowType != INVENTORY_WINDOW_TYPE_NORMAL) {
-            objectExamineFunc(_stack[0], item, gInventoryPrintItemDescriptionHandler);
+            _obj_examine_func(_stack[0], item, gInventoryPrintItemDescriptionHandler);
         } else {
             inventoryExamineItem(_stack[0], item);
         }
@@ -5612,7 +5612,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
             _container_enter(keyCode, inventoryWindowType);
             break;
         case ITEM_TYPE_DRUG:
-            if (drugItemTakeDrug(_stack[0], item)) {
+            if (_item_d_take_drug(_stack[0], item)) {
                 if (itemSlot != nullptr) {
                     *itemSlot = nullptr;
                 } else {
@@ -5620,7 +5620,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
                 }
 
                 _obj_connect(item, gDude->tile, gDude->elevation, nullptr);
-                objectDestroy(item);
+                _obj_destroy(item);
             }
             interfaceRenderHitPoints(true);
             break;
@@ -5632,9 +5632,9 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
 
             int useResult;
             if (_obj_action_can_use(item)) {
-                useResult = objectUseItemInternal(_stack[0], item);
+                useResult = _protinst_use_item(_stack[0], item);
             } else {
-                useResult = objectUseItemOnInternal(_stack[0], _stack[0], item);
+                useResult = _protinst_use_item_on(_stack[0], _stack[0], item);
             }
 
             if (useResult == 1) {
@@ -5643,7 +5643,7 @@ static void inventoryWindowOpenContextMenu(int keyCode, int inventoryWindowType)
                 }
 
                 _obj_connect(item, gDude->tile, gDude->elevation, nullptr);
-                objectDestroy(item);
+                _obj_destroy(item);
             } else {
                 if (itemSlot == nullptr) {
                     itemAdd(owner, item, 1);
@@ -5711,7 +5711,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
     ScopedGameMode gm(GameMode::kLoot);
 
     if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
-        if (critterFlagCheck(target->pid, CRITTER_NO_STEAL)) {
+        if (_critter_flag_check(target->pid, CRITTER_NO_STEAL)) {
             // You can't find anything to take from that.
             messageListItem.num = 50;
             if (messageListGetItem(&gInventoryMessageList, &messageListItem)) {
@@ -5739,7 +5739,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
 
     int sid = -1;
     if (!_gIsSteal) {
-        if (objectGetSid(target, &sid) != -1) {
+        if (_obj_sid(target, &sid) != -1) {
             scriptSetObjects(sid, looter, nullptr);
             scriptExecProc(sid, SCRIPT_PROC_PICKUP);
 
@@ -6144,7 +6144,7 @@ int inventoryOpenLooting(Object* looter, Object* target)
     // NOTE: Uninline.
     inventoryCommonFree();
 
-    if (_gIsSteal && isCaughtStealing && _gStealCount > 0 && objectGetSid(target, &sid) != -1) {
+    if (_gIsSteal && isCaughtStealing && _gStealCount > 0 && _obj_sid(target, &sid) != -1) {
         scriptSetObjects(sid, looter, nullptr);
         scriptExecProc(sid, SCRIPT_PROC_PICKUP);
 
@@ -6878,7 +6878,7 @@ void inventoryOpenTrade(int win, Object* barterer, Object* playerTable, Object* 
         itemRemove(barterer, item2, 1);
     } else {
         if (!gGameDialogSpeakerIsPartyMember) {
-            item1 = inventoryFindByType(barterer, ITEM_TYPE_WEAPON, nullptr);
+            item1 = _inven_find_type(barterer, ITEM_TYPE_WEAPON, nullptr);
             if (item1 != nullptr) {
                 itemRemove(barterer, item1, 1);
             }
@@ -7296,7 +7296,7 @@ static int _drop_into_container(Object* container, Object* item, int sourceIndex
     } else {
         if (itemSlot != nullptr) {
             if (itemSlot == &gInventoryArmor) {
-                adjustCritterStatsOnArmorChange(_stack[0], gInventoryArmor, nullptr);
+                _adjust_ac(_stack[0], gInventoryArmor, nullptr);
             }
             *itemSlot = nullptr;
         }
@@ -7341,7 +7341,7 @@ static int _drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** ammoIte
                 *ammoItemSlot = nullptr;
             }
 
-            objectDestroy(sourceItem);
+            _obj_destroy(sourceItem);
 
             isReloaded = true;
             if (_inven_from_button(keyCode, &sourceItem, nullptr, nullptr) == 0) {
@@ -7821,7 +7821,7 @@ static int inventoryQuantityWindowFree(int inventoryWindowType)
 }
 
 // 0x477074
-int inventorySetTimer(Object* item)
+int _inven_set_timer(Object* item)
 {
     bool isInitialized = _inven_is_initialized;
 
@@ -7841,7 +7841,7 @@ int inventorySetTimer(Object* item)
     return seconds;
 }
 
-Object* inventoryGetTargetObject()
+Object* inven_get_current_target_obj()
 {
     return _target_stack[_target_curr_stack];
 }

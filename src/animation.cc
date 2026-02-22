@@ -1418,7 +1418,7 @@ static int animationRunSequence(int animationSequenceIndex)
             rc = _anim_animate(animationDescription->owner, animationDescription->anim, animationSequenceIndex, ANIM_SAD_FOREVER);
             break;
         case ANIM_KIND_ROTATE_TO_TILE:
-            if (!critterIsProne(animationDescription->owner)) {
+            if (!_critter_is_prone(animationDescription->owner)) {
                 int rotation = tileGetRotationTo(animationDescription->owner->tile, animationDescription->tile);
                 _dude_stand(animationDescription->owner, rotation, -1);
             }
@@ -1637,7 +1637,7 @@ static int _anim_set_end(int animationSequenceIndex)
                                 }
                             }
 
-                            if ((animationSequence->flags & ANIM_SEQ_NO_STAND) == 0 && !critterIsProne(owner)) {
+                            if ((animationSequence->flags & ANIM_SEQ_NO_STAND) == 0 && !_critter_is_prone(owner)) {
                                 _dude_stand(owner, owner->rotation, -1);
                             }
                         }
@@ -2613,7 +2613,7 @@ static void _object_move(int index)
                 }
                 nextTile = -1;
             } else {
-                objectUseDoor(object, obstacle, 0);
+                _obj_use_door(object, obstacle, 0);
             }
         }
 
@@ -3219,7 +3219,7 @@ void _dude_standup(Object* a1)
 // 0x4185EC
 static int actionRotate(Object* obj, int delta, int animationSequenceIndex)
 {
-    if (!critterIsProne(obj)) {
+    if (!_critter_is_prone(obj)) {
         int rotation = obj->rotation + delta;
         if (rotation >= ROTATION_COUNT) {
             rotation = ROTATION_NE;
