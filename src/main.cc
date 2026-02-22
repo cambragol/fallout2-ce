@@ -31,6 +31,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "sfall_global_scripts.h"
 #include "svga.h"
@@ -114,6 +115,9 @@ int falloutMain(int argc, char** argv)
                     gameMoviePlay(MOVIE_ELDER, GAME_MOVIE_STOP_MUSIC);
                     randomSeedPrerandom(-1);
 
+                    // SFALL: Call "before start" event
+                    sfallOnBeforeGameStart();
+
                     // SFALL: Override starting map.
                     char* mapName = nullptr;
                     if (configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STARTING_MAP_KEY, &mapName)) {
@@ -128,6 +132,9 @@ int falloutMain(int argc, char** argv)
 
                     // SFALL: AfterNewGameStartHook.
                     sfall_gl_scr_exec_start_proc();
+                    // SFALL: Call "after loading" event
+                    sfallOnAfterNewGame();
+                    sfallOnAfterGameStarted();
 
                     mainLoop();
                     paletteFadeTo(gPaletteWhite);
@@ -249,7 +256,7 @@ int falloutMain(int argc, char** argv)
 // 0x480CC0
 static bool falloutInit(int argc, char** argv)
 {
-    // set flag to 1 to initilize _screen_buffer for WINDOW_TRANSPARENT
+    // set flag to 1 to initialize _screen_buffer for WINDOW_TRANSPARENT
     if (gameInitWithOptions("FALLOUT II", false, 0, 1, argc, argv) == -1) {
         return false;
     }
@@ -293,7 +300,7 @@ static int _main_load_new(char* mapFileName)
 
     colorPaletteLoad("color.pal");
     paletteFadeTo(_cmap);
-    _map_init();
+    mapInit();
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
     mouseShowCursor();
     mapLoadByName(mapFileName);
@@ -318,7 +325,7 @@ static int main_loadgame_new()
     objectShow(gDude, nullptr);
     mouseHideCursor();
 
-    _map_init();
+    mapInit();
 
     gameMouseSetCursor(MOUSE_CURSOR_NONE);
     mouseShowCursor();
@@ -330,7 +337,7 @@ static int main_loadgame_new()
 static void main_unload_new()
 {
     objectHide(gDude, nullptr);
-    _map_exit();
+    mapExit();
 }
 
 // 0x480E48

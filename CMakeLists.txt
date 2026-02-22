@@ -290,10 +290,15 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_opcodes.h"
     "src/sfall_arrays.cc"
     "src/sfall_arrays.h"
+    "src/sfall_callbacks.cc"
+    "src/sfall_callbacks.h"
     "src/touch.cc"
     "src/touch.h"
     "src/scan_unimplemented.cc"
+	"third_party/lodepng/lodepng.cpp"
 )
+
+target_include_directories(${EXECUTABLE_NAME} PUBLIC "third_party/lodepng")
 
 if(IOS)
     target_sources(${EXECUTABLE_NAME} PUBLIC
@@ -315,7 +320,8 @@ endif()
 if(WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         winmm
-        libcpmt
+        debug libcpmtd
+        optimized libcpmt
     )
 endif()
 

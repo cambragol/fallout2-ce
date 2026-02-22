@@ -396,9 +396,6 @@ typedef struct CitySizeDescription {
 } CitySizeDescription;
 
 typedef struct WmGenData {
-    bool mousePressed;
-    bool didMeetFrankHorrigan;
-
     int currentAreaId;
     int worldPosX;
     int worldPosY;
@@ -823,6 +820,10 @@ static int wmTownMapButtonId[ENTRANCE_LIST_CAPACITY];
 // struct.
 //
 // 0x672E00
+
+static bool mousePressed;
+bool gDidMeetFrankHorrigan;
+
 static WmGenData wmGenData;
 
 // worldmap.msg
@@ -865,6 +866,7 @@ static char gBaseMapOverrides[BASE_MAP_MAX][COMPAT_MAX_PATH] = { 0 };
 static char gBaseAreaOverrides[BASE_AREA_MAX][COMPAT_MAX_PATH] = { 0 };
 
 static bool gTownMapHotkeysFix;
+static bool gCitiesLimitFix;
 static double gGameTimeIncRemainder = 0.0;
 static FrmImage _townFrmImage;
 static FrmImage _townBackgroundFrmImage;
@@ -1072,6 +1074,10 @@ static void wmSetFlags(int* flagsPtr, int flag, int value)
 // 0x4BC89C
 int wmWorldMap_init()
 {
+    // SFALL
+    gCitiesLimitFix = true;
+    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, &gCitiesLimitFix);
+
     char path[COMPAT_MAX_PATH];
 
     if (wmGenDataInit() == -1) {
@@ -1122,7 +1128,7 @@ int wmWorldMap_init()
 // 0x4BC984
 static int wmGenDataInit()
 {
-    wmGenData.didMeetFrankHorrigan = false;
+    gDidMeetFrankHorrigan = false;
     wmGenData.currentAreaId = -1;
     wmGenData.worldPosX = 173;
     wmGenData.worldPosY = 122;
@@ -1152,7 +1158,7 @@ static int wmGenDataInit()
     wmGenData.carImageFrmWidth = 0;
     wmGenData.carImageFrmHeight = 0;
     wmGenData.carImageCurrentFrameIndex = 0;
-    wmGenData.mousePressed = false;
+    mousePressed = false;
     wmGenData.walkWorldPosCrossAxisStepX = 0;
     wmGenData.carImageFrm = nullptr;
 
@@ -1176,7 +1182,7 @@ static int wmGenDataInit()
 // 0x4BCBFC
 static int wmGenDataReset()
 {
-    wmGenData.didMeetFrankHorrigan = false;
+    gDidMeetFrankHorrigan = false;
     wmGenData.currentSubtile = nullptr;
     wmGenData.dword_672E18 = 0;
     wmGenData.isWalking = false;
@@ -1188,7 +1194,7 @@ static int wmGenDataReset()
     wmGenData.walkWorldPosMainAxisStepY = 0;
     wmGenData.walkWorldPosCrossAxisStepY = 0;
     wmGenData.encounterIconIsVisible = false;
-    wmGenData.mousePressed = false;
+    mousePressed = false;
     wmGenData.currentAreaId = -1;
     wmGenData.worldPosX = 173;
     wmGenData.worldPosY = 122;
@@ -1448,6 +1454,13 @@ int wmWorldMap_load(File* stream)
     int numCities;
     if (fileReadInt32(stream, &numCities) == -1)
         return -1;
+
+    if (gCitiesLimitFix && numCities != wmMaxAreaNum) {
+        debugPrint("WorldMap Error: Cities limit fix is enabled, "
+                   "but the number of cities %d in the save file is different from "
+                   "the number of cities %d in the worldmap.txt file.",
+            numCities, wmMaxAreaNum);
+    }
 
     for (int areaIdx = 0; areaIdx < numCities; areaIdx++) {
         CityInfo* city = &(wmAreaInfoList[areaIdx]);
@@ -4554,8 +4567,8 @@ static int wmWorldMapFunc(int a1)
         }
 
         if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_UP) != 0) {
-            if (wmGenData.mousePressed) {
-                wmGenData.mousePressed = false;
+            if (mousePressed) {
+                mousePressed = false;
                 wmInterfaceRefresh();
 
                 if (abs(wmGenData.worldPosX - worldX) < 5 && abs(wmGenData.worldPosY - worldY) < 5) {
@@ -4601,7 +4614,7 @@ static int wmWorldMapFunc(int a1)
                     wmPartyInitWalking(worldX, worldY);
                 }
 
-                wmGenData.mousePressed = false;
+                mousePressed = false;
             }
         }
 
@@ -4671,7 +4684,7 @@ static int wmWorldMapFunc(int a1)
                         int destX = city->x + citySizeDescription->frmImage.getWidth() / 2 - gOffsets.viewX;
                         int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - gOffsets.viewY;
                         wmPartyInitWalking(destX, destY);
-                        wmGenData.mousePressed = 0;
+                        mousePressed = 0;
                     }
                 }
             }
@@ -4773,14 +4786,14 @@ static int wmRndEncounterOccurred()
         return 0;
     }
 
-    if (!wmGenData.didMeetFrankHorrigan) {
+    if (!gDidMeetFrankHorrigan) {
         unsigned int gameTime = gameTimeGetTime();
         if (gameTime / GAME_TIME_TICKS_PER_DAY > 35) {
             // SFALL: Add a flashing icon to the Horrigan encounter.
             wmBlinkRndEncounterIcon(true);
 
             wmGenData.encounterMapId = -1;
-            wmGenData.didMeetFrankHorrigan = true;
+            gDidMeetFrankHorrigan = true;
             if (wmGenData.isInCar) {
                 wmMatchAreaContainingMapIdx(MAP_IN_GAME_MOVIE1, &(wmGenData.currentCarAreaId));
             }
@@ -5282,13 +5295,13 @@ static int wmSetupCritterObjs(int encounterIndex, Object** critterPtr, int critt
                     object->sid = -1;
                 }
 
-                _obj_new_sid_inst(object, SCRIPT_TYPE_CRITTER, encounterEntry->scriptIdx - 1);
+                objectSetScript(object, SCRIPT_TYPE_CRITTER, encounterEntry->scriptIdx - 1);
             }
 
             if (encounter->position != ENCOUNTER_FORMATION_TYPE_SURROUNDING) {
                 objectSetLocation(object, tile, gElevation, nullptr);
             } else {
-                _obj_attempt_placement(object, tile, 0, 0);
+                objectAttemptPlacement(object, tile, 0, 0);
             }
 
             int direction = tileGetRotationTo(tile, gDude->tile);
@@ -5326,7 +5339,7 @@ static int wmSetupCritterObjs(int encounterIndex, Object** critterPtr, int critt
                 _obj_disconnect(item, nullptr);
 
                 if (encounterItem->isEquipped) {
-                    if (_inven_wield(object, item, HAND_RIGHT) == -1) {
+                    if (inventoryEquip(object, item, HAND_RIGHT) == -1) {
                         debugPrint("\nERROR: wmSetupCritterObjs: Inven Wield Failed: %d on %s: Critter Fid: %d", item->pid, critterGetName(object), object->fid);
                     }
                 }
@@ -7126,7 +7139,7 @@ static int wmDrawCursorStopped()
             width = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getWidth();
             height = wmGenData.encounterCursorFrmImages[wmGenData.encounterCursorId].getHeight();
         } else {
-            src = wmGenData.mousePressed ? wmGenData.hotspotPressedFrmImage.getData() : wmGenData.hotspotNormalFrmImage.getData();
+            src = mousePressed ? wmGenData.hotspotPressedFrmImage.getData() : wmGenData.hotspotNormalFrmImage.getData();
             width = wmGenData.hotspotNormalFrmImage.getWidth();
             height = wmGenData.hotspotNormalFrmImage.getHeight();
         }
@@ -7516,7 +7529,7 @@ static int wmTownMapFunc(int* mapIdxPtr)
                         int destY = city->y + citySizeDescription->frmImage.getHeight() / 2 - gOffsets.viewY;
                         wmPartyInitWalking(destX, destY);
 
-                        wmGenData.mousePressed = false;
+                        mousePressed = false;
 
                         break;
                     }
