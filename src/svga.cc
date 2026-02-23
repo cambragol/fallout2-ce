@@ -7,12 +7,12 @@
 
 #include "config.h"
 #include "draw.h"
+#include "game.h"
 #include "interface.h"
 #include "memory.h"
 #include "mouse.h"
 #include "scan_unimplemented.h"
-#include "settings.h"
-#include "sfall_config.h"
+#include "tile.h"
 #include "win32.h"
 #include "window_manager.h"
 #include "window_manager_private.h"
@@ -21,20 +21,6 @@ namespace fallout {
 
 static bool createRenderer(int width, int height);
 static void destroyRenderer();
-
-static bool gStretchEnabled = true;
-static bool gPreserveAspect = true; // used internally for stretching
-static bool gUserAspectPreference = true; // store user preference for restore
-static bool gHighQuality = false; // maybe false by default
-static bool gSquarePixels = false;
-static bool gWidescreen = false;
-static bool gFullscreen = true;
-static int gPlayArea = 0;
-
-static int gContentWidth = 800;
-static int gContentHeight = 500;
-
-Rect gMouseClipRect = { 0, 0, 0, 0 }; // used for setting mouse clipping rectangel
 
 // screen rect
 Rect _scr_size;
@@ -115,76 +101,72 @@ void _zero_vid_mem()
     }
 }
 
-void restoreUserAspectPreference()
-{
-    gPreserveAspect = gUserAspectPreference;
-}
-
-bool gameIsWidescreen()
-{
-    return (gWidescreen); // changed to be set in init, to prevent mid-game widescreen asset changes
-}
-
-bool gameIsFullscreen()
-{
-    if (gSdlWindow == nullptr) {
-        return false;
-    }
-
-    Uint32 flags = SDL_GetWindowFlags(gSdlWindow);
-    bool isFullscreen = (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
-
-    // Update gFullscreen to stay in sync
-    if (isFullscreen != gFullscreen) {
-        gFullscreen = isFullscreen;
-    }
-
-    return isFullscreen;
-}
-
-// Mouse modes vary for windowed and fullscreen modes
-void updateMouseModeForCurrentState()
-{
-    if (!gSdlWindow) return;
-
-    Uint32 flags = SDL_GetWindowFlags(gSdlWindow);
-    bool isFullscreen = (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
-
-    if (isFullscreen) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-    } else {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
-    }
-}
-
 // 0x4CAE1C
 int _GNW95_init_mode_ex(int width, int height, int bpp)
 {
     bool fullscreen = true;
+    int scale = 1;
 
-    width = settings.graphics.game_width;
-    height = settings.graphics.game_height;
-    fullscreen = settings.graphics.fullscreen;
+    Config resolutionConfig;
+    if (configInit(&resolutionConfig)) {
+        if (configRead(&resolutionConfig, "f2_res.ini", false)) {
+            int screenWidth;
+            if (configGetInt(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
+                width = screenWidth;
+            }
 
-    if (width >= 800 && height >= 500 && settings.graphics.widescreen) {
-        gWidescreen = true; // set here to prevent mid game widescreen setting changes (from preferences)
+            int screenHeight;
+            if (configGetInt(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
+                height = screenHeight;
+            }
+
+            bool windowed;
+            if (configGetBool(&resolutionConfig, "MAIN", "WINDOWED", &windowed)) {
+                fullscreen = !windowed;
+            }
+
+            int scaleValue;
+            if (configGetInt(&resolutionConfig, "MAIN", "SCALE_2X", &scaleValue)) {
+                scale = scaleValue + 1; // 0 = 1x, 1 = 2x
+                // Only allow scaling if resulting game resolution is >= 640x480
+                if ((width / scale) < 640 || (height / scale) < 480) {
+                    scale = 1;
+                } else {
+                    width /= scale;
+                    height /= scale;
+                }
+            }
+
+            configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_MODE", &gInterfaceBarMode);
+            configGetInt(&resolutionConfig, "IFACE", "IFACE_BAR_WIDTH", &gInterfaceBarWidth);
+            configGetInt(&resolutionConfig, "IFACE", "IFACE_BAR_SIDE_ART", &gInterfaceSidePanelsImageId);
+            configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_SIDES_ORI", &gInterfaceSidePanelsExtendFromScreenEdge);
+
+            configGetBool(&resolutionConfig, "MAPS", "IGNORE_MAP_EDGES", &gTileIgnoreMapEdges);
+
+            configGetInt(&resolutionConfig, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &gSplashScreenScaling);
+
+            {
+                ConfigMap f2_res_defaults;
+                f2_res_defaults["MAIN"]["SCR_WIDTH"] = "640";
+                f2_res_defaults["MAIN"]["SCR_HEIGHT"] = "480";
+                f2_res_defaults["MAIN"]["WINDOWED"] = "0";
+                f2_res_defaults["MAIN"]["SCALE_2X"] = "0";
+                f2_res_defaults["IFACE"]["IFACE_BAR_MODE"] = "0";
+                f2_res_defaults["IFACE"]["IFACE_BAR_WIDTH"] = "0";
+                f2_res_defaults["IFACE"]["IFACE_BAR_SIDE_ART"] = "0";
+                f2_res_defaults["IFACE"]["IFACE_BAR_SIDES_ORI"] = "0";
+                f2_res_defaults["STATIC_SCREENS"]["SPLASH_SCRN_SIZE"] = "0";
+                f2_res_defaults["MAPS"]["IGNORE_MAP_EDGES"] = "0";
+
+                auto configChecker = ConfigChecker(f2_res_defaults, "f2_res.ini");
+                configChecker.check(resolutionConfig);
+            }
+        }
+        configFree(&resolutionConfig);
     }
 
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, &gInterfaceBarMode);
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, &gInterfaceBarWidth);
-    configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, &gInterfaceSidePanelsImageId);
-    configGetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDES_ORI, &gInterfaceSidePanelsExtendFromScreenEdge);
-
-    // setting for stretching - later
-    gStretchEnabled = settings.graphics.stretch_enabled;
-    gPreserveAspect = settings.graphics.preserve_aspect;
-    gUserAspectPreference = settings.graphics.preserve_aspect; // back up the user preference for restoring after using game screen
-    gHighQuality = settings.graphics.high_quality;
-    gSquarePixels = settings.graphics.square_pixels;
-    gPlayArea = settings.graphics.play_area; // used in resizeContent
-    gFullscreen = settings.graphics.fullscreen; // used in resizeContent
-
-    if (_GNW95_init_window(width, height, fullscreen) == -1) {
+    if (_GNW95_init_window(width, height, fullscreen, scale) == -1) {
         return -1;
     }
 
@@ -221,7 +203,7 @@ int _init_vesa_mode(int width, int height)
 }
 
 // 0x4CAEDC
-int _GNW95_init_window(int width, int height, bool fullscreen)
+int _GNW95_init_window(int width, int height, bool fullscreen, int scale)
 {
     if (gSdlWindow == nullptr) {
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
@@ -229,17 +211,13 @@ int _GNW95_init_window(int width, int height, bool fullscreen)
         Uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 
         if (fullscreen) {
-            windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+            windowFlags |= SDL_WINDOW_FULLSCREEN;
         }
 
-        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, windowFlags);
+        gSdlWindow = SDL_CreateWindow(gProgramWindowTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * scale, height * scale, windowFlags);
         if (gSdlWindow == nullptr) {
             return -1;
         }
-        int actualWidth = 0, actualHeight = 0;
-        SDL_GetWindowSize(gSdlWindow, &actualWidth, &actualHeight);
-
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, gHighQuality ? "1" : "0");
 
         if (!createRenderer(width, height)) {
             destroyRenderer();
@@ -409,56 +387,35 @@ int screenGetVisibleHeight()
     return screenGetHeight() - windowBottomMargin;
 }
 
+bool screenIsFullscreen()
+{
+    Uint32 flags = SDL_GetWindowFlags(gSdlWindow);
+    return (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
+}
+
 static bool createRenderer(int width, int height)
 {
-    gSdlRenderer = SDL_CreateRenderer(
-        gSdlWindow,
-        -1,
-        SDL_RENDERER_ACCELERATED);
-
-    if (!gSdlRenderer) {
-        // Try without VSYNC if accelerated fails
-        gSdlRenderer = SDL_CreateRenderer(
-            gSdlWindow,
-            -1,
-            SDL_RENDERER_ACCELERATED);
+    gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
+    if (gSdlRenderer == nullptr) {
+        return false;
     }
 
-    if (!gSdlRenderer) {
-        // Final fallback to software
-        gSdlRenderer = SDL_CreateRenderer(gSdlWindow, -1, 0);
-    }
-
-    if (!gSdlRenderer) {
+    if (SDL_RenderSetLogicalSize(gSdlRenderer, width, height) != 0) {
         return false;
     }
 
     gSdlTexture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
     if (gSdlTexture == nullptr) {
-        SDL_DestroyRenderer(gSdlRenderer);
-        gSdlRenderer = nullptr;
         return false;
     }
 
     Uint32 format;
     if (SDL_QueryTexture(gSdlTexture, &format, nullptr, nullptr, nullptr) != 0) {
-        SDL_DestroyTexture(gSdlTexture);
-        SDL_DestroyRenderer(gSdlRenderer);
-        gSdlTexture = nullptr;
-        gSdlRenderer = nullptr;
         return false;
-    }
-
-    if (gSdlTextureSurface != nullptr) {
-        SDL_FreeSurface(gSdlTextureSurface);
     }
 
     gSdlTextureSurface = SDL_CreateRGBSurfaceWithFormat(0, width, height, SDL_BITSPERPIXEL(format), format);
     if (gSdlTextureSurface == nullptr) {
-        SDL_DestroyTexture(gSdlTexture);
-        SDL_DestroyRenderer(gSdlRenderer);
-        gSdlTexture = nullptr;
-        gSdlRenderer = nullptr;
         return false;
     }
 
@@ -485,323 +442,16 @@ static void destroyRenderer()
 
 void handleWindowSizeChanged()
 {
-    static bool isResizing = false;
-    if (isResizing)
-        return;
-    isResizing = true;
-
-    // Save palette by copying data (not just pointer)
-    unsigned char* originalPalette = directDrawGetPalette();
-    unsigned char paletteCopy[256 * 3]; // Standard 8-bit palette size
-    if (originalPalette) {
-        memcpy(paletteCopy, originalPalette, sizeof(paletteCopy));
-    }
-
-    // Tear down existing renderer
     destroyRenderer();
-    directDrawFree();
-
-    // Resize window (no error check possible - SDL doesn't return status)
-    int newWidth = settings.graphics.game_width;
-    int newHeight = settings.graphics.game_height;
-    SDL_SetWindowSize(gSdlWindow, newWidth, newHeight);
-    _scr_size = { 0, 0, newWidth - 1, newHeight - 1 };
-
-    // Reinitialize drawing surface
-    directDrawInit(newWidth, newHeight, 8);
-    _zero_vid_mem();
-
-    // Restore palette if we had one
-    if (originalPalette) {
-        directDrawSetPalette(paletteCopy);
-    }
-
-    // Recreate renderer
-    createRenderer(newWidth, newHeight);
-
-    isResizing = false;
-}
-
-/**
- * Resizes the render content area and updates mouse clipping boundaries.
- *
- * This function sets the game's logical content dimensions and calculates
- * where that content is positioned on screen, then sets a clipping rectangle
- * to keep the mouse cursor within the visible game area. This prevents the
- * mouse from escaping into black borders or offscreen areas when stretching
- * or scaling modes are active.
- *
- * For fullscreen modes with specific play areas, we apply special positioning:
- * - Large play area (70% of screen): Content is centered within a 70% viewport
- * - Huge play area (100% of screen): Content is centered in the full window
- * - Windowed mode: Always centers content regardless of settings
- *
- * The mouse clipping rectangle ensures the cursor stays within the actual
- * visible game area, not the theoretical window bounds.
- */
-void resizeContent(int width, int height)
-{
-    // Store the logical content dimensions (what the game thinks it's drawing)
-    gContentWidth = width;
-    gContentHeight = height;
-
-    // Get actual window dimensions (what the player sees)
-    int windowW, windowH;
-    SDL_GetWindowSize(gSdlWindow, &windowW, &windowH);
-
-    if (gFullscreen) {
-        // FULLSCREEN MODE - Handle different play area settings
-
-        if (gPlayArea == 2) { // "Large" play area (70% of screen)
-            // Content is designed for 70% of screen, then stretched to fullscreen
-            // Calculate where the 70% content area sits in the full window
-            int offsetX = ((windowW * 0.7f - gContentWidth) / 2);
-            int offsetY = ((windowH * 0.7f - gContentHeight) / 2);
-
-            gMouseClipRect.left = offsetX;
-            gMouseClipRect.top = offsetY;
-            gMouseClipRect.right = offsetX + gContentWidth - 1;
-            gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-
-        } else if (gPlayArea == 3) { // "Huge" play area (100% of screen)
-            // Content fills the entire screen
-            // Center the content (will be stretched to fill)
-            int offsetX = ((windowW - gContentWidth) / 2);
-            int offsetY = ((windowH - gContentHeight) / 2);
-
-            gMouseClipRect.left = offsetX;
-            gMouseClipRect.top = offsetY;
-            gMouseClipRect.right = offsetX + gContentWidth - 1;
-            gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-        }
-        // Note: Original (640x480) and Default (800x500) modes use the
-        // same logic as windowed mode (centered content)
-
-    } else {
-        // WINDOWED MODE - Always center the content with black borders
-        int offsetX = (windowW - gContentWidth) / 2;
-        int offsetY = (windowH - gContentHeight) / 2;
-
-        gMouseClipRect.left = offsetX;
-        gMouseClipRect.top = offsetY;
-        gMouseClipRect.right = offsetX + gContentWidth - 1;
-        gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-    }
-
-    // Trigger a render to update the display with new content positioning
-    renderPresent();
-}
-
-/**
- * Resizes content with aspect ratio preservation option.
- *
- * Same functionality as the basic resizeContent(), but allows specifying
- * whether to preserve the content's aspect ratio when stretching.
- * This is used when the game switches between different display modes
- * (e.g., from gameplay to menus).
- *
- * @param preserveAspect When true, content maintains its original aspect ratio
- *                       when scaled; when false, content stretches to fill.
- */
-void resizeContent(int width, int height, bool preserveAspect)
-{
-    gContentWidth = width;
-    gContentHeight = height;
-    gPreserveAspect = preserveAspect;
-
-    // Reuse the same positioning logic from the simpler version
-    int windowW, windowH;
-    SDL_GetWindowSize(gSdlWindow, &windowW, &windowH);
-
-    if (gFullscreen) {
-        if (gPlayArea == 2) {
-            int offsetX = ((windowW * 0.7f - gContentWidth) / 2);
-            int offsetY = ((windowH * 0.7f - gContentHeight) / 2);
-
-            gMouseClipRect.left = offsetX;
-            gMouseClipRect.top = offsetY;
-            gMouseClipRect.right = offsetX + gContentWidth - 1;
-            gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-
-        } else if (gPlayArea == 3) {
-            int offsetX = ((windowW - gContentWidth) / 2);
-            int offsetY = ((windowH - gContentHeight) / 2);
-
-            gMouseClipRect.left = offsetX;
-            gMouseClipRect.top = offsetY;
-            gMouseClipRect.right = offsetX + gContentWidth - 1;
-            gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-        }
-    } else {
-        int offsetX = (windowW - gContentWidth) / 2;
-        int offsetY = (windowH - gContentHeight) / 2;
-
-        gMouseClipRect.left = offsetX;
-        gMouseClipRect.top = offsetY;
-        gMouseClipRect.right = offsetX + gContentWidth - 1;
-        gMouseClipRect.bottom = offsetY + gContentHeight - 1;
-    }
-
-    renderPresent();
+    createRenderer(screenGetWidth(), screenGetHeight());
 }
 
 void renderPresent()
 {
-    // Get physical pixel size of the window (DPI-aware)
-    int renderW, renderH;
-    SDL_GetRendererOutputSize(gSdlRenderer, &renderW, &renderH);
-
-    // Get logical window size
-    int windowW, windowH;
-    SDL_GetWindowSize(gSdlWindow, &windowW, &windowH);
-
-    // Calculate scale factors for DPI
-    float scaleX = (float)renderW / windowW;
-    float scaleY = (float)renderH / windowH;
-    float dpiScale = (scaleX < scaleY) ? scaleX : scaleY; // Use min scale for consistency
-
-    // Get logical rendering size fallback
-    int logicalW, logicalH;
-    SDL_RenderGetLogicalSize(gSdlRenderer, &logicalW, &logicalH);
-    if (logicalW == 0)
-        logicalW = gContentWidth;
-    if (logicalH == 0)
-        logicalH = gContentHeight;
-
-    SDL_Rect srcRect, destRect;
-
-    if (gStretchEnabled) {
-        int contentOffsetX = (gSdlTextureSurface->w - gContentWidth) / 2;
-        int contentOffsetY = (gSdlTextureSurface->h - gContentHeight) / 2;
-
-        srcRect = {
-            contentOffsetX,
-            contentOffsetY,
-            gContentWidth,
-            gContentHeight
-        };
-
-        // INTEGER SCALING MODE (with retina support)
-        if (gSquarePixels) {
-            // Use float for scale to support fractional values
-            float scale;
-
-            if (dpiScale > 1.0f) {
-                // High DPI: fractional scaling
-                float maxScaleX = (float)renderW / gContentWidth;
-                float maxScaleY = (float)renderH / gContentHeight;
-                scale = (maxScaleX < maxScaleY) ? maxScaleX : maxScaleY;
-
-                // Snap to 0.5 increments for better quality
-                scale = floorf(scale * 2.0f) / 2.0f;
-                // Ensure minimum scale of 0.5
-                if (scale < 0.5f)
-                    scale = 0.5f;
-            } else {
-                // Standard display: integer scaling
-                int maxScaleX = renderW / gContentWidth;
-                int maxScaleY = renderH / gContentHeight;
-                scale = (maxScaleX < maxScaleY) ? maxScaleX : maxScaleY;
-                // Ensure minimum scale of 1
-                if (scale < 1)
-                    scale = 1;
-            }
-
-            // Calculate scaled dimensions
-            int scaledWidth = static_cast<int>(gContentWidth * scale);
-            int scaledHeight = static_cast<int>(gContentHeight * scale);
-
-            // Center the scaled content
-            destRect = {
-                (renderW - scaledWidth) / 2,
-                (renderH - scaledHeight) / 2,
-                scaledWidth,
-                scaledHeight
-            };
-        }
-        // ASPECT-RATIO PRESERVED MODE
-        else if (gPreserveAspect) {
-            float contentAspect = (float)gContentWidth / gContentHeight;
-            float windowAspect = (float)renderW / renderH;
-
-            if (windowAspect > contentAspect) {
-                destRect.h = renderH;
-                destRect.w = (int)(renderH * contentAspect);
-                destRect.x = (renderW - destRect.w) / 2;
-                destRect.y = 0;
-            } else {
-                destRect.w = renderW;
-                destRect.h = (int)(renderW / contentAspect);
-                destRect.x = 0;
-                destRect.y = (renderH - destRect.h) / 2;
-            }
-        }
-        // STRETCH TO FILL MODE
-        else {
-            // Stretch to fill entire window
-            destRect = { 0, 0, renderW, renderH };
-        }
-
-        SDL_UpdateTexture(gSdlTexture, &srcRect,
-            (uint8_t*)gSdlTextureSurface->pixels + contentOffsetY * gSdlTextureSurface->pitch + contentOffsetX * 4,
-            gSdlTextureSurface->pitch);
-
-    } else {
-        // Stretching disabled — display original size scaled for DPI, centered
-        srcRect = { 0, 0, gSdlTextureSurface->w, gSdlTextureSurface->h };
-
-        destRect = {
-            (renderW - (int)(gSdlTextureSurface->w * scaleX)) / 2,
-            (renderH - (int)(gSdlTextureSurface->h * scaleY)) / 2,
-            (int)(gSdlTextureSurface->w * scaleX),
-            (int)(gSdlTextureSurface->h * scaleY)
-        };
-
-        SDL_UpdateTexture(gSdlTexture, nullptr,
-            gSdlTextureSurface->pixels,
-            gSdlTextureSurface->pitch);
-    }
-
-    // Background color for tracking screen stretching issues
-    // SDL_SetRenderDrawColor(gSdlRenderer, 0, 0, 0, 255);
+    SDL_UpdateTexture(gSdlTexture, nullptr, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
     SDL_RenderClear(gSdlRenderer);
-
-    SDL_RenderCopy(gSdlRenderer, gSdlTexture, &srcRect, &destRect);
+    SDL_RenderCopy(gSdlRenderer, gSdlTexture, nullptr, nullptr);
     SDL_RenderPresent(gSdlRenderer);
-}
-
-void svgaToggleFullscreen()
-{
-    if (!gSdlWindow) return;
-
-    Uint32 flags = SDL_GetWindowFlags(gSdlWindow);
-    bool isFullscreen = (flags & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
-
-    if (isFullscreen) {
-        SDL_SetWindowFullscreen(gSdlWindow, 0);
-        gFullscreen = false;
-
-        SDL_SetWindowSize(gSdlWindow, settings.graphics.game_width, settings.graphics.game_height);
-        // SDL_SetWindowPosition(gSdlWindow, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-    } else {
-        SDL_SetWindowFullscreen(gSdlWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
-        gFullscreen = true;
-    }
-
-    // Must toggle to release mouse
-    updateMouseModeForCurrentState();
-
-    // Force window redraw by sending an expose event
-    // This ensures the game redraws the screen after the mode change
-    SDL_Event exposeEvent;
-    SDL_zero(exposeEvent);
-    exposeEvent.type = SDL_WINDOWEVENT;
-    exposeEvent.window.event = SDL_WINDOWEVENT_EXPOSED;
-    exposeEvent.window.windowID = SDL_GetWindowID(gSdlWindow);
-    SDL_PushEvent(&exposeEvent);
-
-    // Process events to ensure the redraw happens promptly
-    SDL_PumpEvents();
 }
 
 } // namespace fallout

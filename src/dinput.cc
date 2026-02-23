@@ -1,4 +1,5 @@
 #include "dinput.h"
+
 #include "svga.h"
 
 namespace fallout {
@@ -53,14 +54,9 @@ bool mouseDeviceGetData(MouseData* mouseState)
     // TODO: Move mouse events processing into `GNW95_process_message` and
     // update mouse position manually.
     SDL_PumpEvents();
-
-    Uint32 buttons;
-    // Toggle mousestate with fullscreen mode (SDL_GetMouseState() does not play well with screen scaling in fullscreen)
-    if (gameIsFullscreen()) {
-        buttons = SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y));
-    } else {
-        buttons = SDL_GetMouseState(&(mouseState->x), &(mouseState->y));
-    }
+    Uint32 buttons = screenIsFullscreen()
+        ? SDL_GetRelativeMouseState(&(mouseState->x), &(mouseState->y))
+        : SDL_GetMouseState(&(mouseState->x), &(mouseState->y));
     mouseState->buttons[0] = (buttons & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
     mouseState->buttons[1] = (buttons & SDL_BUTTON(SDL_BUTTON_RIGHT)) != 0;
     mouseState->wheelX = gMouseWheelDeltaX;
@@ -100,12 +96,9 @@ bool keyboardDeviceGetData(KeyboardData* keyboardData)
 // 0x4E070C
 bool mouseDeviceInit()
 {
-    // toggle for SDL_GetMouseState() handling
-    if (gameIsFullscreen()) {
-        return SDL_SetRelativeMouseMode(SDL_TRUE) == 0;
-    } else {
-        return true;
-    }
+    return screenIsFullscreen()
+        ? SDL_SetRelativeMouseMode(SDL_TRUE) == 0
+        : true;
 }
 
 // 0x4E078C

@@ -3186,7 +3186,7 @@ void _barter_end_to_talk_to()
     _dialogQuit();
     _dialogClose();
     _updatePrograms();
-    _updateWindows();
+    windowUpdateAll();
     _dialogue_state = 1;
     _dialogue_switch_mode = 1;
 }
@@ -3719,11 +3719,11 @@ void partyMemberControlWindowHandleEvents()
             }
 
             if (keyCode == KEY_LOWERCASE_W) {
-                _inven_unwield(gGameDialogSpeaker, 1);
+                inventoryUnequip(gGameDialogSpeaker, 1);
 
                 Object* weapon = _ai_search_inven_weap(gGameDialogSpeaker, 0, nullptr);
                 if (weapon != nullptr) {
-                    _inven_wield(gGameDialogSpeaker, weapon, HAND_RIGHT);
+                    inventoryEquip(gGameDialogSpeaker, weapon, HAND_RIGHT);
                     aiAttemptWeaponReload(gGameDialogSpeaker, 0);
 
                     int num = _gdPickAIUpdateMsg(gGameDialogSpeaker);
@@ -3752,7 +3752,7 @@ void partyMemberControlWindowHandleEvents()
                 if (gGameDialogSpeaker->pid != 0x10000A1) {
                     Object* armor = _ai_search_inven_armor(gGameDialogSpeaker);
                     if (armor != nullptr) {
-                        _inven_wield(gGameDialogSpeaker, armor, 0);
+                        inventoryEquip(gGameDialogSpeaker, armor, 0);
                     }
                 }
 
@@ -4489,8 +4489,7 @@ int gameDialogWindowRenderBackground()
 {
     FrmImage backgroundFrmImage;
     // alltlk.frm - dialog screen background
-    // use 800 variant with borders in widescreen mode (still 640x480)
-    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 103, gameIsWidescreen());
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 103, 0, 0, 0);
     if (!backgroundFrmImage.lock(backgroundFid)) {
         return -1;
     }

@@ -165,8 +165,7 @@ int partyMembersInit()
     memset(gPartyMemberDescriptions, 0, sizeof(*gPartyMemberDescriptions) * gPartyMemberDescriptionsLength);
 
     _partyMemberLevelUpInfoList = (PartyMemberLevelUpInfo*)internal_malloc(sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
-    if (_partyMemberLevelUpInfoList == nullptr)
-        goto err;
+    if (_partyMemberLevelUpInfoList == nullptr) goto err;
 
     memset(_partyMemberLevelUpInfoList, 0, sizeof(*_partyMemberLevelUpInfoList) * gPartyMemberDescriptionsLength);
 
@@ -520,25 +519,19 @@ int _partyMemberUnPrepSave()
 // 0x4946CC
 int partyMembersSave(File* stream)
 {
-    if (fileWriteInt32(stream, gPartyMembersLength) == -1)
-        return -1;
-    if (fileWriteInt32(stream, _partyMemberItemCount) == -1)
-        return -1;
+    if (fileWriteInt32(stream, gPartyMembersLength) == -1) return -1;
+    if (fileWriteInt32(stream, _partyMemberItemCount) == -1) return -1;
 
     for (int index = 1; index < gPartyMembersLength; index++) {
         PartyMemberListItem* partyMember = &(gPartyMembers[index]);
-        if (fileWriteInt32(stream, partyMember->object->id) == -1)
-            return -1;
+        if (fileWriteInt32(stream, partyMember->object->id) == -1) return -1;
     }
 
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
         PartyMemberLevelUpInfo* ptr = &(_partyMemberLevelUpInfoList[index]);
-        if (fileWriteInt32(stream, ptr->level) == -1)
-            return -1;
-        if (fileWriteInt32(stream, ptr->numLevelUps) == -1)
-            return -1;
-        if (fileWriteInt32(stream, ptr->isEarly) == -1)
-            return -1;
+        if (fileWriteInt32(stream, ptr->level) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->numLevelUps) == -1) return -1;
+        if (fileWriteInt32(stream, ptr->isEarly) == -1) return -1;
     }
 
     return 0;
@@ -709,7 +702,7 @@ static int _partyMemberRecoverLoadInstance(PartyMemberListItem* a1)
     script->flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
 
     if (a1->vars != nullptr) {
-        script->localVarsOffset = _map_malloc_local_var(script->localVarsCount);
+        script->localVarsOffset = mapAllocLocalVars(script->localVarsCount);
         memcpy(gMapLocalVars + script->localVarsOffset, a1->vars, sizeof(int) * script->localVarsCount);
     }
 
@@ -726,17 +719,14 @@ int partyMembersLoad(File* stream)
 
     // FIXME: partyMemberObjectIds is never free'd in this function, obviously memory leak.
 
-    if (fileReadInt32(stream, &gPartyMembersLength) == -1)
-        return -1;
-    if (fileReadInt32(stream, &_partyMemberItemCount) == -1)
-        return -1;
+    if (fileReadInt32(stream, &gPartyMembersLength) == -1) return -1;
+    if (fileReadInt32(stream, &_partyMemberItemCount) == -1) return -1;
 
     gPartyMembers->object = gDude;
 
     if (gPartyMembersLength != 0) {
         for (int index = 1; index < gPartyMembersLength; index++) {
-            if (fileReadInt32(stream, &(partyMemberObjectIds[index])) == -1)
-                return -1;
+            if (fileReadInt32(stream, &(partyMemberObjectIds[index])) == -1) return -1;
         }
 
         for (int index = 1; index < gPartyMembersLength; index++) {
@@ -775,12 +765,9 @@ int partyMembersLoad(File* stream)
     for (int index = 1; index < gPartyMemberDescriptionsLength; index++) {
         PartyMemberLevelUpInfo* levelUpInfo = &(_partyMemberLevelUpInfoList[index]);
 
-        if (fileReadInt32(stream, &(levelUpInfo->level)) == -1)
-            return -1;
-        if (fileReadInt32(stream, &(levelUpInfo->numLevelUps)) == -1)
-            return -1;
-        if (fileReadInt32(stream, &(levelUpInfo->isEarly)) == -1)
-            return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->level)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->numLevelUps)) == -1) return -1;
+        if (fileReadInt32(stream, &(levelUpInfo->isEarly)) == -1) return -1;
     }
 
     return 0;
@@ -825,7 +812,7 @@ int _partyMemberSyncPosition()
             }
 
             int tile = tileGetTileInDirection(gDude->tile, rotation, distance / 2);
-            _objPMAttemptPlacement(partyMemberObj, tile, gDude->elevation);
+            objectAttemptPlacementPartyMember(partyMemberObj, tile, gDude->elevation);
 
             distance++;
             n++;
@@ -1110,7 +1097,7 @@ static int _partyMemberItemRecover(PartyMemberListItem* a1)
     a1->script = nullptr;
 
     if (a1->vars != nullptr) {
-        script->localVarsOffset = _map_malloc_local_var(script->localVarsCount);
+        script->localVarsOffset = mapAllocLocalVars(script->localVarsCount);
         memcpy(gMapLocalVars + script->localVarsOffset, a1->vars, sizeof(int) * script->localVarsCount);
     }
 
@@ -1594,10 +1581,10 @@ static int _partyMemberCopyLevelInfo(Object* critter, int stagePid)
     }
 
     Object* item2 = critterGetItem2(critter);
-    _invenUnwieldFunc(critter, 1, 0);
+    inventoryUnequipFunc(critter, 1, 0);
 
     Object* armor = critterGetArmor(critter);
-    _adjust_ac(critter, armor, nullptr);
+    adjustCritterStatsOnArmorChange(critter, armor, nullptr);
     itemRemove(critter, armor, 1);
 
     int maxHp = critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS);
@@ -1619,13 +1606,13 @@ static int _partyMemberCopyLevelInfo(Object* critter, int stagePid)
 
     if (armor != nullptr) {
         itemAdd(critter, armor, 1);
-        _inven_wield(critter, armor, 0);
+        inventoryEquip(critter, armor, 0);
     }
 
     if (item2 != nullptr) {
         // SFALL: Fix for party member's equipped weapon being placed in the
         // incorrect item slot after leveling up.
-        _invenWieldFunc(critter, item2, HAND_RIGHT, false);
+        inventoryEquipFunc(critter, item2, HAND_RIGHT, false);
     }
 
     return 0;
@@ -1646,14 +1633,10 @@ bool partyIsAnyoneCanBeHealedByRest()
         PartyMemberListItem* ptr = &(gPartyMembers[index]);
         Object* object = ptr->object;
 
-        if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER)
-            continue;
-        if (critterIsDead(object))
-            continue;
-        if ((object->flags & OBJECT_HIDDEN) != 0)
-            continue;
-        if (critterGetKillType(object) == KILL_TYPE_ROBOT)
-            continue;
+        if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) continue;
+        if (critterIsDead(object)) continue;
+        if ((object->flags & OBJECT_HIDDEN) != 0) continue;
+        if (critterGetKillType(object) == KILL_TYPE_ROBOT) continue;
 
         int currentHp = critterGetHitPoints(object);
         int maximumHp = critterGetStat(object, STAT_MAXIMUM_HIT_POINTS);
@@ -1677,14 +1660,10 @@ int partyGetMaxWoundToHealByRest()
         PartyMemberListItem* ptr = &(gPartyMembers[index]);
         Object* object = ptr->object;
 
-        if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER)
-            continue;
-        if (critterIsDead(object))
-            continue;
-        if ((object->flags & OBJECT_HIDDEN) != 0)
-            continue;
-        if (critterGetKillType(object) == KILL_TYPE_ROBOT)
-            continue;
+        if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) continue;
+        if (critterIsDead(object)) continue;
+        if ((object->flags & OBJECT_HIDDEN) != 0) continue;
+        if (critterGetKillType(object) == KILL_TYPE_ROBOT) continue;
 
         int currentHp = critterGetHitPoints(object);
         int maximumHp = critterGetStat(object, STAT_MAXIMUM_HIT_POINTS);

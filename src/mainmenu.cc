@@ -4,19 +4,14 @@
 
 #include "art.h"
 #include "color.h"
-#include "dbox.h"
 #include "draw.h"
 #include "game.h"
 #include "game_sound.h"
 #include "input.h"
 #include "kb.h"
-#include "memory.h"
 #include "mouse.h"
-#include "offsets.h"
 #include "palette.h"
-#include "platform_compat.h"
 #include "preferences.h"
-#include "settings.h"
 #include "sfall_config.h"
 #include "svga.h"
 #include "text_font.h"
@@ -26,6 +21,9 @@
 #include "platform/git_version.h"
 
 namespace fallout {
+
+#define MAIN_MENU_WINDOW_WIDTH 640
+#define MAIN_MENU_WINDOW_HEIGHT 480
 
 typedef enum MainMenuButton {
     MAIN_MENU_BUTTON_INTRO,
@@ -54,10 +52,6 @@ static bool gMainMenuWindowInitialized = false;
 
 // 0x51950C
 static unsigned int gMainMenuScreensaverDelay = 120000;
-
-static MessageList gFissionMessageList;
-
-static MessageListItem gFissionMessageListItem;
 
 // 0x519510
 static const int gMainMenuButtonKeyBindings[MAIN_MENU_BUTTON_COUNT] = {
@@ -89,95 +83,25 @@ static FrmImage _mainMenuBackgroundFrmImage;
 static FrmImage _mainMenuButtonNormalFrmImage;
 static FrmImage _mainMenuButtonPressedFrmImage;
 
-static FrmImage _mainMenuFissionLogoFrmImage;
-
-bool mainMenuLoadOffsetsFromConfig(MainMenuOffsets* offsets, bool isWidescreen)
-{
-    return loadOffsetsFromConfig<MainMenuOffsets>(
-        offsets,
-        isWidescreen,
-        "mainmenu",
-        gMainMenuOffsets640,
-        gMainMenuOffsets800,
-        applyConfigToMainMenuOffsets);
-}
-
-// move to seperate widescreen.cc file later?
-void mainMenuWriteDefaultOffsetsToConfig(bool isWidescreen, const MainMenuOffsets* defaults)
-{
-    const char* section = isWidescreen ? "mainmenu800" : "mainmenu640";
-
-    // Write all default values to config
-    configSetInt(&gGameConfig, section, "copyrightX", defaults->copyrightX);
-    configSetInt(&gGameConfig, section, "copyrightY", defaults->copyrightY);
-    configSetInt(&gGameConfig, section, "versionX", defaults->versionX);
-    configSetInt(&gGameConfig, section, "versionY", defaults->versionY);
-    configSetInt(&gGameConfig, section, "hashX", defaults->hashX);
-    configSetInt(&gGameConfig, section, "hashY", defaults->hashY);
-    configSetInt(&gGameConfig, section, "buildDateX", defaults->buildDateX);
-    configSetInt(&gGameConfig, section, "buildDateY", defaults->buildDateY);
-    configSetInt(&gGameConfig, section, "buttonBaseX", defaults->buttonBaseX);
-    configSetInt(&gGameConfig, section, "buttonBaseY", defaults->buttonBaseY);
-    configSetInt(&gGameConfig, section, "buttonTextOffsetX", defaults->buttonTextOffsetX);
-    configSetInt(&gGameConfig, section, "buttonTextOffsetY", defaults->buttonTextOffsetY);
-    configSetInt(&gGameConfig, section, "width", defaults->width);
-    configSetInt(&gGameConfig, section, "height", defaults->height);
-}
-
 // 0x481650
 int mainMenuWindowInit()
 {
     int fid;
     MessageListItem msg;
     int len;
-    int btn;
 
     if (gMainMenuWindowInitialized) {
         return 0;
     }
 
-    if (!messageListInit(&gFissionMessageList)) {
-        return -1;
-    }
-
-    char fissionPath[COMPAT_MAX_PATH];
-    snprintf(fissionPath, sizeof(fissionPath), "%s%s", asc_5186C8, "fission.msg");
-    if (!messageListLoad(&gFissionMessageList, fissionPath)) {
-        return -1;
-    }
-
-    // Set widescreen - must be wider in both axis and set to widescreen
-    const bool isWidescreen = gameIsWidescreen();
-
-    // Check if we should write defaults
-    int writeOffsets = 0;
-    if (configGetInt(&gGameConfig, "debug", "write_offsets", &writeOffsets) && writeOffsets) {
-        // Write BOTH sets of defaults
-        mainMenuWriteDefaultOffsetsToConfig(false, &gMainMenuOffsets640); // 640x480 defaults
-        mainMenuWriteDefaultOffsetsToConfig(true, &gMainMenuOffsets800); // 800x600 defaults
-
-        // Disable writing and save
-        configSetInt(&gGameConfig, "debug", "write_offsets", 0);
-        gameConfigSave();
-    }
-
-    // Load offsets
-    MainMenuOffsets gOffsets;
-    mainMenuLoadOffsetsFromConfig(&gOffsets, isWidescreen);
-
-    // user preference must be restored after overriding
-    restoreUserAspectPreference();
-    // resize to match SDL texture size for stretching
-    resizeContent(isWidescreen ? 800 : 640, isWidescreen ? 500 : 480);
-
     colorPaletteLoad("color.pal");
 
-    int mainMenuWindowX = (screenGetWidth() - gOffsets.width) / 2;
-    int mainMenuWindowY = (screenGetHeight() - gOffsets.height) / 2;
+    int mainMenuWindowX = (screenGetWidth() - MAIN_MENU_WINDOW_WIDTH) / 2;
+    int mainMenuWindowY = (screenGetHeight() - MAIN_MENU_WINDOW_HEIGHT) / 2;
     gMainMenuWindow = windowCreate(mainMenuWindowX,
         mainMenuWindowY,
-        gOffsets.width,
-        gOffsets.height,
+        MAIN_MENU_WINDOW_WIDTH,
+        MAIN_MENU_WINDOW_HEIGHT,
         0,
         WINDOW_HIDDEN | WINDOW_MOVE_ON_TOP);
     if (gMainMenuWindow == -1) {
@@ -187,13 +111,14 @@ int mainMenuWindowInit()
 
     gMainMenuWindowBuffer = windowGetBuffer(gMainMenuWindow);
 
-    int backgroundFid = artGetFidWithVariant(OBJ_TYPE_INTERFACE, 140, gameIsWidescreen());
+    // mainmenu.frm
+    int backgroundFid = buildFid(OBJ_TYPE_INTERFACE, 140, 0, 0, 0);
     if (!_mainMenuBackgroundFrmImage.lock(backgroundFid)) {
         // NOTE: Uninline.
         return main_menu_fatal_error();
     }
 
-    blitBufferToBuffer(_mainMenuBackgroundFrmImage.getData(), gOffsets.width, gOffsets.height, gOffsets.width, gMainMenuWindowBuffer, gOffsets.width);
+    blitBufferToBuffer(_mainMenuBackgroundFrmImage.getData(), 640, 480, 640, gMainMenuWindowBuffer, 640);
     _mainMenuBackgroundFrmImage.unlock();
 
     int oldFont = fontGetCurrent();
@@ -217,50 +142,29 @@ int mainMenuWindowInit()
     // Copyright.
     msg.num = 20;
     if (messageListGetItem(&gMiscMessageList, &msg)) {
-        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + gOffsets.copyrightX, offsetY + gOffsets.copyrightY, fontSettings | 0x06000000);
+        windowDrawText(gMainMenuWindow, msg.text, 0, offsetX + 15, offsetY + 460, fontSettings | 0x06000000);
     }
 
     // SFALL: Make sure font settings are applied when using 0x010000 flag
     if (fontSettingsSFall)
         fontSettings = fontSettingsSFall;
 
-    // fission.frm
-    fid = buildFid(OBJ_TYPE_INTERFACE, 4503, 0, 0, 0);
-    if (!_mainMenuFissionLogoFrmImage.lock(fid)) {
-        return main_menu_fatal_error();
-    }
-
-    btn = buttonCreate(gMainMenuWindow,
-        gOffsets.hashX - _mainMenuFissionLogoFrmImage.getWidth(),
-        gOffsets.hashY - 2,
-        _mainMenuFissionLogoFrmImage.getWidth(),
-        _mainMenuFissionLogoFrmImage.getHeight(),
-        -1,
-        -1,
-        -1,
-        501,
-        _mainMenuFissionLogoFrmImage.getData(),
-        _mainMenuFissionLogoFrmImage.getData(),
-        nullptr,
-        BUTTON_FLAG_TRANSPARENT);
-
+    // TODO: Allow to move version text
     // Version.
     char version[VERSION_MAX];
     versionGetVersion(version, sizeof(version));
     len = fontGetStringWidth(version);
-    windowDrawText(gMainMenuWindow, version, 0, gOffsets.hashX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.hashY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, version, 0, 615 - len, 440, fontSettings | 0x06000000);
 
-    // Hash - modified for release/fission logo
-    char commitHash[VERSION_MAX] = "POWERED BY: ";
-    // strcat(commitHash, _BUILD_HASH);
+    char commitHash[VERSION_MAX] = "BUILD HASH: ";
+    strcat(commitHash, _BUILD_HASH);
     len = fontGetStringWidth(commitHash);
-    windowDrawText(gMainMenuWindow, commitHash, 0, gOffsets.versionX - len - _mainMenuFissionLogoFrmImage.getWidth() - 3, gOffsets.versionY, fontSettings | 0x06000000);
+    windowDrawText(gMainMenuWindow, commitHash, 0, 615 - len, 450, fontSettings | 0x06000000);
 
-    // Build Date - removed for release
-    /*char buildDate[VERSION_MAX] = "DATE: ";
+    char buildDate[VERSION_MAX] = "DATE: ";
     strcat(buildDate, _BUILD_DATE);
     len = fontGetStringWidth(buildDate);
-    windowDrawText(gMainMenuWindow, buildDate, 0, gOffsets.buildDateX - len, gOffsets.buildDateY, fontSettings | 0x06000000);*/
+    windowDrawText(gMainMenuWindow, buildDate, 0, 615 - len, 460, fontSettings | 0x06000000);
 
     // menuup.frm
     fid = buildFid(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
@@ -280,15 +184,15 @@ int mainMenuWindowInit()
         gMainMenuButtons[index] = -1;
     }
 
-    // SFALL: Allow to move menu buttons via offsetX and offsetY
+    // SFALL: Allow to move menu buttons
     offsetX = offsetY = 0;
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_X_KEY, &offsetX);
     configGetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_MAIN_MENU_OFFSET_Y_KEY, &offsetY);
 
     for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         gMainMenuButtons[index] = buttonCreate(gMainMenuWindow,
-            offsetX + gOffsets.buttonBaseX,
-            offsetY + gOffsets.buttonBaseY + index * 42 - index,
+            offsetX + 30,
+            offsetY + 19 + index * 42 - index,
             26,
             26,
             -1,
@@ -320,7 +224,7 @@ int mainMenuWindowInit()
         msg.num = 9 + index;
         if (messageListGetItem(&gMiscMessageList, &msg)) {
             len = fontGetStringWidth(msg.text);
-            fontDrawText(gMainMenuWindowBuffer + gOffsets.buttonTextOffsetX + offsetX + gOffsets.width * (gOffsets.buttonTextOffsetY + offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, gOffsets.width - (126 - (len / 2)) - 1, gOffsets.width, fontSettings);
+            fontDrawText(gMainMenuWindowBuffer + offsetX + 640 * (offsetY + 42 * index - index + 20) + 126 - (len / 2), msg.text, 640 - (126 - (len / 2)) - 1, 640, fontSettings);
         }
     }
 
@@ -348,7 +252,6 @@ void mainMenuWindowFree()
 
     _mainMenuButtonPressedFrmImage.unlock();
     _mainMenuButtonNormalFrmImage.unlock();
-    _mainMenuFissionLogoFrmImage.unlock();
 
     if (gMainMenuWindow != -1) {
         windowDestroy(gMainMenuWindow);
@@ -409,27 +312,6 @@ int _main_menu_is_enabled()
     return 1;
 }
 
-static int showFissionAbout()
-{
-    // Info dialog (OK)
-    const char* title = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 300);
-    const char* bodyText = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 301);
-    const char* bodyText2 = (const char*)getmsg(&gFissionMessageList, &gFissionMessageListItem, 302);
-    const char* bodyLines[] = { bodyText, bodyText2 };
-
-    showDialogBox(
-        title,
-        bodyLines,
-        2,
-        192, 135,
-        _colorTable[32328],
-        nullptr,
-        _colorTable[32328],
-        1 // DIALOG_BOX_OK
-    );
-    return 1;
-}
-
 // 0x481AEC
 int mainMenuWindowHandleEvents()
 {
@@ -473,10 +355,6 @@ int mainMenuWindowHandleEvents()
                 brightnessDecrease();
             } else if (keyCode == KEY_UPPERCASE_D || keyCode == KEY_LOWERCASE_D) {
                 rc = MAIN_MENU_SCREENSAVER;
-                continue;
-            } else if (keyCode == 501) {
-                main_menu_play_sound("nmselec0");
-                showFissionAbout();
                 continue;
             } else if (keyCode == 1111) {
                 if (!(mouseGetEvent() & MOUSE_EVENT_LEFT_BUTTON_REPEAT)) {

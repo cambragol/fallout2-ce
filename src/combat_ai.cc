@@ -402,81 +402,46 @@ int aiInit()
 
         ai->name = internal_strdup(sectionEntry->key);
 
-        if (!configGetInt(&config, sectionEntry->key, "packet_num", &(ai->packet_num)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "max_dist", &(ai->max_dist)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "min_to_hit", &(ai->min_to_hit)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "min_hp", &(ai->min_hp)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "aggression", &(ai->aggression)))
-            goto err;
+        if (!configGetInt(&config, sectionEntry->key, "packet_num", &(ai->packet_num))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "max_dist", &(ai->max_dist))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "min_to_hit", &(ai->min_to_hit))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "min_hp", &(ai->min_hp))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "aggression", &(ai->aggression))) goto err;
 
         if (configGetString(&config, sectionEntry->key, "hurt_too_much", &stringValue)) {
             _parse_hurt_str(stringValue, &(ai->hurt_too_much));
         }
 
-        if (!configGetInt(&config, sectionEntry->key, "secondary_freq", &(ai->secondary_freq)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "called_freq", &(ai->called_freq)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "font", &(ai->font)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "color", &(ai->color)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "outline_color", &(ai->outline_color)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "chance", &(ai->chance)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "run_start", &(ai->run.start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "run_end", &(ai->run.end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "move_start", &(ai->move.start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "move_end", &(ai->move.end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "attack_start", &(ai->attack.start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "attack_end", &(ai->attack.end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "miss_start", &(ai->miss.start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "miss_end", &(ai->miss.end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_head_start", &(ai->hit[HIT_LOCATION_HEAD].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_head_end", &(ai->hit[HIT_LOCATION_HEAD].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_left_arm_start", &(ai->hit[HIT_LOCATION_LEFT_ARM].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_left_arm_end", &(ai->hit[HIT_LOCATION_LEFT_ARM].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_right_arm_start", &(ai->hit[HIT_LOCATION_RIGHT_ARM].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_right_arm_end", &(ai->hit[HIT_LOCATION_RIGHT_ARM].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_torso_start", &(ai->hit[HIT_LOCATION_TORSO].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_torso_end", &(ai->hit[HIT_LOCATION_TORSO].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_right_leg_start", &(ai->hit[HIT_LOCATION_RIGHT_LEG].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_right_leg_end", &(ai->hit[HIT_LOCATION_RIGHT_LEG].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_left_leg_start", &(ai->hit[HIT_LOCATION_LEFT_LEG].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_left_leg_end", &(ai->hit[HIT_LOCATION_LEFT_LEG].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_eyes_start", &(ai->hit[HIT_LOCATION_EYES].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_eyes_end", &(ai->hit[HIT_LOCATION_EYES].end)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_groin_start", &(ai->hit[HIT_LOCATION_GROIN].start)))
-            goto err;
-        if (!configGetInt(&config, sectionEntry->key, "hit_groin_end", &(ai->hit[HIT_LOCATION_GROIN].end)))
-            goto err;
+        if (!configGetInt(&config, sectionEntry->key, "secondary_freq", &(ai->secondary_freq))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "called_freq", &(ai->called_freq))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "font", &(ai->font))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "color", &(ai->color))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "outline_color", &(ai->outline_color))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "chance", &(ai->chance))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "run_start", &(ai->run.start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "run_end", &(ai->run.end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "move_start", &(ai->move.start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "move_end", &(ai->move.end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "attack_start", &(ai->attack.start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "attack_end", &(ai->attack.end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "miss_start", &(ai->miss.start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "miss_end", &(ai->miss.end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_head_start", &(ai->hit[HIT_LOCATION_HEAD].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_head_end", &(ai->hit[HIT_LOCATION_HEAD].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_left_arm_start", &(ai->hit[HIT_LOCATION_LEFT_ARM].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_left_arm_end", &(ai->hit[HIT_LOCATION_LEFT_ARM].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_right_arm_start", &(ai->hit[HIT_LOCATION_RIGHT_ARM].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_right_arm_end", &(ai->hit[HIT_LOCATION_RIGHT_ARM].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_torso_start", &(ai->hit[HIT_LOCATION_TORSO].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_torso_end", &(ai->hit[HIT_LOCATION_TORSO].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_right_leg_start", &(ai->hit[HIT_LOCATION_RIGHT_LEG].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_right_leg_end", &(ai->hit[HIT_LOCATION_RIGHT_LEG].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_left_leg_start", &(ai->hit[HIT_LOCATION_LEFT_LEG].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_left_leg_end", &(ai->hit[HIT_LOCATION_LEFT_LEG].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_eyes_start", &(ai->hit[HIT_LOCATION_EYES].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_eyes_end", &(ai->hit[HIT_LOCATION_EYES].end))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_groin_start", &(ai->hit[HIT_LOCATION_GROIN].start))) goto err;
+        if (!configGetInt(&config, sectionEntry->key, "hit_groin_end", &(ai->hit[HIT_LOCATION_GROIN].end))) goto err;
 
         ai->hit[HIT_LOCATION_GROIN].end++;
 
@@ -649,71 +614,42 @@ int aiSave(File* stream)
 // 0x427BC8
 static int aiPacketRead(File* stream, AiPacket* ai)
 {
-    if (fileReadInt32(stream, &(ai->packet_num)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->max_dist)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->min_to_hit)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->min_hp)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->aggression)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->hurt_too_much)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->secondary_freq)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->called_freq)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->font)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->color)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->outline_color)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->chance)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->run.start)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->run.end)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->move.start)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->move.end)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->attack.start)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->attack.end)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->miss.start)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->miss.end)) == -1)
-        return -1;
+    if (fileReadInt32(stream, &(ai->packet_num)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->max_dist)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->min_to_hit)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->min_hp)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->aggression)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->hurt_too_much)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->secondary_freq)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->called_freq)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->font)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->color)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->outline_color)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->chance)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->run.start)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->run.end)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->move.start)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->move.end)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->attack.start)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->attack.end)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->miss.start)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->miss.end)) == -1) return -1;
 
     for (int index = 0; index < HIT_LOCATION_SPECIFIC_COUNT; index++) {
         AiMessageRange* range = &(ai->hit[index]);
-        if (fileReadInt32(stream, &(range->start)) == -1)
-            return -1;
-        if (fileReadInt32(stream, &(range->end)) == -1)
-            return -1;
+        if (fileReadInt32(stream, &(range->start)) == -1) return -1;
+        if (fileReadInt32(stream, &(range->end)) == -1) return -1;
     }
 
-    if (fileReadInt32(stream, &(ai->area_attack_mode)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->best_weapon)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->distance)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->attack_who)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->chem_use)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ai->run_away_mode)) == -1)
-        return -1;
+    if (fileReadInt32(stream, &(ai->area_attack_mode)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->best_weapon)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->distance)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->attack_who)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->chem_use)) == -1) return -1;
+    if (fileReadInt32(stream, &(ai->run_away_mode)) == -1) return -1;
 
     for (int index = 0; index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT; index++) {
-        if (fileReadInt32(stream, &(ai->chem_primary_desire[index])) == -1)
-            return -1;
+        if (fileReadInt32(stream, &(ai->chem_primary_desire[index])) == -1) return -1;
     }
 
     return 0;
@@ -722,73 +658,44 @@ static int aiPacketRead(File* stream, AiPacket* ai)
 // 0x427E1C
 static int aiPacketWrite(File* stream, AiPacket* ai)
 {
-    if (fileWriteInt32(stream, ai->packet_num) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->max_dist) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->min_to_hit) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->min_hp) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->aggression) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->hurt_too_much) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->secondary_freq) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->called_freq) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->font) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->color) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->outline_color) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->chance) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->run.start) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->run.end) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->move.start) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->move.end) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->attack.start) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->attack.end) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->miss.start) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->miss.end) == -1)
-        return -1;
+    if (fileWriteInt32(stream, ai->packet_num) == -1) return -1;
+    if (fileWriteInt32(stream, ai->max_dist) == -1) return -1;
+    if (fileWriteInt32(stream, ai->min_to_hit) == -1) return -1;
+    if (fileWriteInt32(stream, ai->min_hp) == -1) return -1;
+    if (fileWriteInt32(stream, ai->aggression) == -1) return -1;
+    if (fileWriteInt32(stream, ai->hurt_too_much) == -1) return -1;
+    if (fileWriteInt32(stream, ai->secondary_freq) == -1) return -1;
+    if (fileWriteInt32(stream, ai->called_freq) == -1) return -1;
+    if (fileWriteInt32(stream, ai->font) == -1) return -1;
+    if (fileWriteInt32(stream, ai->color) == -1) return -1;
+    if (fileWriteInt32(stream, ai->outline_color) == -1) return -1;
+    if (fileWriteInt32(stream, ai->chance) == -1) return -1;
+    if (fileWriteInt32(stream, ai->run.start) == -1) return -1;
+    if (fileWriteInt32(stream, ai->run.end) == -1) return -1;
+    if (fileWriteInt32(stream, ai->move.start) == -1) return -1;
+    if (fileWriteInt32(stream, ai->move.end) == -1) return -1;
+    if (fileWriteInt32(stream, ai->attack.start) == -1) return -1;
+    if (fileWriteInt32(stream, ai->attack.end) == -1) return -1;
+    if (fileWriteInt32(stream, ai->miss.start) == -1) return -1;
+    if (fileWriteInt32(stream, ai->miss.end) == -1) return -1;
 
     for (int index = 0; index < HIT_LOCATION_SPECIFIC_COUNT; index++) {
         AiMessageRange* range = &(ai->hit[index]);
-        if (fileWriteInt32(stream, range->start) == -1)
-            return -1;
-        if (fileWriteInt32(stream, range->end) == -1)
-            return -1;
+        if (fileWriteInt32(stream, range->start) == -1) return -1;
+        if (fileWriteInt32(stream, range->end) == -1) return -1;
     }
 
-    if (fileWriteInt32(stream, ai->area_attack_mode) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->best_weapon) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->distance) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->attack_who) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->chem_use) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ai->run_away_mode) == -1)
-        return -1;
+    if (fileWriteInt32(stream, ai->area_attack_mode) == -1) return -1;
+    if (fileWriteInt32(stream, ai->best_weapon) == -1) return -1;
+    if (fileWriteInt32(stream, ai->distance) == -1) return -1;
+    if (fileWriteInt32(stream, ai->attack_who) == -1) return -1;
+    if (fileWriteInt32(stream, ai->chem_use) == -1) return -1;
+    if (fileWriteInt32(stream, ai->run_away_mode) == -1) return -1;
 
     for (int index = 0; index < AI_PACKET_CHEM_PRIMARY_DESIRE_COUNT; index++) {
         // TODO: Check, probably writes chem_primary_desire[0] three times,
         // might be a bug in original source code.
-        if (fileWriteInt32(stream, ai->chem_primary_desire[index]) == -1)
-            return -1;
+        if (fileWriteInt32(stream, ai->chem_primary_desire[index]) == -1) return -1;
     }
 
     return 0;
@@ -1090,7 +997,7 @@ static int _ai_check_drugs(Object* critter)
         int minHp = critterGetStat(critter, STAT_MAXIMUM_HIT_POINTS) * hpRatio / 100;
         int inventoryItemIndex = -1;
         while (critterGetStat(critter, STAT_CURRENT_HIT_POINTS) < minHp && critter->data.critter.combat.ap >= 2) {
-            Object* drug = _inven_find_type(critter, ITEM_TYPE_DRUG, &inventoryItemIndex);
+            Object* drug = inventoryFindByType(critter, ITEM_TYPE_DRUG, &inventoryItemIndex);
             if (drug == nullptr) {
                 searchCompleted = true;
                 break;
@@ -1099,12 +1006,12 @@ static int _ai_check_drugs(Object* critter)
             int drugPid = drug->pid;
             if (itemIsHealing(drugPid)) {
                 if (itemRemove(critter, drug, 1) == 0) {
-                    if (_item_d_take_drug(critter, drug) == -1) {
+                    if (drugItemTakeDrug(critter, drug) == -1) {
                         itemAdd(critter, drug, 1);
                     } else {
                         _ai_magic_hands(critter, drug, 5000);
                         _obj_connect(drug, critter->tile, critter->elevation, nullptr);
-                        _obj_destroy(drug);
+                        objectDestroy(drug);
                         drugUsed = true;
                     }
 
@@ -1147,7 +1054,7 @@ static int _ai_check_drugs(Object* critter)
                 // The alternative is to use a pair of `std::vector`s and let
                 // them manage the memory.
                 while (true) {
-                    Object* drug = _inven_find_type(critter, ITEM_TYPE_DRUG, &inventoryItemIndex);
+                    Object* drug = inventoryFindByType(critter, ITEM_TYPE_DRUG, &inventoryItemIndex);
                     if (drug == nullptr) {
                         searchCompleted = true;
                         break;
@@ -1196,12 +1103,12 @@ static int _ai_check_drugs(Object* critter)
                     *availableDrugsCountPtr -= 1;
 
                     if (itemRemove(critter, drug, 1) == 0) {
-                        if (_item_d_take_drug(critter, drug) == -1) {
+                        if (drugItemTakeDrug(critter, drug) == -1) {
                             itemAdd(critter, drug, 1);
                         } else {
                             _ai_magic_hands(critter, drug, 5000);
                             _obj_connect(drug, critter->tile, critter->elevation, nullptr);
-                            _obj_destroy(drug);
+                            objectDestroy(drug);
                             drugUsed = true;
                             drugCount += 1;
                         }
@@ -1241,12 +1148,12 @@ static int _ai_check_drugs(Object* critter)
             }
 
             if (itemRemove(critter, lastItem, 1) == 0) {
-                if (_item_d_take_drug(critter, lastItem) == -1) {
+                if (drugItemTakeDrug(critter, lastItem) == -1) {
                     itemAdd(critter, lastItem, 1);
                 } else {
                     _ai_magic_hands(critter, lastItem, 5000);
                     _obj_connect(lastItem, critter->tile, critter->elevation, nullptr);
-                    _obj_destroy(lastItem);
+                    objectDestroy(lastItem);
                     lastItem = nullptr;
                 }
 
@@ -1868,7 +1775,7 @@ static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr)
     int inventoryItemIndex = -1;
 
     while (1) {
-        Object* ammo = _inven_find_type(critter, ITEM_TYPE_AMMO, &inventoryItemIndex);
+        Object* ammo = inventoryFindByType(critter, ITEM_TYPE_AMMO, &inventoryItemIndex);
         if (ammo == nullptr) {
             break;
         }
@@ -1882,10 +1789,10 @@ static bool aiHaveAmmo(Object* critter, Object* weapon, Object** ammoPtr)
 
         if (weaponGetAnimationCode(weapon)) {
             if (weaponGetRange(critter, HIT_MODE_RIGHT_WEAPON_PRIMARY) < 3) {
-                _inven_unwield(critter, HAND_RIGHT);
+                inventoryUnequip(critter, HAND_RIGHT);
             }
         } else {
-            _inven_unwield(critter, HAND_RIGHT);
+            inventoryUnequip(critter, HAND_RIGHT);
         }
     }
 
@@ -2105,7 +2012,7 @@ Object* _ai_search_inven_weap(Object* critter, bool checkRequiredActionPoints, O
     Object* bestWeapon = nullptr;
     Object* rightHandWeapon = critterGetItem2(critter);
     while (true) {
-        Object* weapon = _inven_find_type(critter, ITEM_TYPE_WEAPON, &token);
+        Object* weapon = inventoryFindByType(critter, ITEM_TYPE_WEAPON, &token);
         if (weapon == nullptr) {
             break;
         }
@@ -2166,7 +2073,7 @@ Object* _ai_search_inven_armor(Object* critter)
 
     int inventoryItemIndex = -1;
     while (true) {
-        Object* candidate = _inven_find_type(critter, ITEM_TYPE_ARMOR, &inventoryItemIndex);
+        Object* candidate = inventoryFindByType(critter, ITEM_TYPE_ARMOR, &inventoryItemIndex);
         if (candidate == nullptr) {
             break;
         }
@@ -2338,7 +2245,7 @@ static Object* _ai_retrieve_object(Object* critter, Object* item)
 
     // Find the item in NPC's inventory. This step is needed because NPC could
     // not get the item on this turn.
-    Object* retrievedItem = _inven_find_id(critter, item->id);
+    Object* retrievedItem = inventoryFindById(critter, item->id);
 
     if (retrievedItem != nullptr || item->owner != nullptr) {
         // Either NPC have the item, or someone else have picked it up.
@@ -2713,7 +2620,7 @@ static int _ai_switch_weapons(Object* attacker, int* hitMode, Object** weapon, O
     }
 
     if (*weapon != nullptr) {
-        _inven_wield(attacker, *weapon, HAND_RIGHT);
+        inventoryEquip(attacker, *weapon, HAND_RIGHT);
         _combat_turn_run();
         if (weaponGetActionPointCost(attacker, *hitMode, 0) <= attacker->data.critter.combat.ap) {
             return 0;
@@ -2784,7 +2691,7 @@ static int _ai_attack(Object* attacker, Object* defender, int hitMode)
 // 0x42A7D8
 static int _ai_try_attack(Object* attacker, Object* defender)
 {
-    _critter_set_who_hit_me(attacker, defender);
+    critterSetWhoHitMe(attacker, defender);
 
     CritterCombatData* combatData = &(attacker->data.critter.combat);
     bool taunt = true;
@@ -2829,7 +2736,7 @@ static int _ai_try_attack(Object* attacker, Object* defender)
                 while (aiHaveAmmo(attacker, weapon, &ammo)) {
                     int remainingAmmoQuantity = weaponReload(weapon, ammo);
                     if (remainingAmmoQuantity == 0 && ammo != nullptr) {
-                        _obj_destroy(ammo);
+                        objectDestroy(ammo);
                         ++roundsLoaded;
                     } else {
                         break;
@@ -2861,7 +2768,7 @@ static int _ai_try_attack(Object* attacker, Object* defender)
                     if (ammo != nullptr) {
                         int remainingAmmoQuantity = weaponReload(weapon, ammo);
                         if (remainingAmmoQuantity == 0) {
-                            _obj_destroy(ammo);
+                            objectDestroy(ammo);
                         }
 
                         if (remainingAmmoQuantity != -1) {
@@ -2889,7 +2796,7 @@ static int _ai_try_attack(Object* attacker, Object* defender)
                     _gsound_play_sfx_file_volume(sfx, volume);
                     _ai_magic_hands(attacker, weapon, 5001);
 
-                    if (_inven_unwield(attacker, 1) == 0) {
+                    if (inventoryUnequip(attacker, 1) == 0) {
                         _combat_turn_run();
                     }
 
@@ -3004,7 +2911,7 @@ static int _ai_try_attack(Object* attacker, Object* defender)
 int _cAIPrepWeaponItem(Object* critter, Object* item)
 {
     if (item != nullptr && critterGetStat(critter, STAT_INTELLIGENCE) >= 3 && item->pid == PROTO_ID_FLARE && lightGetAmbientIntensity() < LIGHT_INTENSITY_MAX * 0.85) {
-        _protinst_use_item(critter, item);
+        objectUseItem(critter, item);
     }
     return 0;
 }
@@ -3026,7 +2933,7 @@ void aiAttemptWeaponReload(Object* critter, int animate)
             if (aiHaveAmmo(critter, weapon, &ammo)) {
                 int rc = weaponReload(weapon, ammo);
                 if (rc == 0) {
-                    _obj_destroy(ammo);
+                    objectDestroy(ammo);
                     ++loadedRounds;
                 } else {
                     break;
@@ -3345,7 +3252,7 @@ int critterSetTeam(Object* obj, int team)
     obj->data.critter.combat.team = team;
 
     if (obj->data.critter.combat.whoHitMeCid == -1) {
-        _critter_set_who_hit_me(obj, nullptr);
+        critterSetWhoHitMe(obj, nullptr);
         debugPrint("\nError: CombatData found with invalid who_hit_me!");
         return -1;
     }
@@ -3353,7 +3260,7 @@ int critterSetTeam(Object* obj, int team)
     Object* whoHitMe = obj->data.critter.combat.whoHitMe;
     if (whoHitMe != nullptr) {
         if (whoHitMe->data.critter.combat.team == team) {
-            _critter_set_who_hit_me(obj, nullptr);
+            critterSetWhoHitMe(obj, nullptr);
         }
     }
 
@@ -3595,10 +3502,10 @@ void _combatai_check_retaliation(Object* a1, Object* a2)
         int candidateRating = _combatai_rating(a2);
         int whoHitMeRating = _combatai_rating(whoHitMe);
         if (candidateRating > whoHitMeRating) {
-            _critter_set_who_hit_me(a1, a2);
+            critterSetWhoHitMe(a1, a2);
         }
     } else {
-        _critter_set_who_hit_me(a1, a2);
+        critterSetWhoHitMe(a1, a2);
     }
 }
 

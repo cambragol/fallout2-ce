@@ -172,8 +172,6 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/obj_types.h"
     "src/object.cc"
     "src/object.h"
-    "src/offsets.h"
-    "src/offsets.cc"
     "src/options.cc"
     "src/options.h"
     "src/palette.cc"
@@ -290,10 +288,15 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/sfall_opcodes.h"
     "src/sfall_arrays.cc"
     "src/sfall_arrays.h"
+    "src/sfall_callbacks.cc"
+    "src/sfall_callbacks.h"
     "src/touch.cc"
     "src/touch.h"
     "src/scan_unimplemented.cc"
+	"third_party/lodepng/lodepng.cpp"
 )
+
+target_include_directories(${EXECUTABLE_NAME} PUBLIC "third_party/lodepng")
 
 if(IOS)
     target_sources(${EXECUTABLE_NAME} PUBLIC
@@ -315,14 +318,15 @@ endif()
 if(WIN32)
     target_link_libraries(${EXECUTABLE_NAME}
         winmm
-        libcpmt
+        debug libcpmtd
+        optimized libcpmt
     )
 endif()
 
 if(WIN32)
     target_sources(${EXECUTABLE_NAME} PUBLIC
-        "os/windows/fission.ico"
-        "os/windows/fission.rc"
+        "os/windows/fallout2-ce.ico"
+        "os/windows/fallout2-ce.rc"
     )
 endif()
 
@@ -331,7 +335,6 @@ if(APPLE)
         set(RESOURCES
             "os/ios/AppIcon.xcassets"
             "os/ios/LaunchScreen.storyboard"
-            "os/macos/fission.dat"
         )
 
         target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
@@ -345,26 +348,25 @@ if(APPLE)
         )
 
         set(MACOSX_BUNDLE_BUNDLE_NAME "${EXECUTABLE_NAME}")
-        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout-Fission")
+        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout 2")
     else()
         set(RESOURCES
-            "os/macos/fallout-fission.icns"
-            "os/macos/fission.dat"
+            "os/macos/fallout2-ce.icns"
         )
 
         target_sources(${EXECUTABLE_NAME} PUBLIC ${RESOURCES})
         set_source_files_properties(${RESOURCES} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
         set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-            OUTPUT_NAME "Fallout-Fission"
+            OUTPUT_NAME "Fallout II Community Edition"
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/os/macos/Info.plist"
             XCODE_ATTRIBUTE_EXECUTABLE_NAME "${EXECUTABLE_NAME}"
             XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.alexbatalov.fallout2-ce"
         )
 
-        set(MACOSX_BUNDLE_ICON_FILE "fallout-fission.icns")
-        set(MACOSX_BUNDLE_BUNDLE_NAME "Fallout-Fission")
-        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout-Fission")
+        set(MACOSX_BUNDLE_ICON_FILE "fallout2-ce.icns")
+        set(MACOSX_BUNDLE_BUNDLE_NAME "Fallout II: Community Edition")
+        set(MACOSX_BUNDLE_DISPLAY_NAME "Fallout II")
     endif()
 
     set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.alexbatalov.fallout2-ce")
@@ -442,14 +444,14 @@ if(APPLE)
 
         set(CPACK_GENERATOR "ZIP")
         set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
-        set(CPACK_PACKAGE_FILE_NAME "fallout-fission")
+        set(CPACK_PACKAGE_FILE_NAME "fallout2-ce")
         set(CPACK_ARCHIVE_FILE_EXTENSION "ipa")
     else()
         install(TARGETS ${EXECUTABLE_NAME} DESTINATION .)
 
         set(CPACK_GENERATOR "DragNDrop")
         set(CPACK_DMG_DISABLE_APPLICATIONS_SYMLINK ON)
-        set(CPACK_PACKAGE_FILE_NAME "Fallout-Fission")
+        set(CPACK_PACKAGE_FILE_NAME "Fallout II Community Edition")
     endif()
 
     include(CPack)

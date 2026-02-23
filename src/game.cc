@@ -52,6 +52,7 @@
 #include "scripts.h"
 #include "settings.h"
 #include "sfall_arrays.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "sfall_ext.h"
 #include "sfall_global_scripts.h"
@@ -108,9 +109,6 @@ int* gGameGlobalVars = nullptr;
 // 0x5186C4
 int gGameGlobalVarsLength = 0;
 
-// global for all strictVanilla controls
-bool gStrictVanillaEnabled = false;
-
 // 0x5186C8
 const char* asc_5186C8 = _aGame_0;
 
@@ -121,6 +119,8 @@ int _game_user_wants_to_quit = 0;
 //
 // 0x58E940
 MessageList gMiscMessageList;
+
+int gSplashScreenScaling = 0;
 
 // CE: Sonora folks like to store objects in global variables.
 static void** gGameGlobalPointers = nullptr;
@@ -138,9 +138,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     // override it's file name.
     sfallConfigInit(argc, argv);
 
+    // SFALL: Execute all code that should be executed BEFORE game init
+    sfallOnBeforeGameInit();
+
     settingsInit(isMapper, argc, argv);
 
-    gStrictVanillaEnabled = settings.sfall_misc.strict_vanilla;
     gIsMapper = isMapper;
 
     if (gameDbInit() == -1) {
@@ -154,8 +156,11 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     messageListRepositoryInit();
 
     programWindowSetTitle(windowTitle);
-    _initWindow(1, flags);
+    windowInit(1, flags);
     paletteInit();
+
+    // SFALL: Execute all code that should be executed ON game init
+    sfallOnGameInit();
 
     const char* language = settings.system.language.c_str();
     if (compat_stricmp(language, FRENCH) == 0) {
@@ -181,13 +186,6 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     debugPrint(">init_options_menu\n");
 
     if (!gIsMapper && skipOpeningMovies < 2) {
-
-        if (gameIsWidescreen()) {
-            resizeContent(800, 500);
-        } else {
-            resizeContent(640, 480);
-        }
-        // resizeContent(640, 480);
         showSplash();
     }
 
@@ -229,7 +227,7 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
     queueInit();
     critterInit();
     aiInit();
-    _inven_reset_dude();
+    inventoryResetDude();
 
     if (gameSoundInit() != 0) {
         debugPrint("Sound initialization failed.\n");
@@ -396,6 +394,9 @@ int gameInitWithOptions(const char* windowTitle, bool isMapper, int font, int fl
 
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, &gMiscMessageList);
 
+    // SFALL: Execute all code that should be executed AFTER game init
+    sfallOnAfterGameInit();
+
     return 0;
 }
 
@@ -415,7 +416,7 @@ void gameReset()
     lsgInit();
     critterReset();
     aiReset();
-    _inven_reset_dude();
+    inventoryResetDude();
     gameSoundReset();
     _movieStop();
     movieEffectsReset();
@@ -443,6 +444,7 @@ void gameReset()
     messageListRepositoryReset();
     sfallArraysReset();
     sfall_gl_scr_reset();
+    sfallOnGameReset();
 }
 
 // 0x442C34
@@ -456,6 +458,7 @@ void gameExit()
     sfallListsExit();
     sfall_gl_vars_exit();
     premadeCharactersExit();
+    sfallOnGameExit();
 
     tileDisable();
     messageListRepositorySetStandardMessageList(STANDARD_MESSAGE_LIST_MISC, nullptr);
@@ -467,6 +470,7 @@ void gameExit()
     // NOTE: Uninline.
     gameFreeGlobalVars();
 
+    sfallOnBeforeGameClose();
     scriptsExit();
     animationExit();
     protoExit();
@@ -491,7 +495,7 @@ void gameExit()
     partyMembersExit();
     endgameDeathEndingExit();
     interfaceFontsExit();
-    _windowClose();
+    windowClose();
     messageListRepositoryExit();
     dbExit();
     settingsExit(true);
@@ -1060,7 +1064,7 @@ static int gameLoadGlobalVars()
 // 0x443CE8
 int globalVarsRead(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr)
 {
-    _inven_reset_dude();
+    inventoryResetDude();
 
     File* stream = fileOpen(path, "rt");
     if (stream == nullptr) {
@@ -1166,7 +1170,16 @@ static int gameTakeScreenshot(int width, int height, unsigned char* buffer, unsi
 {
     MessageListItem messageListItem;
 
-    if (screenshotHandlerDefaultImpl(width, height, buffer, palette) != 0) {
+    ScreenshotHandler* handler = screenshotHandlerDefaultImpl;
+
+    char* formatName = nullptr;
+    configGetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCREENSHOTS_FORMAT, &formatName);
+
+    if (compat_stricmp(formatName, "png") == 0) {
+        handler = screenshotHandlerPngImpl;
+    }
+
+    if (handler(width, height, buffer, palette) != 0) {
         // Error saving screenshot.
         messageListItem.num = 8;
         if (messageListGetItem(&gMiscMessageList, &messageListItem)) {
@@ -1206,9 +1219,6 @@ static void gameFreeGlobalVars()
 static void showHelp()
 {
     ScopedGameMode gm(GameMode::kHelp);
-
-    restoreUserAspectPreference();
-    resizeContent(640, 480);
 
     bool isoWasEnabled = isoDisable();
     gameMouseObjectsHide();
@@ -1282,7 +1292,6 @@ static void showHelp()
     if (isoWasEnabled) {
         isoEnable();
     }
-    resizeContent(screenGetWidth(), screenGetHeight(), true);
 }
 
 // 0x4440B8
@@ -1340,97 +1349,33 @@ int showQuitConfirmationDialog()
     return rc;
 }
 
-// create a folder to hold 'lists' reports
-void createListsFolder()
-{
-    // create the "lists" folder inside the "data" directory
-    const char* dataDir = "data";
-    const char* listsFolderName = "lists";
-
-    char listsFolderPath[COMPAT_MAX_PATH];
-    compat_makepath(listsFolderPath, nullptr, dataDir, listsFolderName, nullptr);
-
-    // create the lists folder
-    compat_mkdir(listsFolderPath);
-}
-
 // 0x44418C
 static int gameDbInit()
 {
     const char* main_file_name;
     const char* patch_file_name;
-    char filename[COMPAT_MAX_PATH];
     int patch_index;
-    bool is_original = false;
+    char filename[COMPAT_MAX_PATH];
 
-    // Check if master.dat is the original version (multiple versions?)
-    const char* master_path = settings.system.master_dat_path.c_str();
-    if (*master_path != '\0') {
-        FILE* f = fopen(master_path, "rb");
-        if (f) {
-            fseek(f, 0, SEEK_END);
-            is_original = (ftell(f) == 333177805);
-            fclose(f);
-        }
+    main_file_name = nullptr;
+    patch_file_name = nullptr;
+
+    main_file_name = settings.system.master_dat_path.c_str();
+    if (*main_file_name == '\0') {
+        main_file_name = nullptr;
     }
 
-    // Helper lambda to actually open the fission datafile
-    auto loadFission = [&]() -> int {
-        const char* main_file_name = settings.system.fission_dat_path.c_str();
-        const char* patch_file_name = settings.system.fission_patches_path.c_str();
-        if (*patch_file_name == '\0') {
-            patch_file_name = nullptr;
-        }
-        int handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        if (handle == -1) {
-            showMesageBox(
-                "Could not find the fission datafile. "
-                "Please make sure the fission.dat file is in the folder "
-                "that you are running FALLOUT from.");
-        }
-        return handle;
-    };
-
-    bool hasFission = !settings.system.fission_dat_path.empty();
-    bool useMasterOverride = settings.system.master_override;
-
-    // If master.dat is *not* the “original” AND override is *not* set,
-    // then load fission.dat *before* master.dat.
-    if (!is_original && !useMasterOverride && hasFission) {
-        if (loadFission() == -1)
-            return -1;
+    patch_file_name = settings.system.master_patches_path.c_str();
+    if (*patch_file_name == '\0') {
+        patch_file_name = nullptr;
     }
 
-    // Now load master.dat
-    {
-        const char* main_file_name = settings.system.master_dat_path.c_str();
-        const char* patch_file_name = settings.system.master_patches_path.c_str();
-        if (*main_file_name == '\0') {
-            main_file_name = nullptr;
-        }
-        if (*patch_file_name == '\0') {
-            patch_file_name = nullptr;
-        }
-
-        int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
-        if (master_db_handle == -1) {
-            showMesageBox(
-                "Could not find the master datafile. "
-                "Please make sure the master.dat file is in the folder "
-                "that you are running FALLOUT from.");
-            return -1;
-        }
+    int master_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
+    if (master_db_handle == -1) {
+        showMesageBox("Could not find the master datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
+        return -1;
     }
 
-    // If master.dat *is* the original, OR if override is set,
-    // then load fission.dat *after* master.dat.
-    if ((is_original || useMasterOverride) && hasFission) {
-
-        if (loadFission() == -1)
-            return -1;
-    }
-
-    // Load critter.dat
     main_file_name = settings.system.critter_dat_path.c_str();
     if (*main_file_name == '\0') {
         main_file_name = nullptr;
@@ -1443,10 +1388,7 @@ static int gameDbInit()
 
     int critter_db_handle = dbOpen(main_file_name, 0, patch_file_name, 1);
     if (critter_db_handle == -1) {
-        showMesageBox(
-            "Could not find the critter datafile. "
-            "Please make sure the critter.dat file is in the folder "
-            "that you are running FALLOUT from.");
+        showMesageBox("Could not find the critter datafile. Please make sure the FALLOUT CD is in the drive and that you are running FALLOUT from the directory you installed it to.");
         return -1;
     }
 
@@ -1465,9 +1407,11 @@ static int gameDbInit()
         }
     }
 
-    createListsFolder();
-
     sfallLoadMods();
+
+    if (compat_access("f2_res.dat", 0) == 0) {
+        dbOpen("f2_res.dat", 0, nullptr, 1);
+    }
 
     return 0;
 }
@@ -1485,21 +1429,9 @@ static void showSplash()
         snprintf(path, sizeof(path), "art\\splash\\");
     }
 
-    File* stream = nullptr;
+    File* stream;
     for (int index = 0; index < SPLASH_COUNT; index++) {
         char filePath[64];
-
-        // First try widescreen version if in widescreen mode
-        if (gameIsWidescreen()) {
-            snprintf(filePath, sizeof(filePath), "%ssplash%d%s.rix", path, splash,
-                settings.graphics.widescreen_variant_suffix.c_str());
-            stream = fileOpen(filePath, "rb");
-            if (stream != nullptr) {
-                break;
-            }
-        }
-
-        // If widescreen version not found or not in widescreen mode, try regular version
         snprintf(filePath, sizeof(filePath), "%ssplash%d.rix", path, splash);
         stream = fileOpen(filePath, "rb");
         if (stream != nullptr) {
@@ -1507,6 +1439,7 @@ static void showSplash()
         }
 
         splash++;
+
         if (splash >= SPLASH_COUNT) {
             splash = 0;
         }
@@ -1561,17 +1494,45 @@ static void showSplash()
         }
     }
 
+    int size = gSplashScreenScaling;
+
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
-    // Calculate centered position
-    int x = (screenWidth - width) / 2;
-    int y = (screenHeight - height) / 2;
+    if (size != 0 || screenWidth < width || screenHeight < height) {
+        int scaledWidth;
+        int scaledHeight;
 
-    // Perform clean blit
-    _scr_blit(data, width, height, 0, 0, width, height, x, y);
-    paletteFadeTo(palette);
-    inputPauseForTocks(1000); // Added for gravitas
+        if (size == 2) {
+            scaledWidth = screenWidth;
+            scaledHeight = screenHeight;
+        } else {
+            if (screenHeight * width >= screenWidth * height) {
+                scaledWidth = screenWidth;
+                scaledHeight = screenWidth * height / width;
+            } else {
+                scaledWidth = screenHeight * width / height;
+                scaledHeight = screenHeight;
+            }
+        }
+
+        unsigned char* scaled = reinterpret_cast<unsigned char*>(internal_malloc(scaledWidth * scaledHeight));
+        if (scaled != nullptr) {
+            blitBufferToBufferStretch(data, width, height, width, scaled, scaledWidth, scaledHeight, scaledWidth);
+
+            int x = screenWidth > scaledWidth ? (screenWidth - scaledWidth) / 2 : 0;
+            int y = screenHeight > scaledHeight ? (screenHeight - scaledHeight) / 2 : 0;
+            _scr_blit(scaled, scaledWidth, scaledHeight, 0, 0, scaledWidth, scaledHeight, x, y);
+            paletteFadeTo(palette);
+
+            internal_free(scaled);
+        }
+    } else {
+        int x = (screenWidth - width) / 2;
+        int y = (screenHeight - height) / 2;
+        _scr_blit(data, width, height, 0, 0, width, height, x, y);
+        paletteFadeTo(palette);
+    }
 
     internal_free(data);
     internal_free(palette);

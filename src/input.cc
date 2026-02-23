@@ -1,6 +1,7 @@
 #include "input.h"
 
 #include <SDL.h>
+#include <lodepng.h>
 
 #include "audio_engine.h"
 #include "color.h"
@@ -98,7 +99,7 @@ static TickerListNode* gTickerListHead;
 // 0x6AC788
 static unsigned int gTickerLastTimestamp;
 
-// global for useItemOn inventory to prevent click through bug
+// global for inventoryOpenUseItemOn inventory to prevent click through bug
 bool gBlockMouseUpEvent = false;
 
 // 0x4C8A70
@@ -497,6 +498,50 @@ int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, uns
 
     fflush(stream);
     fclose(stream);
+
+    return 0;
+}
+
+int screenshotHandlerPngImpl(int width, int height, unsigned char* data, unsigned char* palette)
+{
+    char fileName[16];
+    FILE* stream;
+    int fileIndex;
+
+    for (fileIndex = 0; fileIndex < 100000; fileIndex++) {
+        snprintf(fileName, sizeof(fileName), "scr%.5d.png", fileIndex);
+
+        stream = compat_fopen(fileName, "rb");
+        if (stream == nullptr) {
+            break;
+        }
+
+        fclose(stream);
+    }
+
+    if (fileIndex == 100000) {
+        return -1;
+    }
+
+    stream = compat_fopen(fileName, "wb");
+    if (stream == nullptr) {
+        return -1;
+    }
+    fclose(stream);
+
+    int imgLen = width * height;
+    std::vector<unsigned char> image(imgLen * 3);
+
+    for (size_t i = 0; i < imgLen; i++) {
+        image[i * 3] = palette[data[i] * 3] << 2;
+        image[i * 3 + 1] = palette[data[i] * 3 + 1] << 2;
+        image[i * 3 + 2] = palette[data[i] * 3 + 2] << 2;
+    }
+
+    unsigned error = lodepng::encode(fileName, image, width, height, LCT_RGB, 8);
+    if (error) {
+        return -1;
+    }
 
     return 0;
 }
@@ -934,14 +979,6 @@ void _GNW95_process_message()
         case SDL_KEYDOWN:
         case SDL_KEYUP:
             if (!keyboardIsDisabled()) {
-                // Check for Alt+Enter or F11 to toggle fullscreen
-                if (e.type == SDL_KEYDOWN) {
-                    if ((e.key.keysym.sym == SDLK_RETURN && (e.key.keysym.mod & KMOD_ALT)) || e.key.keysym.sym == SDLK_F11) {
-                        svgaToggleFullscreen();
-                        break; // Don't process as a normal key
-                    }
-                }
-
                 keyboardData.key = e.key.keysym.scancode;
                 keyboardData.down = (e.key.state & SDL_PRESSED) != 0;
                 _GNW95_process_key(&keyboardData);
@@ -963,12 +1000,6 @@ void _GNW95_process_message()
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 gProgramIsActive = false;
                 audioEnginePause();
-                break;
-            case SDL_WINDOWEVENT_RESTORED:
-            case SDL_WINDOWEVENT_MAXIMIZED:
-            case SDL_WINDOWEVENT_MINIMIZED:
-            case SDL_WINDOWEVENT_RESIZED:
-            case SDL_WINDOWEVENT_MOVED:
                 break;
             }
             break;

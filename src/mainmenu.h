@@ -1,8 +1,6 @@
 #ifndef FALLOUT_MAINMENU_H_
 #define FALLOUT_MAINMENU_H_
 
-#include "config.h" // For Config type
-
 namespace fallout {
 
 typedef enum MainMenuOption {

@@ -12,21 +12,12 @@ extern Rect _scr_size;
 extern void (*_scr_blit)(unsigned char* src, int src_pitch, int a3, int src_x, int src_y, int src_width, int src_height, int dest_x, int dest_y);
 extern void (*_zero_mem)();
 
-void resizeContent(int width, int height);
-void resizeContent(int width, int height, bool preserveAspect);
-void restoreUserAspectPreference(void);
-bool gameIsWidescreen();
-bool gameIsFullscreen();
-void svgaToggleFullscreen();
-
 extern SDL_Window* gSdlWindow;
 extern SDL_Surface* gSdlSurface;
 extern SDL_Renderer* gSdlRenderer;
 extern SDL_Texture* gSdlTexture;
 extern SDL_Surface* gSdlTextureSurface;
 extern FpsLimiter sharedFpsLimiter;
-
-extern Rect gMouseClipRect;
 
 int _init_mode_320_200();
 int _init_mode_320_400();
@@ -40,7 +31,7 @@ void _get_start_mode_();
 void _zero_vid_mem();
 int _GNW95_init_mode_ex(int width, int height, int bpp);
 int _init_vesa_mode(int width, int height);
-int _GNW95_init_window(int width, int height, bool fullscreen);
+int _GNW95_init_window(int width, int height, bool fullscreen, int scale);
 int directDrawInit(int width, int height, int bpp);
 void directDrawFree();
 void directDrawSetPaletteInRange(unsigned char* palette, int start, int count);
@@ -54,6 +45,7 @@ int screenGetHeight();
 int screenGetVisibleHeight();
 void handleWindowSizeChanged();
 void renderPresent();
+bool screenIsFullscreen();
 
 } // namespace fallout
 

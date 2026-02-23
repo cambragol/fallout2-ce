@@ -4,7 +4,6 @@
 #include <string>
 
 #include "game_config.h"
-#include "sfall_config.h"
 
 namespace fallout {
 
@@ -14,10 +13,7 @@ struct SystemSettings {
     std::string master_patches_path = "data";
     std::string critter_dat_path = "critter.dat";
     std::string critter_patches_path = "data";
-    std::string fission_dat_path = "fission.dat";
-    std::string fission_patches_path = "data";
     std::string language = ENGLISH;
-    bool master_override;
     int scroll_lock = 0;
     bool interrupt_walk = true;
     int art_cache_size = 8;
@@ -76,7 +72,6 @@ struct DebugSettings {
     bool show_script_messages = false;
     bool show_load_info = false;
     bool output_map_data_info = false;
-    bool write_offsets = false;
 };
 
 struct MapperSettings {
@@ -94,117 +89,12 @@ struct MapperSettings {
     bool sort_script_list = false;
 };
 
-struct GraphicSettings {
-    int game_width = 800;
-    int game_height = 500;
-    bool fullscreen = true;
-    bool stretch_enabled = true;
-    bool preserve_aspect = true;
-    bool high_quality = false;
-    bool highres_stencil = true;
-    bool widescreen = true;
-    bool square_pixels = false;
-    int play_area = 1;
-    std::string widescreen_variant_suffix = "_800";
-};
-
-// May need to revist defaults on some of these
-struct SfallMainSettings {
-    // none for now
-};
-
-struct SfallMiscSettings {
-    std::string dude_native_look_jumpsuit_male = "";
-    std::string dude_native_look_jumpsuit_female = "";
-    std::string dude_native_look_tribal_male = "";
-    std::string dude_native_look_tribal_female = "";
-    int start_year = 2241;
-    int start_month = 6;
-    int start_day = 24;
-    int main_menu_big_font_color = 0;
-    int main_menu_credits_offset_x = 0;
-    int main_menu_credits_offset_y = 0;
-    int main_menu_font_color = 0;
-    int main_menu_offset_x = 0;
-    int main_menu_offset_y = 0;
-    int skip_opening_movies = 0;
-    std::string starting_map = "";
-    std::string karma_frms = "";
-    std::string karma_points = "";
-    bool display_karma_changes = false;
-    int override_criticals_mode = 2;
-    std::string override_criticals_file = "";
-    bool remove_criticals_time_limits = false;
-    std::string books_file = "";
-    std::string elevators_file = "";
-    std::string console_output_file = "";
-    std::string premade_characters_file_names = "";
-    std::string premade_characters_face_fids = "";
-    bool burst_mod_enabled = false;
-    int burst_mod_center_multiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_MULTIPLIER;
-    int burst_mod_center_divisor = SFALL_CONFIG_BURST_MOD_DEFAULT_CENTER_DIVISOR;
-    int burst_mod_target_multiplier = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_MULTIPLIER;
-    int burst_mod_target_divisor = SFALL_CONFIG_BURST_MOD_DEFAULT_TARGET_DIVISOR;
-    int dynamite_min_damage = 30;
-    int dynamite_max_damage = 50;
-    int plastic_explosive_min_damage = 40;
-    int plastic_explosive_max_damage = 80;
-    bool explosion_emits_light = false;
-    int movie_timer_artimer1 = 90;
-    int movie_timer_artimer2 = 180;
-    int movie_timer_artimer3 = 270;
-    int movie_timer_artimer4 = 360;
-    std::string city_reputation_list = "";
-    std::string unarmed_file = "";
-    int damage_mod_formula = 0;
-    bool bonus_hth_damage_fix = true;
-    bool display_bonus_damage = false;
-    int use_lockpick_frm = 293;
-    int use_steal_frm = 293;
-    int use_traps_frm = 293;
-    int use_first_aid_frm = 293;
-    int use_doctor_frm = 293;
-    int use_science_frm = 293;
-    int use_repair_frm = 293;
-    bool science_repair_target_type = false;
-    bool game_dialog_fix = true;
-    std::string tweaks_file = "";
-    bool game_dialog_gender_words = false;
-    bool town_map_hotkeys_fix = true;
-    std::string extra_message_lists = "";
-    bool numbers_is_dialog = false;
-    int auto_quick_save = 0;
-    std::string version_string = "";
-    std::string config_file = "";
-    std::string patch_file = "";
-    int pipboy_available_at_gamestart = 0;
-    int use_walk_distance = 5;
-    int auto_open_doors = 0;
-    int gapless_music = 0;
-    int worldmap_trail_markers = 0;
-    bool enhanced_barter = false;
-    bool strict_vanilla = false;
-    bool iface_bar_mode = true;
-    int iface_bar_width = 800;
-    int iface_bar_side_art = 0;
-    bool iface_bar_sides_ori = false;
-};
-
-struct SfallScriptsSettings {
-    std::string ini_config_folder = "";
-    std::string global_script_paths = "";
-};
-
 struct Settings {
     SystemSettings system;
     PreferencesSettings preferences;
     SoundSettings sound;
     DebugSettings debug;
     MapperSettings mapper;
-    GraphicSettings graphics;
-    SfallMainSettings sfall_main; // [sfall_main] section
-    SfallMiscSettings sfall_misc; // [sfall_misc] section
-    SfallScriptsSettings sfall_scripts; // [sfall_scripts] section
 };
 
 extern Settings settings;

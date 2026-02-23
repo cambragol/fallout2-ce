@@ -2,7 +2,6 @@
 #define MESSAGE_H
 
 #include <stddef.h>
-#include <stdint.h>
 
 namespace fallout {
 
@@ -92,14 +91,6 @@ void messageListRepositorySetStandardMessageList(int messageListId, MessageList*
 void messageListRepositorySetProtoMessageList(int messageListId, MessageList* messageList);
 int messageListRepositoryAddExtra(int messageListId, const char* path);
 char* messageListRepositoryGetMsg(int messageListId, int messageId);
-
-uint32_t generate_mod_message_id(const char* mod_name, const char* message_key);
-bool messageListLoadWithMods(MessageList* msg, const char* path, const char* msg_type);
-bool messageListAddEntry(MessageList* msg, int num, const char* text);
-
-bool messageListAddModProtoMessage(int pid, int message_type, const char* text);
-char* messageListRepositoryGetProtoMsg(int pid, int message_type);
-char* messageListGetModProtoMessage(int pid, int message_type);
 
 } // namespace fallout
 

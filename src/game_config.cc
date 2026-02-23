@@ -67,24 +67,7 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, "data");
     configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_DAT_KEY, "critter.dat");
     configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CRITTER_PATCHES_KEY, "data");
-#ifdef __APPLE__
-#include "TargetConditionals.h"
-#if TARGET_OS_IPHONE
-    // iOS path
-    configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FISSION_DAT_KEY, "Fallout-Fission.app/fission.dat");
-#elif TARGET_OS_MAC
-    // macOS path
-    configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FISSION_DAT_KEY, "Fallout-Fission.app/Contents/Resources/fission.dat");
-#else
-    // Other Apple platform fallback
-    configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FISSION_DAT_KEY, "fission.dat");
-#endif
-#else
-    configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FISSION_DAT_KEY, "fission.dat");
-#endif
-    configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FISSION_PATCHES_KEY, "data");
     configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, ENGLISH);
-    configSetBool(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_OVERRIDE_KEY, false);
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SCROLL_LOCK_KEY, 0);
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_INTERRUPT_WALK_KEY, 1);
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_ART_CACHE_SIZE_KEY, 8);
@@ -92,7 +75,6 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_HASHING_KEY, 1);
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_SPLASH_KEY, 0);
     configSetInt(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_FREE_SPACE_KEY, 20480);
-
     configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_GAME_DIFFICULTY_KEY, 1);
     configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, 1);
     configSetInt(&gGameConfig, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, 3);
@@ -130,19 +112,6 @@ bool gameConfigInit(bool isMapper, int argc, char** argv)
     configSetInt(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_SCRIPT_MESSAGES_KEY, 0);
     configSetInt(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_SHOW_LOAD_INFO_KEY, 0);
     configSetInt(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_OUTPUT_MAP_DATA_INFO_KEY, 0);
-    configSetInt(&gGameConfig, GAME_CONFIG_DEBUG_KEY, GAME_CONFIG_WRITE_OFFSETS, 0);
-
-    configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_GAME_WIDTH, 800);
-    configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_GAME_HEIGHT, 500);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_FULLSCREEN, true);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_STRETCH_ENABLED, true);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_PRESERVE_ASPECT, true);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_HIGH_QUALITY, false);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_ENABLE_HIRES_STENCIL, true);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_WIDESCREEN, true);
-    configSetBool(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_SQUARE_PIXELS, false);
-    configSetInt(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_PLAY_AREA, 1);
-    configSetString(&gGameConfig, GAME_CONFIG_GRAPHICS_KEY, GAME_CONFIG_VARIANT_SUFFIX, "_800");
 
     if (isMapper) {
         configSetString(&gGameConfig, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_EXECUTABLE_KEY, "mapper");

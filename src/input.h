@@ -7,7 +7,7 @@ typedef void(TickerProc)();
 
 typedef int(ScreenshotHandler)(int width, int height, unsigned char* buffer, unsigned char* palette);
 
-// global for blocking mouse event in useItemOn inventory screen
+// global for blocking mouse event in inventoryOpenUseItemOn inventory screen
 extern bool gBlockMouseUpEvent;
 
 int inputInit(int a1);
@@ -24,6 +24,7 @@ void tickersEnable();
 void tickersDisable();
 void takeScreenshot();
 int screenshotHandlerDefaultImpl(int width, int height, unsigned char* data, unsigned char* palette);
+int screenshotHandlerPngImpl(int width, int height, unsigned char* data, unsigned char* palette);
 void screenshotHandlerConfigure(int keyCode, ScreenshotHandler* handler);
 unsigned int getTicks();
 void inputPauseForTocks(unsigned int ms);

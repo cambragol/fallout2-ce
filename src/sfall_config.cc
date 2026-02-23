@@ -7,8 +7,6 @@
 
 namespace fallout {
 
-#define SFALL_CONFIG_FILE_NAME "fallout2.cfg"
-
 bool gSfallConfigInitialized = false;
 Config gSfallConfig;
 
@@ -61,6 +59,7 @@ bool sfallConfigInit(int argc, char** argv)
     configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_VERSION_STRING, "");
     configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CONFIG_FILE, "");
     configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_PATCH_FILE, "");
+    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_CITIES_LIMIT_FIX, true);
 
     configSetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_INI_CONFIG_FOLDER, "");
     configSetString(&gSfallConfig, SFALL_CONFIG_SCRIPTS_KEY, SFALL_CONFIG_GLOBAL_SCRIPT_PATHS, "");
@@ -70,13 +69,11 @@ bool sfallConfigInit(int argc, char** argv)
     configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_AUTO_OPEN_DOORS, 0);
     configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_GAPLESS_MUSIC, 0);
     configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_WORLDMAP_TRAIL_MARKERS, 0);
-    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_ENHANCED_BARTER, 0);
-    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_STRICT_VANILLA, 0);
 
-    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_MODE, true);
-    configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_WIDTH, 800);
-    configSetInt(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDE_ART, 0);
-    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_IFACE_BAR_SIDES_ORI, false);
+    configSetString(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_SCREENSHOTS_FORMAT, "png");
+    configSetBool(&gSfallConfig, SFALL_CONFIG_MISC_KEY, SFALL_CONFIG_DISABLE_HORRIGAN, false);
+
+    configSetBool(&gSfallConfig, SFALL_CONFIG_MAIN_KEY, SFALL_CONFIG_ENABLE_HIRES_STENCIL, true);
 
     char path[COMPAT_MAX_PATH];
     char* executable = argv[0];
@@ -89,7 +86,7 @@ bool sfallConfigInit(int argc, char** argv)
         strcpy(path, SFALL_CONFIG_FILE_NAME);
     }
 
-    auto configChecker = ConfigChecker(gSfallConfig, "fallout2.cfg");
+    auto configChecker = ConfigChecker(gSfallConfig, SFALL_CONFIG_FILE_NAME);
 
     configRead(&gSfallConfig, path, false);
 

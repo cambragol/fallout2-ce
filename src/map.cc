@@ -27,7 +27,6 @@
 #include "light.h"
 #include "loadsave.h"
 #include "memory.h"
-#include "message.h"
 #include "object.h"
 #include "palette.h"
 #include "party_member.h"
@@ -38,6 +37,7 @@
 #include "random.h"
 #include "scripts.h"
 #include "settings.h"
+#include "sfall_callbacks.h"
 #include "sfall_config.h"
 #include "svga.h"
 #include "text_object.h"
@@ -48,10 +48,6 @@
 #include "worldmap.h"
 
 namespace fallout {
-
-#define BASE_AREA_MAX 200
-#define MOD_AREA_START 200
-#define MOD_AREA_MAX 1000
 
 static char* mapBuildPath(char* name);
 static int mapLoad(File* stream);
@@ -288,7 +284,7 @@ void isoExit()
 }
 
 // 0x481FB4
-void _map_init()
+void mapInit()
 {
     if (compat_stricmp(settings.system.executable.c_str(), "mapper") == 0) {
         _map_scroll_refresh = isoWindowRefreshRectMapper;
@@ -298,8 +294,7 @@ void _map_init()
         char path[COMPAT_MAX_PATH];
         snprintf(path, sizeof(path), "%smap.msg", asc_5186C8);
 
-        // modified for mods
-        if (!messageListLoadWithMods(&gMapMessageList, path, "MAP")) {
+        if (!messageListLoad(&gMapMessageList, path)) {
             debugPrint("\nError loading map_msg_file!");
         }
     } else {
@@ -315,7 +310,7 @@ void _map_init()
 }
 
 // 0x482084
-void _map_exit()
+void mapExit()
 {
     windowHide(gIsoWindow);
     gameMouseSetCursor(MOUSE_CURSOR_ARROW);
@@ -483,10 +478,10 @@ int mapGetLocalVar(int var, ProgramValue& value)
 // Make a room to store more local variables.
 //
 // 0x4822E0
-int _map_malloc_local_var(int a1)
+int mapAllocLocalVars(const int numNewVars)
 {
     int oldMapLocalVarsLength = gMapLocalVarsLength;
-    gMapLocalVarsLength += a1;
+    gMapLocalVarsLength += numNewVars;
 
     int* vars = (int*)internal_realloc(gMapLocalVars, sizeof(*vars) * gMapLocalVarsLength);
     if (vars == nullptr) {
@@ -494,7 +489,7 @@ int _map_malloc_local_var(int a1)
     }
 
     gMapLocalVars = vars;
-    memset((unsigned char*)vars + sizeof(*vars) * oldMapLocalVarsLength, 0, sizeof(*vars) * a1);
+    memset((unsigned char*)vars + sizeof(*vars) * oldMapLocalVarsLength, 0, sizeof(*vars) * numNewVars);
 
     gMapLocalPointers.resize(gMapLocalVarsLength);
 
@@ -521,121 +516,47 @@ char* mapGetName(int map, int elevation)
     }
 
     MessageListItem messageListItem;
-
-    if (map >= MOD_MAP_START && map < MOD_MAP_MAX) {
-        // Mod map: generate message ID using mod name and lookup name
-        const char* lookupName = wmGetMapLookupName(map);
-        int areaIndex = wmGetAreaContainingMap(map);
-
-        if (areaIndex != -1 && lookupName != nullptr) {
-            const char* modName = wmGetAreaModName(areaIndex);
-
-            char compositeKey[256];
-            snprintf(compositeKey, sizeof(compositeKey), "lookup_name:%s:%d", lookupName, elevation);
-
-            uint32_t messageId = generate_mod_message_id(modName, compositeKey);
-            return getmsg(&gMapMessageList, &messageListItem, messageId);
-        }
-        return nullptr;
-    } else {
-        // Vanilla map: use original formula (map * 3 + elevation + 200)
-        int messageId = map * 3 + elevation + 200;
-        return getmsg(&gMapMessageList, &messageListItem, messageId);
-    }
+    return getmsg(&gMapMessageList, &messageListItem, map * 3 + elevation + 200);
 }
 
 // TODO: Check, probably returns true if map1 and map2 represents the same city.
 //
 // 0x482528
-bool _is_map_idx_same(int map1, int map2)
+bool mapAreSameArea(int map1, int map2)
 {
     if (map1 < 0 || map1 >= wmMapMaxCount()) {
-        return 0;
+        return false;
     }
 
     if (map2 < 0 || map2 >= wmMapMaxCount()) {
-        return 0;
+        return false;
     }
 
-    // For mod maps (?160), use city name comparison
-    if (map1 >= 160 || map2 >= 160) {
-        char* cityName1 = mapGetCityName(map1);
-        char* cityName2 = mapGetCityName(map2);
-
-        // If either city name is null or the error string, they're not the same
-        if (!cityName1 || !cityName2) {
-            return 0;
-        }
-
-        // Check for "ERROR! F2" error string
-        const char* errorStr = "ERROR! F2";
-        if (strcmp(cityName1, errorStr) == 0 || strcmp(cityName2, errorStr) == 0) {
-            return 0;
-        }
-
-        // Compare city names
-        return strcmp(cityName1, cityName2) == 0;
-    }
-
-    // For vanilla maps (<160), use the original logic
     if (!wmMapIdxIsSaveable(map1)) {
-        return 0;
+        return false;
     }
 
     if (!wmMapIdxIsSaveable(map2)) {
-        return 0;
+        return false;
     }
 
     int city1;
     if (wmMatchAreaContainingMapIdx(map1, &city1) == -1) {
-        return 0;
+        return false;
     }
 
     int city2;
     if (wmMatchAreaContainingMapIdx(map2, &city2) == -1) {
-        return 0;
+        return false;
     }
 
     return city1 == city2;
 }
 
-// 0x4825CCMod
+// TODO: probably can be replaced with mapAreSameArea
+// 0x4825CC
 int _get_map_idx_same(int map1, int map2)
 {
-    // Check bounds
-    if (map1 < 0 || map1 >= wmMapMaxCount() || map2 < 0 || map2 >= wmMapMaxCount()) {
-        return -1;
-    }
-
-    // For mod maps (?160), use city name comparison
-    if (map1 >= 160 || map2 >= 160) {
-        // If one is mod and one is vanilla, they're not the same
-        if ((map1 < 160 && map2 >= 160) || (map1 >= 160 && map2 < 160)) {
-            return -1;
-        }
-
-        // Both are mod maps, compare city names
-        char* cityName1 = mapGetCityName(map1);
-        char* cityName2 = mapGetCityName(map2);
-
-        if (!cityName1 || !cityName2) {
-            return -1;
-        }
-
-        // Check for error string
-        const char* errorStr = "ERROR! F2";
-        if (strcmp(cityName1, errorStr) == 0 || strcmp(cityName2, errorStr) == 0) {
-            return -1;
-        }
-
-        if (strcmp(cityName1, cityName2) == 0) {
-            // Return 0 to indicate they're the same (non-negative, not -1)
-            return 0;
-        }
-        return -1;
-    }
-
-    // Original logic for vanilla maps
     int city1 = -1;
     if (wmMatchAreaContainingMapIdx(map1, &city1) == -1) {
         return -1;
@@ -650,7 +571,7 @@ int _get_map_idx_same(int map1, int map2)
         return -1;
     }
 
-    return city1; // Return the city index as original
+    return city1;
 }
 
 // 0x48261C
@@ -662,22 +583,12 @@ char* mapGetCityName(int map)
     }
 
     MessageListItem messageListItem;
-
-    if (city >= MOD_AREA_START && city < MOD_AREA_MAX) {
-        // Mod area: use the area's message ID (already set during loading)
-        messageListItem.num = wmGetAreaId(city);
-        char* name = getmsg(&gMapMessageList, &messageListItem, messageListItem.num);
-        return name ? name : _aErrorF2;
-    } else {
-        // Vanilla area: use original formula (1500 + city)
-        messageListItem.num = 1500 + city;
-        char* name = getmsg(&gMapMessageList, &messageListItem, messageListItem.num);
-        return name ? name : _aErrorF2;
-    }
+    char* name = getmsg(&gMapMessageList, &messageListItem, 1500 + city);
+    return name;
 }
 
 // 0x48268C
-char* _map_get_description_idx_(int map)
+char* mapDescriptionById(int map)
 {
     int city;
     if (wmMatchAreaContainingMapIdx(map, &city) == 0) {
@@ -851,66 +762,41 @@ int mapLoadByName(char* fileName)
 {
     int rc;
 
-    // Convert to uppercase for consistent file handling
     compat_strupr(fileName);
-
-    debugPrint("\nmapLoadByName: Loading map %s", fileName);
 
     rc = -1;
 
-    // First check if there's a saved version of this map
     char* extension = strstr(fileName, ".MAP");
     if (extension != nullptr) {
-        // Temporarily change extension to .SAV to check for saved map
         strcpy(extension, ".SAV");
 
         const char* filePath = mapBuildPath(fileName);
+
         File* stream = fileOpen(filePath, "rb");
 
-        // Restore original extension
         strcpy(extension, ".MAP");
 
         if (stream != nullptr) {
-            debugPrint("\nmapLoadByName: Found saved map, loading %s", filePath);
             fileClose(stream);
             rc = mapLoadSaved(fileName);
             wmMapMusicStart();
-        } else {
-            debugPrint("\nmapLoadByName: No saved map found for %s", fileName);
         }
     }
 
-    // If no saved map found or loading failed, try loading fresh .MAP file
     if (rc == -1) {
         const char* filePath = mapBuildPath(fileName);
-
-        debugPrint("\nmapLoadByName: Attempting to load fresh map %s", filePath);
-
         File* stream = fileOpen(filePath, "rb");
         if (stream != nullptr) {
-            debugPrint("\nmapLoadByName: Map file opened successfully, loading data");
-
             rc = mapLoad(stream);
             fileClose(stream);
+        }
 
-            debugPrint("\nmapLoadByName: Map load result: %d, header name: %s",
-                rc, gMapHeader.name);
-
-            if (rc == 0) {
-                // Success - update map header and clear combat target
-                strcpy(gMapHeader.name, fileName);
-                gDude->data.critter.combat.whoHitMe = nullptr;
-
-                debugPrint("\nmapLoadByName: Map loaded successfully");
-            } else {
-                debugPrint("\nmapLoadByName: Map load failed with code %d", rc);
-            }
-        } else {
-            debugPrint("\nmapLoadByName: ERROR - Map file not found or cannot open: %s", filePath);
+        if (rc == 0) {
+            strcpy(gMapHeader.name, fileName);
+            gDude->data.critter.combat.whoHitMe = nullptr;
         }
     }
 
-    debugPrint("\nmapLoadByName: Completed with return code %d", rc);
     return rc;
 }
 
@@ -1124,6 +1010,8 @@ err:
         _obj_preload_art_cache(gMapHeader.flags);
     }
 
+    sfallOnBeforeMapLoad();
+
     _partyMemberRecoverLoad();
     interfaceBarShow();
     _proto_dude_update_gender();
@@ -1238,8 +1126,8 @@ static int _map_age_dead_critters()
             && !objectIsPartyMember(obj)
             && !critterIsDead(obj)) {
             obj->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
-            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !_critter_flag_check(obj->pid, CRITTER_NO_HEAL)) {
-                _critter_heal_hours(obj, hoursSinceLastVisit);
+            if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !critterFlagCheck(obj->pid, CRITTER_NO_HEAL)) {
+                critterHealByHours(obj, hoursSinceLastVisit);
             }
         }
         obj = objectFindNext();
@@ -1263,7 +1151,7 @@ static int _map_age_dead_critters()
         int type = PID_TYPE(obj->pid);
         if (type == OBJ_TYPE_CRITTER) {
             if (obj != gDude && critterIsDead(obj)) {
-                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !_critter_flag_check(obj->pid, CRITTER_NO_HEAL)) {
+                if (critterGetKillType(obj) != KILL_TYPE_ROBOT && !critterFlagCheck(obj->pid, CRITTER_NO_HEAL)) {
                     objects[count++] = obj;
 
                     if (count >= capacity) {
@@ -1294,7 +1182,7 @@ static int _map_age_dead_critters()
     for (int index = 0; index < count; index++) {
         Object* obj = objects[index];
         if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
-            if (!_critter_flag_check(obj->pid, CRITTER_NO_DROP)) {
+            if (!critterFlagCheck(obj->pid, CRITTER_NO_DROP)) {
                 itemDropAll(obj, obj->tile);
             }
 
@@ -1332,7 +1220,7 @@ static int _map_age_dead_critters()
 }
 
 // 0x48358C
-int _map_target_load_area()
+int mapGetLoadedAreaId()
 {
     int city = -1;
     if (wmMatchAreaContainingMapIdx(gMapHeader.index, &city) == -1) {
@@ -1878,32 +1766,19 @@ static int _square_load(File* stream, int flags)
 // 0x4843B8
 static int mapHeaderWrite(MapHeader* ptr, File* stream)
 {
-    if (fileWriteInt32(stream, ptr->version) == -1)
-        return -1;
-    if (fileWriteFixedLengthString(stream, ptr->name, 16) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->enteringTile) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->enteringElevation) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->enteringRotation) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->localVariablesCount) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->scriptIndex) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->flags) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->darkness) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->globalVariablesCount) == -1)
-        return -1;
-    if (fileWriteInt32(stream, ptr->index) == -1)
-        return -1;
-    if (fileWriteUInt32(stream, ptr->lastVisitTime) == -1)
-        return -1;
-    if (fileWriteInt32List(stream, ptr->field_3C, 44) == -1)
-        return -1;
+    if (fileWriteInt32(stream, ptr->version) == -1) return -1;
+    if (fileWriteFixedLengthString(stream, ptr->name, 16) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->enteringTile) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->enteringElevation) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->enteringRotation) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->localVariablesCount) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->scriptIndex) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->flags) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->darkness) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->globalVariablesCount) == -1) return -1;
+    if (fileWriteInt32(stream, ptr->index) == -1) return -1;
+    if (fileWriteUInt32(stream, ptr->lastVisitTime) == -1) return -1;
+    if (fileWriteInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
 }
@@ -1911,32 +1786,19 @@ static int mapHeaderWrite(MapHeader* ptr, File* stream)
 // 0x4844B4
 static int mapHeaderRead(MapHeader* ptr, File* stream)
 {
-    if (fileReadInt32(stream, &(ptr->version)) == -1)
-        return -1;
-    if (fileReadFixedLengthString(stream, ptr->name, 16) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->enteringTile)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->enteringElevation)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->enteringRotation)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->localVariablesCount)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->scriptIndex)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->flags)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->darkness)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->globalVariablesCount)) == -1)
-        return -1;
-    if (fileReadInt32(stream, &(ptr->index)) == -1)
-        return -1;
-    if (fileReadUInt32(stream, &(ptr->lastVisitTime)) == -1)
-        return -1;
-    if (fileReadInt32List(stream, ptr->field_3C, 44) == -1)
-        return -1;
+    if (fileReadInt32(stream, &(ptr->version)) == -1) return -1;
+    if (fileReadFixedLengthString(stream, ptr->name, 16) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->enteringTile)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->enteringElevation)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->enteringRotation)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->localVariablesCount)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->scriptIndex)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->flags)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->darkness)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->globalVariablesCount)) == -1) return -1;
+    if (fileReadInt32(stream, &(ptr->index)) == -1) return -1;
+    if (fileReadUInt32(stream, &(ptr->lastVisitTime)) == -1) return -1;
+    if (fileReadInt32List(stream, ptr->field_3C, 44) == -1) return -1;
 
     return 0;
 }
